@@ -256,7 +256,7 @@ class RebuildTests(unittest.TestCase):
     def test_kernel_variant_sets_environment_and_owns_its_out(self):
         self.workspace().prepare()
         manifest = self.fake_android_build()
-        out = self.root / "out-ksu"
+        out = self.source / "out-ksu"
 
         def build(kernel):
             with mock.patch.object(rebuild.Rebuild, "check_source", return_value=manifest), \
@@ -273,6 +273,8 @@ class RebuildTests(unittest.TestCase):
         self.assertEqual(build("normal"), 1)
         self.assertEqual(len(list((self.source / "artifacts").iterdir())), 1)
         self.assertEqual(build("unknown"), 1)
+        self.assertEqual(rebuild.main(["build", "--source", str(self.source), "--kernel", "ksu",
+                                       "--out", str(self.root / "outside")], control=self.control), 1)
         # A successful KSU variant archives only its boot.img, named after the ROM version.
         with mock.patch.dict(os.environ, {"FAKE_BOOT_OK": "1"}):
             self.assertEqual(build("ksu"), 0)

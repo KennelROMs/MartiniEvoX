@@ -129,6 +129,9 @@ class Rebuild:
         if (inside(self.source, self.out) or inside(self.source, self.artifacts)
                 or inside(self.artifacts, self.out) or inside(self.out, self.artifacts)):
             raise RebuildError("OUT and ARTIFACTS must not overlap each other or contain SOURCE")
+        if not inside(self.out, self.source):
+            # Siso cannot load its generated config from an OUT outside the source tree.
+            raise RebuildError(f"OUT must be inside SOURCE (e.g. SOURCE/out-ksu): {self.out}")
         self.bundle = Path(source_bundle).resolve() if source_bundle else None
         self.settings_patch = Path(settings_patch).resolve() if settings_patch else None
         self.signing = signing

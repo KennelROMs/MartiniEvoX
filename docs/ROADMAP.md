@@ -1,74 +1,41 @@
 # 生效路线图
 
-决策日期：2026-10-01。维护者已将工作顺序调整如下；本文件替代历史规划中的
-“先完整无Root日用验收、再增强”的优先级。普通内核仍是默认产品。
+决策日期：2026-10-01（同日两次调整）。本文件替代历史规划中的“先完整无Root日用验收、
+再增强”的优先级，以及先单独交付KSU的顺序。
 
 执行标准：最简充分设计，只做实际功能相关测试，适度检查；不新增通用框架或反复复核。
 
-## 1. REPO — 可交接、可重建的控制仓库
+## 最终交付
 
-交付当前状态/任务台账、完整源码锁、补丁顺序、来源/许可记录、构建和验收入口，
-以及克隆后的离线回归。真实ROM重建是独立验收层，未执行不能标完成。
+1. **一个普通版ROM**：Evolution X Android 17，整合PixelOS已有的martini增强，
+   OTA升级经验证，集中修复已知问题。
+2. **一个配对的KernelSU Next内核**：与该ROM同一提交、同一内核源码构建的`boot.img`。
+   普通/KSU内核模块CRC一致，KSU用户只替换boot，vendor_boot/vendor_dlkm沿用ROM。
 
-原始私钥、设备日志和大产物不入Git。公开获取历史源码的许可/对象缺口要明确标记，
-不能用维护者机器上恰好存在的文件掩盖。当前执行项见 [TASKS](TASKS.md)。
+## 与上游保持同步
 
-## 2. KSU — KernelSU Next 可选内核适配
+Evolution-X、LineageOS、TheMuppets、PixelOS与KernelSU Next均跟随上游分支。
+`tools/refresh_lock.py`把当前上游固定为新锁；随后`rebuild.py update/prepare`在真实源码上
+确认补丁仍可应用。上游已合入的补丁转为“已有等效”并从序列移除；冲突的补丁按上游现状重做。
+PixelOS有新提交时，按[PIXELOS台账](PIXELOS.md)逐项补充结论。发布前做最后一次同步。
 
-- 当前5.4.302厂商QGKI内核，按固定legacy/manual-hooks路线研究，不套用通用GKI2镜像。
-- 固定legacy分支`cd739c78802333455391df973db17d9f28328b83`（v3.4.0-legacy，内核部分GPL-2.0）。
-- 拆分接线、配置、手动hooks及必要兼容回移植；不得让Kbuild暗中联网或修改源树。
-- 普通/KSU源码和输出隔离。核对86个原有模块、vendor_dlkm、vendor_boot及受影响
-  DTB/DTBO/AVB关联，不能假定交付一个boot.img就足够。
-- 保持CFI、SELinux、MODVERSIONS及Manager身份验证。Root授权/拒绝与metamodule
-  系统覆盖是不同验收项。
-- 维护者决定（2026-10-01）：按KernelSU Next上游原生行为接入，不刻意移除其默认的
-  selinux_hide、adb_root、avc_spoof等功能；也不额外加入SUSFS等第三方补丁。
+## 顺序
 
-**本阶段验收：**可审查补丁、编译/模块一致性、匹配镜像和经授权的最小启动/
-Manager授权与拒绝验证。完整日用稳定性不提前成为本阶段的总门槛。
+1. **PIXEL**：PixelOS增强按[台账](PIXELOS.md)整合（设备树、hardware/oplus、vendor、内核）。
+2. **KSU**：KernelSU Next legacy手动hooks补丁始终叠加在最终内核之上，`--kernel ksu`只构建
+   `bootimage`。按上游原生行为接入（维护者决定），不刻意移除selinux_hide、adb_root、
+   avc_spoof；不额外加入SUSFS等第三方补丁。保持CFI、SELinux、MODVERSIONS。
+3. **OTA**：离线核对OTA包、payload签名与证书；实机验证`a8114027`→新构建的同签名保数据
+   升级（A/B、virtual A/B snapshot）。KSU用户OTA后内核回到普通版，需刷入新版本配对boot。
+4. **FIX**：高刷新率、0.9×相机及新发现问题；先用源码/日志定位，最小修复并回归。
+5. **交付**：发布前同步上游、最终构建（ROM+配对KSU boot）、发布说明与许可/隐私复核。
+   Git推送、公开发布与付费服务分别授权。
 
-## 3. PIXEL — 可借鉴的PixelOS增强
-
-维护者确认（2026-10-01）：PixelOS已采用的组件均可取用，包括其使用的OnePlus公开
-blob（OPlus Camera、Dolby等）。不是只挑几项后宣称“全部借鉴”，也不是直接整树覆盖。对设备、common、hardware、
-kernel、vendor建立完整差异/依赖清单，每项记录来源、许可、收益、兼容性和验收。
-
-| 候选组 | 已知需覆盖的内容 |
-| --- | --- |
-| 显示/UI | 锁屏提示与UDFPS间距、电源键位置、状态栏/挖孔几何、显示缩放与横竖屏 |
-| 亮度 | gamma属性是否被EvoX消费，低亮度/滑杆/自动亮度的对照 |
-| OPlus Camera | 额外vendor、库依赖、权限/SELinux、各镜头拍照录像 |
-| Dolby | audio effects/policy/codecs及扬声器、耳机、蓝牙和通话音频 |
-| libperfmgr | powerhint、PowerHAL/init、内核节点与权限，帧时间/功耗/温升对照 |
-| sensors/Doze | hardware/oplus依赖、接近感应、抬手、AOD、熄屏指纹 |
-| 进一步发现 | 补审hardware/kernel/vendor后新增的有价值差异 |
-
-研究起点为PixelOS martini `a86283a00cc19093c1af57c7f115c7a361d5623e` 与 common
-`8e5da21cbb704d3026f16a00f6eae14033725e1d`，不是已验证可直接应用的补丁。
-保留Lineage A17/CP2A相机依赖修复及接口/VINTF/固件一致性。
-
-每项最终必须明确：集成并验证、已有等效实现、无收益、不兼容，或因来源/许可阻塞。
-不能用提交数量或更多blobs代替收益测量，不静默遗漏不适合直接搬运的项。
-
-## 4. OTA — 升级验证
-
-在前述产物身份明确后，验证同一发布签名、保留数据、A/B与snapshot、普通/KSU配套
-镜像，以及升级后的可选内核行为。首次sideload成功不是该验收的替代。
-刷写/重启/恢复步骤需根据届时手机状态逐次确认。
-
-## 5. FIX — 集中问题修复
-
-集中处理高刷、0.9×相机与新增非阻塞问题；逐项记录复现环境、最小修复、回归及
-普通/KSU差异。没有测到的项目标未测试，不把“没收到投诉”写成通过。
-
-## 6. DELIVERY — 剩余工程交付
-
-整理发布说明、受控分发、可选CI、长期升级维护、备份和预算收尾。
-首次发布前完成全部材料许可/隐私复核；Git远端、发布和付费服务分别授权。
+**实机验证统一放在全部工作完成之后**（维护者决定），步骤见
+[DEVICE-VALIDATION](DEVICE-VALIDATION.md)。构建任务不授权刷机、格式化、切槽或重锁。
 
 ## 所有阶段共有的底线
 
-各阶段做范围内必要的烟测，普通问题可以留到FIX阶段；无法启动、数据安全或
-阻塞下一阶段验证的问题必须先解决。失败保留证据，不关闭安全检查以制造成功。
-这不改变维护者确定的阶段顺序。
+原始私钥、设备日志和大产物不入Git。未执行的验证明确写未验证，不把“构建成功”写成实机
+通过。失败保留证据，不关闭安全检查以制造成功；无法启动、数据安全或阻塞后续验证的问题
+优先处理。

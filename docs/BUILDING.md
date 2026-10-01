@@ -9,8 +9,8 @@
 - 历史成功环境是Debian13、约64GiB内存；新工作区按至少600GB可用空间准备。
   编译使用源码自带JDK/Clang；归档需要tar和zstd，证书检查需要openssl。
 - CONTROL是这个小Git仓库；SOURCE、OUT、ARTIFACTS在CONTROL之外。不要把源码同步进这里。
-- 合法持有者提供SettingsGoogle旧源码bundle和原始补丁。固定身份见
-  [恢复描述](../sources/settings-google.json)，脚本不替你取得再分发许可。
+- 当前锁不需要外部源码输入：上游SettingsGoogle已含此前外置补丁的同一修复。历史候选
+  `20260930`的bundle/补丁身份仍记录在[恢复描述](../sources/settings-google.json)。
 - 自己的完整签名材料按官方模板放在 `SOURCE/vendor/evolution-priv/keys`，不入控制Git。
   模板为 `Evolution-X/vendor_evolution-priv_keys-template`，固定提交
   `fed6526d27440d6c1317b465ea399a287313ba19`。自行审查模板后生成或恢复密钥，
@@ -27,33 +27,29 @@
 CONTROL="$PWD"
 SOURCE="$HOME/android/martini/source"
 ARTIFACTS="$HOME/android/martini/artifacts"
-# SETTINGS_BUNDLE、SETTINGS_PATCH 指向你合法持有的外部材料。
 ```
 
 ### 1. 初始化并同步固定源码
 
 ```sh
-python3 "$CONTROL/tools/rebuild.py" init \
-  --source "$SOURCE" --source-bundle "$SETTINGS_BUNDLE"
+python3 "$CONTROL/tools/rebuild.py" init --source "$SOURCE"
 ```
 
 仅接受不存在或空的SOURCE，不覆盖已有树。使用profile指定的当前锁
 `manifests/locked/martini-20261001.xml`，不叠加浮动的`manifests/martini.xml`。
 Evolution-X会改写`cnb`分支历史，部分固定提交已不在分支上；当前锁对其全部项目
 使用`clone-depth="1"`按SHA直接获取，修订本身不变（推导见`baselines/20261001.json`）。
-Settings恢复材料在checkout前以受限本地镜像接入，提交身份不变；其余项目和LFS
-由Repo正常同步。若网络失败，保留现场，不自动清空工作区。
+项目和LFS由Repo正常同步。若网络失败，保留现场，不自动清空工作区。
 
 ### 2. 应用固定补丁
 
 ```sh
-python3 "$CONTROL/tools/rebuild.py" prepare \
-  --source "$SOURCE" --settings-patch "$SETTINGS_PATCH"
+python3 "$CONTROL/tools/rebuild.py" prepare --source "$SOURCE"
 ```
 
-核对基线、补丁哈希和工作树，先检查再应用：库内diff（含KSU内核与开关）加一份外部
-Settings diff。普通内核`kernel/oneplus/sm8350`不打补丁；KSU改动只在
-`kernel/oneplus/sm8350-ksu`这一独立checkout中。
+核对基线、补丁哈希和工作树，先检查再应用：EROFS/update_engine/target-files、PixelOS增强
+（设备树、vendor、内核）与KSU开关/内核补丁。PixelOS内核补丁同时用于两份内核checkout；
+KSU补丁只在`kernel/oneplus/sm8350-ksu`中。
 未知修改或部分应用时停止，不reset/clean。准备记录仅用于后续发现输入/工作树变化，
 不代替构建与实机验证。已准备的树直接进入build，不盲目重复应用补丁。
 
@@ -61,37 +57,52 @@ Settings diff。普通内核`kernel/oneplus/sm8350`不打补丁；KSU改动只�
 
 ```sh
 python3 "$CONTROL/tools/rebuild.py" build \
-  --source "$SOURCE" --settings-patch "$SETTINGS_PATCH" \
-  --artifacts "$ARTIFACTS" --signing self-build
+  --source "$SOURCE" --artifacts "$ARTIFACTS" --signing self-build
 ```
 
 普通目标固定为`lineage_martini-cp2a-userdebug`、`m evolution`，实际导出
-`EVO_KEEP_TARGET_FILES=true`；默认OUT为SOURCE/out，显式更改时始终使用同一路径。
+`EVO_KEEP_TARGET_FILES=true`；默认OUT为SOURCE/out。OUT必须位于SOURCE内：siso无法从源码树外的
+OUT加载其生成的配置（Soong会跳过带`.out-dir`标记的OUT目录）。
 
-KernelSU Next版本在同一个已准备的SOURCE上另用一个OUT构建：
+配对的KernelSU Next内核在同一个已准备的SOURCE上另用一个OUT构建，只构建`bootimage`：
 
 ```sh
 python3 "$CONTROL/tools/rebuild.py" build --kernel ksu \
-  --source "$SOURCE" --settings-patch "$SETTINGS_PATCH" \
-  --out "$OUT_KSU" --artifacts "$ARTIFACTS" --signing release
+  --source "$SOURCE" --out "$SOURCE/out-ksu" --artifacts "$ARTIFACTS" --signing release
 ```
 
-`--kernel ksu`只导出`MARTINI_KSU=true`：设备树据此改用`kernel/oneplus/sm8350-ksu`、
-追加`vendor/ksu.config`并固定KSU版本号（不依赖Git标签或网络）。OUT首次使用时记录
+`--kernel ksu`导出`MARTINI_KSU=true`：设备树据此改用`kernel/oneplus/sm8350-ksu`、追加
+`vendor/ksu.config`并固定KSU版本号（Repo不同步标签，版本由`refresh_lock.py`按上游Kbuild
+规则算出）。归档为`<ROM版本>-ksu-boot.img`，只与同一次prepare的普通ROM配对。OUT首次使用时记录
 内核变体，之后不同变体复用同一OUT会被拒绝，避免两种内核产物混合。
 构建检查实际证书绑定，保留失败退出码和日志，不把tee成功当作构建成功。
 成功后保存实际ZIP、原始target-files及构建记录到新的归档目录，不覆盖旧候选。
+
+### 与上游同步
+
+```sh
+python3 "$CONTROL/tools/refresh_lock.py" --id YYYYMMDD     # 需要repo与网络
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s "$CONTROL/tests"
+```
+
+工具让Repo合并当前Evolution-X清单与`manifests/martini.xml`，用`git ls-remote`固定全部
+项目，并更新profile、补丁基线和KSU版本号。提交后在SOURCE上`update`与`prepare`：补丁若
+已被上游合入或冲突，按上游现状重做补丁或从序列移除，并在[PIXELOS](PIXELOS.md)记录。
 
 ### 更新已准备的SOURCE到新的CONTROL提交
 
 ```sh
 python3 "$CONTROL/tools/rebuild.py" update --source "$SOURCE"
-python3 "$CONTROL/tools/rebuild.py" prepare --source "$SOURCE" --settings-patch "$SETTINGS_PATCH"
+python3 "$CONTROL/tools/rebuild.py" prepare --source "$SOURCE"
 ```
 
 `update`先确认各已修改项目与准备记录逐字节一致，只撤销这些已记录的改动并归档记录到
 `SOURCE/.martini-history/`，再`repo init -b`当前CONTROL提交并`repo sync`。出现记录外
 的改动时停止，不reset/clean。之后重新prepare。
+
+上游若把某路径换成不同项目（名称/远端改变），`repo sync`会拒绝覆盖。确认该checkout
+无改动后，把它和`.repo/projects/<路径>.git`移出SOURCE（例如`~/martini/displaced/`），
+再重跑`update`；不使用`--force-sync`。
 
 在上述任一命令末尾加 `--dry-run` 只显示计划，不联网、建目录或运行Android代码。
 控制机只适合控制仓库工作；构建服务器为16核/62GiB，源码约211GiB、每个OUT约170GiB。
