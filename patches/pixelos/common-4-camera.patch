@@ -1,0 +1,13 @@
+diff --git a/common.mk b/common.mk
+index a818410..df3771b 100644
+--- a/common.mk
++++ b/common.mk
+@@ -89,6 +89,8 @@ PRODUCT_PACKAGES += \
+     android.hardware.boot-service.qti.recovery
+ 
+ # Camera
++$(call inherit-product-if-exists, vendor/oplus/camera/opluscamera.mk)
++
+ PRODUCT_PACKAGES += \
+     android.hardware.camera.provider@2.4-impl \
+     android.hardware.camera.provider@2.4-service_64

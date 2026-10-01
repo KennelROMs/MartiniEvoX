@@ -25,8 +25,8 @@
 | --- | --- | --- | --- |
 | KSU-01 | DONE | 固定legacy源码、手动hooks映射、兼容改动清单 | legacy `cd739c78`；8处手动hook+path_umount回移植；独立内核编译通过，86模块与14611个导出CRC同普通内核一致；见evidence/ksu-kernel-compile-20261001.json |
 | KSU-02 | TODO | 可选内核、模块/镜像一致性与最小实机验收 | 完整KSU构建、dtb/dtbo/vendor_boot/vendor_dlkm对比；实机刷写由维护者操作 |
-| PIXEL-01 | TODO | 完整差异/来源/许可/依赖台账 | 已有一轮研究：A17对应common `seventeen` c2beeae；hardware/oplus为锁定提交的快进；维护者确认OnePlus公开blob可取用 |
-| PIXEL-02 | TODO | 可行有价值项逐项集成及范围内验证 | 每项独立任务、提交、结果与不采纳理由 |
+| PIXEL-01 | DONE | 完整差异/来源/许可/依赖台账 | 见[PIXELOS](PIXELOS.md)：每项给出集成/已有等效/无收益/不适用结论；维护者确认OnePlus公开blob可取用 |
+| PIXEL-02 | IN_PROGRESS | 可行有价值项逐项集成及范围内验证 | 锁`martini-20261001-pixel`与9个补丁已在干净基线逐仓库检查通过；待完整构建与实机 |
 | OTA-01 | TODO | 普通/KSU、同签名保数据升级与snapshot验证 | 依赖配套产物，专门设计升级/恢复场景 |
 | FIX-01 | TODO | 集中修复开放问题并回归 | OTA阶段后集中收敛；阻塞/数据安全问题提前处理 |
 | DELIVERY-01 | TODO | 剩余发布、可选CI、分发与长期维护 | 不在本阶段创建远端或公开发布 |

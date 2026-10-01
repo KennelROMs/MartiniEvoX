@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 BASELINE = "baselines/20260930-a8114027.json"
 MANIFEST = "manifests/locked/martini-20260930.xml"
 # Active inputs derived from the historical candidate lock above.
-ACTIVE_BASELINE = "baselines/20261001.json"
-ACTIVE_MANIFEST = "manifests/locked/martini-20261001.xml"
+ACTIVE_BASELINE = "baselines/20261001-pixel.json"
+ACTIVE_MANIFEST = "manifests/locked/martini-20261001-pixel.xml"
 KSU_KERNEL = "kernel/oneplus/sm8350-ksu"
 KSU_SOURCE = "external/KernelSU-Next"
 KSU_REVISION = "cd739c78802333455391df973db17d9f28328b83"
@@ -204,9 +204,15 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertEqual(series["on_mismatch"], "stop-and-inspect")
         self.assertEqual(series["already_applied"], "stop-and-inspect")
         self.assertNotIn("git am", json.dumps(series))
-        kernel_repos = {p["repo"] for p in series["patches"] if p["repo"].startswith("kernel/")}
-        # The normal kernel source is never patched; KSU changes live in their own checkout.
-        self.assertEqual(kernel_repos, {KSU_KERNEL})
+        kernel = {}
+        for entry in series["patches"]:
+            if entry["repo"].startswith("kernel/"):
+                kernel.setdefault(entry["repo"], []).append(entry["patch"])
+        # KSU changes only exist in their own checkout; both kernels share the same other patches.
+        ksu_only = [p for p in kernel[KSU_KERNEL] if p.startswith("patches/ksu/")]
+        self.assertEqual([p for p in kernel[KSU_KERNEL] if p not in ksu_only], kernel["kernel/oneplus/sm8350"])
+        self.assertEqual(set(kernel), {"kernel/oneplus/sm8350", KSU_KERNEL})
+        self.assertTrue(ksu_only)
 
     def test_candidate_identity_and_historical_trust_scope(self):
         baseline = self.load_json(BASELINE)
@@ -266,38 +272,61 @@ class TestBaselineInputs(unittest.TestCase):
         })
         self.assertNotIn("manifests/martini.xml", json.dumps(profile))
 
-    def test_active_lock_only_adds_documented_changes(self):
-        old = ET.fromstring(self.required_file(MANIFEST).read_bytes())
-        new = ET.fromstring(self.required_file(ACTIVE_MANIFEST).read_bytes())
-        baseline = self.load_json(ACTIVE_BASELINE)
-        raw = self.required_file(ACTIVE_MANIFEST).read_bytes()
-        self.assertEqual(baseline["manifest"]["portable"],
-                         {"path": ACTIVE_MANIFEST, "bytes": len(raw), "sha256": sha256(raw)})
+    def check_derivation(self, baseline):
+        derived = baseline["derived_from"]
+        raw = self.required_file(baseline["manifest"]["portable"]["path"]).read_bytes()
+        self.assertEqual(baseline["manifest"]["portable"]["bytes"], len(raw))
+        self.assertEqual(baseline["manifest"]["portable"]["sha256"], sha256(raw))
+        old = ET.fromstring(self.required_file(derived["manifest"]).read_bytes())
+        new = ET.fromstring(raw)
         self.assertEqual([element_record(e) for e in new if e.tag != "project"],
                          [element_record(e) for e in old if e.tag != "project"])
+        ops = derived["operations"]
+        added = {o["path"] for o in ops if o["operation"] == "add_project"}
+        replaced = {o["path"]: o["attributes"] for o in ops if o["operation"] == "replace_project"}
+        deepen = any(o["operation"] == "add_clone_depth" for o in ops)
         old_projects = {p.get("path", p.get("name")): p for p in old.findall("project")}
         new_projects = {p.get("path", p.get("name")): p for p in new.findall("project")}
-        self.assertEqual(set(new_projects) - set(old_projects), {KSU_KERNEL, KSU_SOURCE})
+        self.assertEqual(set(new_projects) - set(old_projects), added)
         self.assertEqual(set(old_projects) - set(new_projects), set())
         self.assertEqual(baseline["manifest"]["project_count"], len(new_projects))
-        deepened = 0
+        deepened = revisions_changed = 0
         for path, before in old_projects.items():
             after = copy.deepcopy(new_projects[path])
-            if after.get("clone-depth") != before.get("clone-depth"):
+            if path in replaced:
+                for key, value in replaced[path].items():
+                    self.assertEqual(after.get(key), value, path)
+                    after.set(key, before.get(key))
+                revisions_changed += before.get("revision") != replaced[path].get("revision", before.get("revision"))
+            elif deepen and after.get("clone-depth") != before.get("clone-depth"):
+                # Only Evolution-X projects, never the mirror-served SettingsGoogle.
                 self.assertEqual((before.get("remote"), after.get("clone-depth")), ("evo", "1"), path)
+                self.assertNotEqual(path, "vendor/google/apps/SettingsGoogle")
                 del after.attrib["clone-depth"]
                 deepened += 1
             self.assertEqual(element_record(after), element_record(before), path)
-        self.assertEqual(deepened, 67)
-        # SettingsGoogle keeps the branch fetch served by the private mirror.
-        self.assertIsNone(new_projects["vendor/google/apps/SettingsGoogle"].get("clone-depth"))
-        kernel, ksu = new_projects["kernel/oneplus/sm8350"], new_projects[KSU_KERNEL]
+        if deepen:
+            self.assertEqual(deepened, next(o["count"] for o in ops if o["operation"] == "add_clone_depth"))
+        self.assertEqual(bool(revisions_changed), derived["revisions_changed"])
+
+    def test_derived_locks_only_apply_documented_operations(self):
+        derived = [path for path in sorted((ROOT / "baselines").glob("*.json"))
+                   if "derived_from" in json.loads(path.read_text())]
+        self.assertIn(ROOT / ACTIVE_BASELINE, derived)
+        for path in derived:
+            with self.subTest(baseline=path.name):
+                self.check_derivation(json.loads(path.read_text()))
+
+    def test_ksu_sources_in_active_lock(self):
+        projects = {p.get("path", p.get("name")): p for p in
+                    ET.fromstring(self.required_file(ACTIVE_MANIFEST).read_bytes()).findall("project")}
+        kernel, ksu = projects["kernel/oneplus/sm8350"], projects[KSU_KERNEL]
         self.assertEqual((ksu.get("name"), ksu.get("revision")), (kernel.get("name"), kernel.get("revision")))
-        source = new_projects[KSU_SOURCE]
+        source = projects[KSU_SOURCE]
         self.assertEqual((source.get("revision"), source.get("upstream")), (KSU_REVISION, "refs/heads/legacy"))
         # Kbuild runs "git fetch --unshallow" on shallow checkouts; keep the full history.
         self.assertIsNone(source.get("clone-depth"))
-        variant = baseline["kernel"]["variants"]["ksu"]
+        variant = self.load_json(ACTIVE_BASELINE)["kernel"]["variants"]["ksu"]
         self.assertEqual((variant["repo"], variant["kernelsu_next"]["revision"]), (KSU_KERNEL, KSU_REVISION))
 
     def test_source_descriptor_is_explicitly_external_and_blocked(self):
@@ -335,7 +364,8 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertFalse(list((ROOT / "sources").rglob("*.bundle")))
 
     def test_new_json_is_host_independent(self):
-        for relative in (BASELINE, ACTIVE_BASELINE, "profiles/martini.json", SERIES, SOURCE):
+        for relative in (BASELINE, "baselines/20261001.json", ACTIVE_BASELINE,
+                         "profiles/martini.json", SERIES, SOURCE):
             text = self.required_file(relative).read_text()
             self.load_json(relative)
             self.assertNotRegex(text, r"/(?:home|Users|tmp|mnt)/")

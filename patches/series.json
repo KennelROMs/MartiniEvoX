@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "baseline": "baselines/20261001.json",
+  "baseline": "baselines/20261001-pixel.json",
   "apply": "git apply",
   "check": "git apply --check",
   "order": "patches-array-order",
@@ -65,6 +65,69 @@
       "base_revision": "abd4ede9ec6463110b40360a4a772e1285e995dd",
       "patch": "patches/ksu/0002-kernel-kernelsu-next-manual-hooks.patch",
       "sha256": "1a0f8025beb9b5f77e66a4a86e78130509fe50649cabc23b9f0bab8d3fb4359c"
+    },
+    {
+      "id": "pixelos-common-power",
+      "repo": "device/oneplus/sm8350-common",
+      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
+      "patch": "patches/pixelos/common-1-power.patch",
+      "sha256": "e9264eb9f1d8f89ce0b77073bbe75e7076f0e2b37a579867414edd8dde9b4e14"
+    },
+    {
+      "id": "pixelos-common-sensors",
+      "repo": "device/oneplus/sm8350-common",
+      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
+      "patch": "patches/pixelos/common-2-sensors.patch",
+      "sha256": "716605b2f88116b469843065d3e7ccfb1244290839637522ca12d3af50de5571"
+    },
+    {
+      "id": "pixelos-common-dolby",
+      "repo": "device/oneplus/sm8350-common",
+      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
+      "patch": "patches/pixelos/common-3-dolby.patch",
+      "sha256": "6aa04b5a29fa32ecba5da5bb66fbcaf5b090d1ab79f40df272cde912469b0be7"
+    },
+    {
+      "id": "pixelos-common-camera",
+      "repo": "device/oneplus/sm8350-common",
+      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
+      "patch": "patches/pixelos/common-4-camera.patch",
+      "sha256": "6ec52e1c016765e9bd213b661e9fabdf1352f838a822bb7d01d83a3fcbe1c4c2"
+    },
+    {
+      "id": "pixelos-martini-brightness",
+      "repo": "device/oneplus/martini",
+      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
+      "patch": "patches/pixelos/martini-1-brightness.patch",
+      "sha256": "3ebcc131d1a966ae2eea9c4ffd1270d8f2a42193fdb27d62a9b2f7589e83eeee"
+    },
+    {
+      "id": "pixelos-martini-ui-overlays",
+      "repo": "device/oneplus/martini",
+      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
+      "patch": "patches/pixelos/martini-2-ui-overlays.patch",
+      "sha256": "03c8058cf42b4cd785df11ab6a785353e45681d530bcd2600feffa6ae776b37e"
+    },
+    {
+      "id": "pixelos-vendor-remove-perfd",
+      "repo": "vendor/oneplus/sm8350-common",
+      "base_revision": "445ead080f9ffb2be428405cea6e474e0fc3db05",
+      "patch": "patches/pixelos/vendor-common-1-remove-perfd.patch",
+      "sha256": "4b7a82256db053d0dd68eb3f8176c0cf24e338b0cbe3be4625a475c8a4d7bbc3"
+    },
+    {
+      "id": "pixelos-kernel-picks",
+      "repo": "kernel/oneplus/sm8350",
+      "base_revision": "abd4ede9ec6463110b40360a4a772e1285e995dd",
+      "patch": "patches/pixelos/kernel-1-pixelos-picks.patch",
+      "sha256": "64e08b88353db19f40e11034c95f6e16df984029106d96fe68328c707aab29b0"
+    },
+    {
+      "id": "pixelos-kernel-picks-ksu",
+      "repo": "kernel/oneplus/sm8350-ksu",
+      "base_revision": "abd4ede9ec6463110b40360a4a772e1285e995dd",
+      "patch": "patches/pixelos/kernel-1-pixelos-picks.patch",
+      "sha256": "64e08b88353db19f40e11034c95f6e16df984029106d96fe68328c707aab29b0"
     }
   ]
 }

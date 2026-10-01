@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "id": "martini-20261001",
+  "id": "martini-20261001-pixel",
   "device": "martini",
-  "baseline": "baselines/20261001.json",
-  "manifest": "manifests/locked/martini-20261001.xml",
+  "baseline": "baselines/20261001-pixel.json",
+  "manifest": "manifests/locked/martini-20261001-pixel.xml",
   "patch_series": "patches/series.json",
   "source_restores": [
     "sources/settings-google.json"

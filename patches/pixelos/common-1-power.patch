@@ -1,0 +1,1408 @@
+diff --git a/common.mk b/common.mk
+index 6455785..e9b24bc 100644
+--- a/common.mk
++++ b/common.mk
+@@ -239,16 +239,14 @@ PRODUCT_USE_DYNAMIC_PARTITIONS := true
+ 
+ # Perf
+ PRODUCT_COPY_FILES += \
++    $(LOCAL_PATH)/configs/perf/powerhint_lahaina.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint_lahaina.json \
++    $(LOCAL_PATH)/configs/perf/powerhint_yupik.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint_yupik.json \
+     $(LOCAL_PATH)/configs/perf/task_profiles.json:$(TARGET_COPY_OUT_VENDOR)/etc/task_profiles.json
+ 
+ # Power
+ PRODUCT_PACKAGES += \
+-    android.hardware.power-service-qti
+-
+-PRODUCT_COPY_FILES += \
+-    vendor/qcom/opensource/power/config/lahaina/powerhint.xml:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.xml
+-
+-$(call soong_config_set,qtipower,tap_to_wake_node,/proc/touchpanel/double_tap_enable)
++    android.hardware.power-service.lineage-libperfmgr \
++    libqti-perfd-client
+ 
+ # Sensors
+ PRODUCT_PACKAGES += \
+@@ -278,8 +276,14 @@ PRODUCT_SHIPPING_API_LEVEL := $(BOARD_SHIPPING_API_LEVEL)
+ # Soong namespaces
+ PRODUCT_SOONG_NAMESPACES += \
+     $(LOCAL_PATH) \
++    hardware/google/interfaces \
++    hardware/google/pixel \
++    hardware/google/pixel/pixelstats \
++    hardware/google/pixel/power-libperfmgr \
++    hardware/lineage/interfaces/power-libperfmgr \
+     hardware/oplus \
+-    hardware/pixelworks/interfaces
++    hardware/pixelworks/interfaces \
++    hardware/qcom-caf/common/libqti-perfd-client
+ 
+ # Storage
+ $(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
+diff --git a/configs/perf/powerhint_lahaina.json b/configs/perf/powerhint_lahaina.json
+new file mode 100644
+index 0000000..47680b3
+--- /dev/null
++++ b/configs/perf/powerhint_lahaina.json
+@@ -0,0 +1,571 @@
++{
++  "Nodes": [
++    {
++      "Name": "CPULittleClusterMaxFreq",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq",
++      "Values": [
++        "9999999",
++        "1612800"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPULittleClusterMinFreq",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq",
++      "Values": [
++        "9999999",
++        "1708800",
++        "1305600",
++        "691200"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPULittleClusterUpRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us",
++      "Values": [
++        "500",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPULittleClusterDownRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us",
++      "Values": [
++        "20000",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterMaxFreq",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq",
++      "Values": [
++        "9999999",
++        "1324800"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterMinFreq",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq",
++      "Values": [
++        "9999999",
++        "1324800",
++        "1075200",
++        "710400"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterUpRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us",
++      "Values": [
++        "500",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterDownRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us",
++      "Values": [
++        "10000",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterMaxFreq",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_max_freq",
++      "Values": [
++        "9999999",
++        "1555200"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterMinFreq",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_min_freq",
++      "Values": [
++        "9999999",
++        "1075200",
++        "844800"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterUpRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/schedutil/up_rate_limit_us",
++      "Values": [
++        "500",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterDownRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/schedutil/down_rate_limit_us",
++      "Values": [
++        "5000",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "UclampTAMin",
++      "Path": "/dev/cpuctl/top-app/cpu.uclamp.min",
++      "Values": [
++        "0",
++        "25",
++        "50"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "UclampTALatency",
++      "Path": "/dev/cpuctl/top-app/cpu.uclamp.latency_sensitive",
++      "Values": [
++        "1",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "UclampFGMin",
++      "Path": "/dev/cpuctl/foreground/cpu.uclamp.min",
++      "Values": [
++        "0",
++        "50"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedBusyHystNs",
++      "Path": "/proc/sys/kernel/sched_busy_hyst_ns",
++      "Values": [
++        "99000000",
++        "3000000",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedBusyHystEnableCPUs",
++      "Path": "/proc/sys/kernel/sched_busy_hysteresis_enable_cpus",
++      "Values": [
++        "255",
++        "15",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedMinTaskUtilForBoost",
++      "Path": "/proc/sys/kernel/sched_min_task_util_for_boost",
++      "Values": [
++        "0",
++        "51"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedMinTaskUtilForColoc",
++      "Path": "/proc/sys/kernel/sched_min_task_util_for_colocation",
++      "Values": [
++        "0",
++        "35"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUMaxFreq",
++      "Path": "/sys/class/kgsl/kgsl-3d0/devfreq/max_freq",
++      "Values": [
++        "840000000",
++        "540000000",
++        "443000000"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUMinFreq",
++      "Path": "/sys/class/kgsl/kgsl-3d0/devfreq/min_freq",
++      "Values": [
++        "540000000",
++        "379000000",
++        "315000000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUForceRailOn",
++      "Path": "/sys/class/kgsl/kgsl-3d0/force_rail_on",
++      "Values": [
++        "1",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUForceClkOn",
++      "Path": "/sys/class/kgsl/kgsl-3d0/force_clk_on",
++      "Values": [
++        "1",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUIdleTimer",
++      "Path": "/sys/class/kgsl/kgsl-3d0/idle_timer",
++      "Values": [
++        "10000",
++        "72"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWHystTriggerCount",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/bw_hwmon/hyst_trigger_count",
++      "Values": [
++        "0",
++        "3"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWHistMemory",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/bw_hwmon/hist_memory",
++      "Values": [
++        "0",
++        "20"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWHystLength",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/bw_hwmon/hyst_length",
++      "Values": [
++        "0",
++        "10"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWMinFreq",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/min_freq",
++      "Values": [
++        "12298",
++        "9155",
++        "4577"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "LLCCBWMinFreq",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-llcc-ddr-bw/min_freq",
++      "Values": [
++        "6515",
++        "3879",
++        "762"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "DisplayWakeup",
++      "Path": "/sys/devices/platform/soc/ae00000.qcom,mdss_mdp/drm/card0/sde-crtc-0/early_wakeup",
++      "Values": [
++        "1",
++        "0"
++      ]
++    },
++    {
++      "Name": "PowerHALMainState",
++      "Path": "vendor.powerhal.state",
++      "Values": [
++        "SUSTAINED_PERFORMANCE",
++        ""
++      ],
++      "Type": "Property"
++    },
++    {
++      "Name": "PowerHALRenderingState",
++      "Path": "vendor.powerhal.rendering",
++      "Values": [
++        "EXPENSIVE_RENDERING",
++        ""
++      ],
++      "Type": "Property"
++    },
++    {
++      "Name": "DoubleTapToWake",
++      "Path": "/proc/touchpanel/double_tap_enable",
++      "Values": [
++        "1",
++        "0"
++      ]
++    }
++  ],
++  "Actions": [
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "PowerHALMainState",
++      "Duration": 0,
++      "Value": "SUSTAINED_PERFORMANCE"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "CPUBigClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1324800"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "CPUBigPlusClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1555200"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "CPULittleClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1612800"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "GPUMaxFreq",
++      "Duration": 0,
++      "Value": "540000000"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBigClusterMinFreq",
++      "Duration": 0,
++      "Value": "1324800"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPULittleClusterMinFreq",
++      "Duration": 0,
++      "Value": "1305600"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "UclampTAMin",
++      "Duration": 0,
++      "Value": "25"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "UclampTALatency",
++      "Duration": 0,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedBusyHystNs",
++      "Duration": 0,
++      "Value": "99000000"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedBusyHystEnableCPUs",
++      "Duration": 0,
++      "Value": "255"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedMinTaskUtilForBoost",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedMinTaskUtilForColoc",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWHystTriggerCount",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWHystLength",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWHistMemory",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWMinFreq",
++      "Duration": 0,
++      "Value": "9155"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "LLCCBWMinFreq",
++      "Duration": 0,
++      "Value": "3879"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPULittleClusterUpRateLimit",
++      "Duration": 0,
++      "Value": "500"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPULittleClusterDownRateLimit",
++      "Duration": 0,
++      "Value": "20000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigClusterUpRateLimit",
++      "Duration": 0,
++      "Value": "500"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigClusterDownRateLimit",
++      "Duration": 0,
++      "Value": "10000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigPlusClusterUpRateLimit",
++      "Duration": 0,
++      "Value": "500"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigPlusClusterDownRateLimit",
++      "Duration": 0,
++      "Value": "5000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "SchedBusyHystNs",
++      "Duration": 0,
++      "Value": "3000000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "SchedBusyHystEnableCPUs",
++      "Duration": 0,
++      "Value": "15"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBigClusterMinFreq",
++      "Duration": 3000,
++      "Value": "9999999"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPULittleClusterMinFreq",
++      "Duration": 3000,
++      "Value": "9999999"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "UclampTAMin",
++      "Duration": 3000,
++      "Value": "50"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "UclampFGMin",
++      "Duration": 3000,
++      "Value": "50"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWHystTriggerCount",
++      "Duration": 3000,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWHystLength",
++      "Duration": 3000,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWHistMemory",
++      "Duration": 3000,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWMinFreq",
++      "Duration": 3000,
++      "Value": "12298"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "GPUForceClkOn",
++      "Duration": 3000,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "GPUForceRailOn",
++      "Duration": 3000,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "GPUIdleTimer",
++      "Duration": 3000,
++      "Value": "10000"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "LLCCBWMinFreq",
++      "Duration": 3000,
++      "Value": "6515"
++    },
++    {
++      "PowerHint": "EXPENSIVE_RENDERING",
++      "Node": "PowerHALRenderingState",
++      "Duration": 0,
++      "Value": "EXPENSIVE_RENDERING"
++    },
++    {
++      "PowerHint": "EXPENSIVE_RENDERING",
++      "Node": "GPUMinFreq",
++      "Duration": 0,
++      "Value": "540000000"
++    },
++    {
++      "PowerHint": "DISPLAY_UPDATE_IMMINENT",
++      "Node": "DisplayWakeup",
++      "Duration": 60,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "DOUBLE_TAP_TO_WAKE",
++      "Node": "DoubleTapToWake",
++      "Duration": 0,
++      "Value": "1"
++    }
++  ]
++}
+diff --git a/configs/perf/powerhint_yupik.json b/configs/perf/powerhint_yupik.json
+new file mode 100644
+index 0000000..2d9b43a
+--- /dev/null
++++ b/configs/perf/powerhint_yupik.json
+@@ -0,0 +1,606 @@
++{
++  "Nodes": [
++    {
++      "Name": "CPULittleClusterMaxFreq",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq",
++      "Values": [
++        "9999999",
++        "1516800"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPULittleClusterMinFreq",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq",
++      "Values": [
++        "9999999",
++        "1324800",
++        "691200"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPULittleClusterUpRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us",
++      "Values": [
++        "500",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPULittleClusterDownRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/schedutil/down_rate_limit_us",
++      "Values": [
++        "20000",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterMaxFreq",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq",
++      "Values": [
++        "9999999",
++        "1651200"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterMinFreq",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq",
++      "Values": [
++        "9999999",
++        "1228800",
++        "691200"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterUpRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/schedutil/up_rate_limit_us",
++      "Values": [
++        "500",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigClusterDownRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/schedutil/down_rate_limit_us",
++      "Values": [
++        "10000",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterMaxFreq",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_max_freq",
++      "Values": [
++        "9999999",
++        "1516800"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterMinFreq",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_min_freq",
++      "Values": [
++        "9999999",
++        "1324800",
++        "806400"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterUpRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/schedutil/up_rate_limit_us",
++      "Values": [
++        "500",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBigPlusClusterDownRateLimit",
++      "Path": "/sys/devices/system/cpu/cpu7/cpufreq/schedutil/down_rate_limit_us",
++      "Values": [
++        "5000",
++        "2000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "UclampTAMin",
++      "Path": "/dev/cpuctl/top-app/cpu.uclamp.min",
++      "Values": [
++        "0",
++        "25",
++        "50"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "UclampTALatency",
++      "Path": "/dev/cpuctl/top-app/cpu.uclamp.latency_sensitive",
++      "Values": [
++        "1",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "UclampFGMin",
++      "Path": "/dev/cpuctl/foreground/cpu.uclamp.min",
++      "Values": [
++        "0",
++        "50"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedPreferSpread",
++      "Path": "/proc/sys/kernel/sched_prefer_spread",
++      "Values": [
++        "3",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedBusyHystNs",
++      "Path": "/proc/sys/kernel/sched_busy_hyst_ns",
++      "Values": [
++        "99000000",
++        "3000000",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedBusyHystEnableCPUs",
++      "Path": "/proc/sys/kernel/sched_busy_hysteresis_enable_cpus",
++      "Values": [
++        "255",
++        "15",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedMinTaskUtilForBoost",
++      "Path": "/proc/sys/kernel/sched_min_task_util_for_boost",
++      "Values": [
++        "0",
++        "51"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "SchedMinTaskUtilForColoc",
++      "Path": "/proc/sys/kernel/sched_min_task_util_for_colocation",
++      "Values": [
++        "0",
++        "35"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUMaxFreq",
++      "Path": "/sys/class/kgsl/kgsl-3d0/devfreq/max_freq",
++      "Values": [
++        "550000000",
++        "315000000"
++      ],
++      "DefaultIndex": 0,
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUMinFreq",
++      "Path": "/sys/class/kgsl/kgsl-3d0/devfreq/min_freq",
++      "Values": [
++        "550000000",
++        "315000000"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUForceRailOn",
++      "Path": "/sys/class/kgsl/kgsl-3d0/force_rail_on",
++      "Values": [
++        "1",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUForceClkOn",
++      "Path": "/sys/class/kgsl/kgsl-3d0/force_clk_on",
++      "Values": [
++        "1",
++        "0"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "GPUIdleTimer",
++      "Path": "/sys/class/kgsl/kgsl-3d0/idle_timer",
++      "Values": [
++        "10000",
++        "58"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWHystTriggerCount",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/bw_hwmon/hyst_trigger_count",
++      "Values": [
++        "0",
++        "3"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWHistMemory",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/bw_hwmon/hist_memory",
++      "Values": [
++        "0",
++        "20"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWHystLength",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/bw_hwmon/hyst_length",
++      "Values": [
++        "0",
++        "10"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "CPUBWMinFreq",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-llcc-bw/min_freq",
++      "Values": [
++        "12298",
++        "9155",
++        "4577"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "LLCCBWMinFreq",
++      "Path": "/sys/class/devfreq/soc:qcom,cpu-llcc-ddr-bw/min_freq",
++      "Values": [
++        "6515",
++        "3879",
++        "762"
++      ],
++      "ResetOnInit": true
++    },
++    {
++      "Name": "DisplayWakeup",
++      "Path": "/sys/devices/platform/soc/ae00000.qcom,mdss_mdp/drm/card0/sde-crtc-0/early_wakeup",
++      "Values": [
++        "1",
++        "0"
++      ]
++    },
++    {
++      "Name": "PowerHALMainState",
++      "Path": "vendor.powerhal.state",
++      "Values": [
++        "SUSTAINED_PERFORMANCE",
++        ""
++      ],
++      "Type": "Property"
++    },
++    {
++      "Name": "PowerHALRenderingState",
++      "Path": "vendor.powerhal.rendering",
++      "Values": [
++        "EXPENSIVE_RENDERING",
++        ""
++      ],
++      "Type": "Property"
++    },
++    {
++      "Name": "DoubleTapToWake",
++      "Path": "/proc/touchpanel/double_tap_enable",
++      "Values": [
++        "1",
++        "0"
++      ]
++    }
++  ],
++  "Actions": [
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "PowerHALMainState",
++      "Duration": 0,
++      "Value": "SUSTAINED_PERFORMANCE"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "CPUBigClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1651200"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "CPUBigPlusClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1516800"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "CPULittleClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1516800"
++    },
++    {
++      "PowerHint": "SUSTAINED_PERFORMANCE",
++      "Node": "GPUMaxFreq",
++      "Duration": 0,
++      "Value": "550000000"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBigClusterMinFreq",
++      "Duration": 0,
++      "Value": "1228800"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBigPlusClusterMinFreq",
++      "Duration": 0,
++      "Value": "1324800"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPULittleClusterMinFreq",
++      "Duration": 0,
++      "Value": "9999999"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "UclampTAMin",
++      "Duration": 0,
++      "Value": "25"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "UclampTALatency",
++      "Duration": 0,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedPreferSpread",
++      "Duration": 0,
++      "Value": "3"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedBusyHystNs",
++      "Duration": 0,
++      "Value": "99000000"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedBusyHystEnableCPUs",
++      "Duration": 0,
++      "Value": "255"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedMinTaskUtilForBoost",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "SchedMinTaskUtilForColoc",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWHystTriggerCount",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWHystLength",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWHistMemory",
++      "Duration": 0,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "CPUBWMinFreq",
++      "Duration": 0,
++      "Value": "9155"
++    },
++    {
++      "PowerHint": "INTERACTION",
++      "Node": "LLCCBWMinFreq",
++      "Duration": 0,
++      "Value": "3879"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPULittleClusterUpRateLimit",
++      "Duration": 0,
++      "Value": "500"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPULittleClusterDownRateLimit",
++      "Duration": 0,
++      "Value": "20000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigClusterUpRateLimit",
++      "Duration": 0,
++      "Value": "500"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigClusterDownRateLimit",
++      "Duration": 0,
++      "Value": "10000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigPlusClusterUpRateLimit",
++      "Duration": 0,
++      "Value": "500"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "CPUBigPlusClusterDownRateLimit",
++      "Duration": 0,
++      "Value": "5000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "SchedBusyHystNs",
++      "Duration": 0,
++      "Value": "3000000"
++    },
++    {
++      "PowerHint": "INTERACTIVE",
++      "Node": "SchedBusyHystEnableCPUs",
++      "Duration": 0,
++      "Value": "15"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBigClusterMinFreq",
++      "Duration": 3000,
++      "Value": "9999999"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPULittleClusterMinFreq",
++      "Duration": 3000,
++      "Value": "9999999"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "UclampTAMin",
++      "Duration": 3000,
++      "Value": "50"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "UclampFGMin",
++      "Duration": 3000,
++      "Value": "50"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWHystTriggerCount",
++      "Duration": 3000,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWHystLength",
++      "Duration": 3000,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWHistMemory",
++      "Duration": 3000,
++      "Value": "0"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "CPUBWMinFreq",
++      "Duration": 3000,
++      "Value": "12298"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "GPUForceClkOn",
++      "Duration": 3000,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "GPUForceRailOn",
++      "Duration": 3000,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "GPUIdleTimer",
++      "Duration": 3000,
++      "Value": "10000"
++    },
++    {
++      "PowerHint": "LAUNCH",
++      "Node": "LLCCBWMinFreq",
++      "Duration": 3000,
++      "Value": "6515"
++    },
++    {
++      "PowerHint": "EXPENSIVE_RENDERING",
++      "Node": "PowerHALRenderingState",
++      "Duration": 0,
++      "Value": "EXPENSIVE_RENDERING"
++    },
++    {
++      "PowerHint": "EXPENSIVE_RENDERING",
++      "Node": "GPUMinFreq",
++      "Duration": 0,
++      "Value": "550000000"
++    },
++    {
++      "PowerHint": "DISPLAY_UPDATE_IMMINENT",
++      "Node": "DisplayWakeup",
++      "Duration": 60,
++      "Value": "1"
++    },
++    {
++      "PowerHint": "Flipendo",
++      "Node": "CPULittleClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1516800"
++    },
++    {
++      "PowerHint": "Flipendo",
++      "Node": "CPUBigClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1651200"
++    },
++    {
++      "PowerHint": "Flipendo",
++      "Node": "CPUBigPlusClusterMaxFreq",
++      "Duration": 0,
++      "Value": "1516800"
++    },
++    {
++      "PowerHint": "DOUBLE_TAP_TO_WAKE",
++      "Node": "DoubleTapToWake",
++      "Duration": 0,
++      "Value": "1"
++    }
++  ]
++}
+diff --git a/init/init.oplus.rc b/init/init.oplus.rc
+index 4a40471..0ee2aa8 100644
+--- a/init/init.oplus.rc
++++ b/init/init.oplus.rc
+@@ -67,6 +67,9 @@ on property:sys.boot_completed=1
+     copy /vendor/etc/oplus_Widevine_licenses.pfm /mnt/vendor/persist/data/pfm/licenses/oplus_Widevine_licenses.pfm
+     chown system system /mnt/vendor/persist/data/pfm/licenses/oplus_Widevine_licenses.pfm
+ 
++    # Enable PowerHAL hint processing
++    setprop vendor.powerhal.init 1
++
+ on property:vendor.post_boot.parsed=1
+     # IRQ Tuning
+     # IRQ 243: msm_drm
+@@ -84,3 +87,6 @@ service oplus_sensor_fb /odm/bin/oplus_sensor_fb
+     group system
+     class late_start
+     oneshot
++
++on init
++    setprop vendor.powerhal.config powerhint_${ro.boot.product.vendor.sku}.json
+diff --git a/init/init.qcom.rc b/init/init.qcom.rc
+index f5984b1..245618a 100644
+--- a/init/init.qcom.rc
++++ b/init/init.qcom.rc
+@@ -208,12 +208,6 @@ on post-fs-data
+     # Create directory used by display clients
+     mkdir /data/vendor/display 0770 system graphics
+ 
+-    # Change lm related dirs
+-    mkdir /data/vendor/lm 0700 root root
+-
+-    # Create directory used by powermodule
+-    mkdir /data/vendor/pwr 0700 root root
+-
+     # Create directory used by media clients
+     mkdir /data/vendor/media 0770 mediacodec media
+ 
+@@ -306,16 +300,8 @@ on post-fs-data
+     mkdir /data/vendor/fm 0770 system system
+     chmod 0770 /data/vendor/fm
+ 
+-    #Create PERFD deamon related dirs
+-    mkdir /data/vendor/perfd 0770 root system
+-    chmod 2770 /data/vendor/perfd
+-    rm /data/vendor/perfd/default_values
+-
+     mkdir /data/vendor/secure_element 0777 system system
+ 
+-    #Create IOP  deamon related dirs
+-    mkdir /data/vendor/iop 0700 root system
+-
+     # Mark the copy complete flag to not completed
+     write /data/vendor/radio/copy_complete 0
+     chown radio radio /data/vendor/radio/copy_complete
+@@ -367,13 +353,6 @@ service nqnfcinfo /system/vendor/bin/nqnfcinfo
+     user system
+     oneshot
+ 
+-service iop /system/vendor/bin/iop
+-    class main
+-    user root
+-    group root
+-    disabled
+-    socket iop seqpacket 0666 root system
+-
+ service qcomsysd /system/vendor/bin/qcom-system-daemon
+     class main
+     user root
+diff --git a/proprietary-files.txt b/proprietary-files.txt
+index 5e8efd7..786a60f 100644
+--- a/proprietary-files.txt
++++ b/proprietary-files.txt
+@@ -370,6 +370,7 @@ vendor/lib/libkcl.so
+ vendor/lib/libkernelmanager.so
+ vendor/lib/libllvm-glnext.so
+ vendor/lib/libllvm-qcom.so
++vendor/lib/vendor.qti.qspmhal@1.0.so
+ vendor/lib64/egl/eglSubDriverAndroid.so
+ vendor/lib64/egl/libEGL_adreno.so;SYMLINK=vendor/lib64/libEGL_adreno.so
+ vendor/lib64/egl/libGLESv1_CM_adreno.so
+@@ -389,6 +390,7 @@ vendor/lib64/libkcl.so
+ vendor/lib64/libkernelmanager.so
+ vendor/lib64/libllvm-glnext.so
+ vendor/lib64/libllvm-qcom.so
++vendor/lib64/vendor.qti.qspmhal@1.0.so
+ 
+ # Graphics (Vulkan)
+ vendor/lib/hw/vulkan.adreno.so
+@@ -636,39 +638,12 @@ vendor/lib64/libmmosal.so;MODULE_SUFFIX=_vendor
+ # Native public libraries
+ vendor/etc/public.libraries.txt
+ 
+-# PASR
+-vendor/lib/vendor.qti.memory.pasrmanager@1.0.so
+-vendor/lib/vendor.qti.memory.pasrmanager@1.1.so
+-vendor/lib64/vendor.qti.memory.pasrmanager@1.0.so
+-vendor/lib64/vendor.qti.memory.pasrmanager@1.1.so
+-
+ # Peripheral manager
+ vendor/bin/pm-proxy
+ vendor/bin/pm-service
+ vendor/lib64/libperipheral_client.so
+ vendor/lib64/libspcom.so
+ 
+-# Perf
+-vendor/bin/hw/vendor.qti.hardware.perf@2.2-service
+-vendor/etc/init/vendor.qti.hardware.perf@2.2-service.rc
+-vendor/etc/perf/commonresourceconfigs.xml
+-vendor/etc/perf/commonsysnodesconfigs.xml
+-vendor/etc/perf/perfboostsconfig.xml
+-vendor/etc/perf/perfconfigstore.xml
+-vendor/etc/perf/targetconfig.xml
+-vendor/etc/perf/targetresourceconfigs.xml
+-vendor/lib/libperfconfig.so
+-vendor/lib/libperfgluelayer.so
+-vendor/lib/libperfioctl.so
+-vendor/lib/libqti-perfd-client.so
+-vendor/lib/libqti-perfd.so
+-vendor/lib/libqti-util.so
+-vendor/lib64/libperfconfig.so
+-vendor/lib64/libperfgluelayer.so
+-vendor/lib64/libperfioctl.so
+-vendor/lib64/libqti-perfd-client.so
+-vendor/lib64/libqti-perfd.so
+-vendor/lib64/libqti-util.so
+ 
+ # Power-off alarm (system) - from LE2125 13.1.0.593(EX01)
+ product/app/PowerOffAlarm/PowerOffAlarm.apk|5928b0a09b559a33f08ad2f04603a5c70fd3493b|c8e09ecd9ca2c4b093f0ed4b1ee31f6a7911fcff
+@@ -728,14 +703,6 @@ vendor/lib64/libqmi_encdec.so
+ vendor/lib64/libqmi_legacy.so
+ vendor/lib64/libqmiservices.so
+ 
+-# QSPM
+-vendor/bin/vendor.qti.qspmhal@1.0-service
+-vendor/etc/init/vendor.qti.qspmhal@1.0-service.rc
+-vendor/etc/seccomp_policy/qspm.policy
+-vendor/lib/vendor.qti.qspmhal@1.0.so
+-vendor/lib64/vendor.qti.qspmhal@1.0-impl.so
+-vendor/lib64/vendor.qti.qspmhal@1.0.so
+-
+ # RIL
+ odm/lib64/lib-virtual-modem-protos.so
+ odm/lib64/libcommcenterfw.so
+diff --git a/vintf/manifest.xml b/vintf/manifest.xml
+index e245d1d..b424b1a 100644
+--- a/vintf/manifest.xml
++++ b/vintf/manifest.xml
+@@ -258,15 +258,6 @@
+             <instance>MwqemAdapter</instance>
+         </interface>
+     </hal>
+-    <hal format="hidl">
+-        <name>vendor.qti.hardware.perf</name>
+-        <transport>hwbinder</transport>
+-        <version>2.2</version>
+-        <interface>
+-            <name>IPerf</name>
+-            <instance>default</instance>
+-        </interface>
+-    </hal>
+     <hal format="hidl">
+         <name>vendor.qti.hardware.qconfig</name>
+         <transport>hwbinder</transport>
+@@ -481,13 +472,4 @@
+             <instance>imsrtpservice</instance>
+         </interface>
+     </hal>
+-    <hal format="hidl">
+-        <name>vendor.qti.qspmhal</name>
+-        <transport>hwbinder</transport>
+-        <version>1.0</version>
+-        <interface>
+-            <name>IQspmhal</name>
+-            <instance>default</instance>
+-        </interface>
+-    </hal>
+ </manifest>
