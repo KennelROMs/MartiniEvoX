@@ -86,9 +86,10 @@ class RebuildTests(unittest.TestCase):
         self.profile = {
             "baseline": "baselines/base.json", "manifest": "manifests/locked/test.xml",
             "patch_series": "patches/series.json", "source_restores": ["sources/settings-google.json"],
-            "lunch": "lineage_martini-cp2a-userdebug", "target": "evolution",
+            "lunch": "lineage_martini-cp2a-userdebug",
             "environment": {"EVO_KEEP_TARGET_FILES": "true"},
-            "kernel_variants": {"normal": {}, "ksu": {"MARTINI_KSU": "true"}},
+            "kernel_variants": {"normal": {"environment": {}, "target": "evolution"},
+                                "ksu": {"environment": {"MARTINI_KSU": "true"}, "target": "bootimage"}},
         }
         manifest = ET.Element("manifest")
         for name, head in self.heads.items():
@@ -244,7 +245,11 @@ class RebuildTests(unittest.TestCase):
             ' DEFAULT_SYSTEM_DEV_CERTIFICATE) printf "%s\\n" vendor/evolution-priv/keys/testkey;;\n'
             ' LINEAGE_VERSION) printf "%s\\n" synthetic-build;;\n'
             ' esac\n}\n'
-            'm() { printf "MARTINI_KSU=%s\\n" "${MARTINI_KSU-unset}"; return 23; }\n')
+            'm() {\n'
+            ' printf "MARTINI_KSU=%s target=%s\\n" "${MARTINI_KSU-unset}" "$1"\n'
+            ' [ -n "$FAKE_BOOT_OK" ] || return 23\n'
+            ' mkdir -p "$OUT_DIR/target/product/martini"\n'
+            ' printf boot > "$OUT_DIR/target/product/martini/boot.img"\n}\n')
         return (self.control / self.profile["manifest"]).read_bytes()
 
     @unittest.skipUnless(shutil.which("openssl"), "public certificate parsing needs openssl")
@@ -262,12 +267,18 @@ class RebuildTests(unittest.TestCase):
 
         self.assertEqual(build("ksu"), 23)
         run = next((self.source / "artifacts").iterdir())
-        self.assertIn("MARTINI_KSU=true", (run / "build.log").read_text())
+        self.assertIn("MARTINI_KSU=true target=bootimage", (run / "build.log").read_text())
         self.assertEqual(json.loads((run / "result.json").read_text())["kernel"], "ksu")
         # A normal build must not reuse (and silently mix into) the KSU OUT.
         self.assertEqual(build("normal"), 1)
         self.assertEqual(len(list((self.source / "artifacts").iterdir())), 1)
         self.assertEqual(build("unknown"), 1)
+        # A successful KSU variant archives only its boot.img, named after the ROM version.
+        with mock.patch.dict(os.environ, {"FAKE_BOOT_OK": "1"}):
+            self.assertEqual(build("ksu"), 0)
+        result = [json.loads(r.read_text()) for r in (self.source / "artifacts").glob("*/result.json")]
+        done = [r for r in result if r["status"] == "BUILT_AND_ARCHIVED_UNVALIDATED"]
+        self.assertEqual([list(r["artifacts"]) for r in done], [["synthetic-build-ksu-boot.img"]])
 
     def test_update_undoes_only_recorded_changes_before_resync(self):
         self.workspace().prepare()
@@ -354,6 +365,29 @@ class RebuildTests(unittest.TestCase):
         self.assertEqual([c[1] for c in calls], ["init", "sync"])
         self.assertIn("--git-lfs", calls[0])
         self.assertEqual(fingerprint(bundle), bundle_before)
+
+    def test_init_without_source_restore_needs_no_bundle(self):
+        self.profile["source_restores"] = []
+        write_json(self.control / "profiles/martini.json", self.profile)
+        self.series["patches"] = self.series["patches"][:1]
+        write_json(self.control / "patches/series.json", self.series)
+        self.commit_control()
+        new_source = self.root / "fresh-source"
+        calls, original_run = [], rebuild.run
+
+        def repo_only(command, **kwargs):
+            if command[0] != "repo":
+                return original_run(command, **kwargs)
+            calls.append(command)
+            return b""
+
+        with mock.patch.object(rebuild, "run", side_effect=repo_only), \
+             contextlib.redirect_stdout(io.StringIO()):
+            rebuild.Rebuild(self.control, new_source).init()
+        self.assertEqual([c[:2] for c in calls], [["repo", "init"], ["repo", "sync"]])
+        self.assertFalse((new_source / ".martini-cache").exists())
+        # Without the external entry, prepare needs no --settings-patch either.
+        rebuild.Rebuild(self.control, self.source).patches()
 
     def test_build_source_mapping_rejects_changed_revision(self):
         self.workspace().prepare()

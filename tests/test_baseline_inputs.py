@@ -18,11 +18,10 @@ ROOT = Path(__file__).resolve().parents[1]
 BASELINE = "baselines/20260930-a8114027.json"
 MANIFEST = "manifests/locked/martini-20260930.xml"
 # Active inputs derived from the historical candidate lock above.
-ACTIVE_BASELINE = "baselines/20261001-pixel.json"
-ACTIVE_MANIFEST = "manifests/locked/martini-20261001-pixel.xml"
+# The active lock moves with every upstream refresh; the profile names it.
 KSU_KERNEL = "kernel/oneplus/sm8350-ksu"
 KSU_SOURCE = "external/KernelSU-Next"
-KSU_REVISION = "cd739c78802333455391df973db17d9f28328b83"
+KSU_PATCH = "patches/ksu/0001-martini-ksu-kernel-variant.patch"
 SERIES = "patches/series.json"
 SOURCE = "sources/settings-google.json"
 SETTINGS_PATCH_BYTES = 1357
@@ -158,42 +157,56 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertEqual(sum(c[1][0] == "linkfile" for c in children), 25)
         self.assertEqual(fingerprint(children), FINGERPRINTS["ordered_copy_link_records"])
 
-    def test_patch_bytes_order_and_base_heads_match_candidate(self):
-        baseline = self.load_json(BASELINE)
-        series = self.load_json(SERIES)
-        self.assertEqual(baseline["repo_heads"], HEADS)
-        self.assertEqual(series["baseline"], ACTIVE_BASELINE)
-        active = self.load_json(ACTIVE_BASELINE)["repo_heads"]
-        projects = ET.fromstring(self.required_file(ACTIVE_MANIFEST).read_bytes()).findall("project")
+    def active(self):
+        profile = self.load_json("profiles/martini.json")
+        baseline = self.load_json(profile["baseline"])
+        root = ET.fromstring(self.required_file(profile["manifest"]).read_bytes())
+        projects = {p.get("path", p.get("name")): p for p in root.findall("project")}
+        return profile, baseline, projects
+
+    def test_historical_candidate_patch_set(self):
+        self.assertEqual(self.load_json(BASELINE)["repo_heads"], HEADS)
+        projects = ET.fromstring(self.required_file(MANIFEST).read_bytes()).findall("project")
         revisions = {p.get("path", p.get("name")): p.get("revision") for p in projects}
         for repo, revision in HEADS.items():
             self.assertEqual(revisions[repo], revision)
-            self.assertEqual(active[repo], revision)
-        for entry in series["patches"]:
-            self.assertEqual(entry["base_revision"], active[entry["repo"]])
-            self.assertEqual(entry["base_revision"], revisions[entry["repo"]])
-        expected = []
         for name, repo, patch, digest in PATCHES:
-            entry = {"id": name, "repo": repo, "base_revision": HEADS[repo], "sha256": digest}
-            if patch is None:
-                entry.update(external_input="settings_google_patch", bytes=SETTINGS_PATCH_BYTES)
-            else:
-                entry["patch"] = patch
-            expected.append(entry)
-        # The candidate's patch set stays first and unchanged; later work only appends.
-        self.assertEqual(series["patches"][:len(expected)], expected)
-        source = self.load_json(SOURCE)
+            if patch is not None:
+                self.assertEqual(sha256(self.required_file(patch).read_bytes()), digest, name)
+
+    def test_active_series_matches_active_lock(self):
+        profile, baseline, projects = self.active()
+        series = self.load_json(SERIES)
+        self.assertEqual(series["baseline"], profile["baseline"])
         for entry in series["patches"]:
             self.relative_path(entry["repo"])
-            if "patch" in entry:
-                self.assertEqual(sha256(self.required_file(entry["patch"]).read_bytes()), entry["sha256"])
-            else:
-                external = source["external_inputs"][entry["external_input"]]
-                self.assertEqual(external["type"], "git-diff")
-                self.assertEqual(external["sha256"], entry["sha256"])
-                self.assertEqual(external["bytes"], entry["bytes"])
-                self.assertIs(external["included"], False)
-                self.assertEqual(source["status"], "BLOCKED")
+            self.assertEqual(entry["base_revision"], baseline["repo_heads"][entry["repo"]])
+            self.assertEqual(entry["base_revision"], projects[entry["repo"]].get("revision"))
+            self.assertEqual(sha256(self.required_file(entry["patch"]).read_bytes()), entry["sha256"])
+        # SettingsGoogle's collector fix is upstream now; no external input remains.
+        self.assertEqual(profile["source_restores"], [])
+        self.assertFalse([e for e in series["patches"] if "external_input" in e])
+        # Retained candidate patches (all but the historical Settings diff) keep their bytes.
+        retained = {name: digest for name, _, patch, digest in PATCHES if patch}
+        active = {e["id"]: e["sha256"] for e in series["patches"]}
+        self.assertEqual({k: active.get(k) for k in retained}, retained)
+
+    def test_active_lock_comes_from_upstream_refresh(self):
+        profile, baseline, projects = self.active()
+        raw = self.required_file(profile["manifest"]).read_bytes()
+        self.assertEqual(baseline["manifest"]["portable"],
+                         {"path": profile["manifest"], "bytes": len(raw), "sha256": sha256(raw)})
+        self.assertEqual(baseline["manifest"]["project_count"], len(projects))
+        local = baseline["source"]["local_manifest"]
+        # Editing manifests/martini.xml requires a new refresh.
+        self.assertEqual(sha256(self.required_file(local["path"]).read_bytes()), local["sha256"])
+        self.assertRegex(baseline["source"]["commit"], r"^[0-9a-f]{40}$")
+        for path in [p.get("path") for p in ET.parse(ROOT / local["path"]).getroot().findall("project")]:
+            self.assertIn(path, projects)
+        for path, project in projects.items():
+            self.assertRegex(project.get("revision"), r"^[0-9a-f]{40}$", path)
+            if project.get("remote") == "evo":
+                self.assertEqual(project.get("clone-depth"), "1", path)
 
     def test_diffs_use_git_apply_without_reexport_or_commits(self):
         series = self.load_json(SERIES)
@@ -252,24 +265,19 @@ class TestBaselineInputs(unittest.TestCase):
     def test_profile_uses_locked_inputs_and_normal_build_rules(self):
         profile = self.load_json("profiles/martini.json")
         self.assertEqual(profile["device"], "martini")
-        for key, path in {"baseline": ACTIVE_BASELINE, "manifest": ACTIVE_MANIFEST,
-                          "patch_series": SERIES}.items():
-            self.assertEqual(profile[key], path)
-            self.required_file(path)
-        self.assertEqual(profile["source_restores"], [SOURCE])
-        self.required_file(SOURCE)
+        for key in ("baseline", "manifest", "patch_series"):
+            self.required_file(profile[key])
         self.assertEqual(profile["lunch"], "lineage_martini-cp2a-userdebug")
-        self.assertEqual(profile["target"], "evolution")
         self.assertEqual(profile["environment"], {"EVO_KEEP_TARGET_FILES": "true"})
-        self.assertEqual(profile["kernel_variants"], {"normal": {}, "ksu": {"MARTINI_KSU": "true"}})
+        self.assertEqual(profile["kernel_variants"], {
+            "normal": {"environment": {}, "target": "evolution"},
+            "ksu": {"environment": {"MARTINI_KSU": "true"}, "target": "bootimage"}})
         self.assertEqual(profile["erofs_partitions"], ["odm", "product", "system", "system_ext", "vendor", "vendor_dlkm"])
         self.assertEqual(profile["prebuild"], {
-            "required_inputs": ["locked-manifest", "base-revisions", "patch-sha256", "source-restores"],
+            "required_inputs": ["locked-manifest", "base-revisions", "patch-sha256"],
             "requires_existing_out": False, "requires_historical_artifacts": False,
         })
-        self.assertEqual(profile["independent_rebuild"], {
-            "status": "BLOCKED", "blockers": [SOURCE], "full_rom_rebuild_tested": False,
-        })
+        self.assertEqual(profile["independent_rebuild"]["blockers"], [])
         self.assertNotIn("manifests/martini.xml", json.dumps(profile))
 
     def check_derivation(self, baseline):
@@ -312,22 +320,23 @@ class TestBaselineInputs(unittest.TestCase):
     def test_derived_locks_only_apply_documented_operations(self):
         derived = [path for path in sorted((ROOT / "baselines").glob("*.json"))
                    if "derived_from" in json.loads(path.read_text())]
-        self.assertIn(ROOT / ACTIVE_BASELINE, derived)
         for path in derived:
             with self.subTest(baseline=path.name):
                 self.check_derivation(json.loads(path.read_text()))
 
     def test_ksu_sources_in_active_lock(self):
-        projects = {p.get("path", p.get("name")): p for p in
-                    ET.fromstring(self.required_file(ACTIVE_MANIFEST).read_bytes()).findall("project")}
+        _, baseline, projects = self.active()
         kernel, ksu = projects["kernel/oneplus/sm8350"], projects[KSU_KERNEL]
         self.assertEqual((ksu.get("name"), ksu.get("revision")), (kernel.get("name"), kernel.get("revision")))
         source = projects[KSU_SOURCE]
-        self.assertEqual((source.get("revision"), source.get("upstream")), (KSU_REVISION, "refs/heads/legacy"))
         # Kbuild runs "git fetch --unshallow" on shallow checkouts; keep the full history.
         self.assertIsNone(source.get("clone-depth"))
-        variant = self.load_json(ACTIVE_BASELINE)["kernel"]["variants"]["ksu"]
-        self.assertEqual((variant["repo"], variant["kernelsu_next"]["revision"]), (KSU_KERNEL, KSU_REVISION))
+        variant = baseline["kernel"]["variants"]["ksu"]
+        pins = variant["kernelsu_next"]
+        self.assertEqual((variant["repo"], pins["revision"]), (KSU_KERNEL, source.get("revision")))
+        # Repo syncs without tags, so the KSU switch pins the version Kbuild would derive.
+        self.assertIn(f"KSU_VERSION_OVERRIDE={pins['version']} KSU_VERSION_TAG_OVERRIDE={pins['version_tag']}",
+                      self.required_file(KSU_PATCH).read_text())
 
     def test_source_descriptor_is_explicitly_external_and_blocked(self):
         source = self.load_json(SOURCE)
@@ -364,8 +373,8 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertFalse(list((ROOT / "sources").rglob("*.bundle")))
 
     def test_new_json_is_host_independent(self):
-        for relative in (BASELINE, "baselines/20261001.json", ACTIVE_BASELINE,
-                         "profiles/martini.json", SERIES, SOURCE):
+        for relative in [BASELINE, "profiles/martini.json", SERIES, SOURCE] + sorted(
+                str(p.relative_to(ROOT)) for p in (ROOT / "baselines").glob("2026100*.json")):
             text = self.required_file(relative).read_text()
             self.load_json(relative)
             self.assertNotRegex(text, r"/(?:home|Users|tmp|mnt)/")

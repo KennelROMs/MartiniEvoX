@@ -136,12 +136,14 @@ class Rebuild:
         self.profile = read_json(self.control / "profiles/martini.json")
         self.baseline = read_json(child(self.control, self.profile["baseline"]))
         self.series = read_json(child(self.control, self.profile["patch_series"]))
-        self.restore_path = self.profile["source_restores"][0]
-        self.restore = read_json(child(self.control, self.restore_path))
+        # Optional external source restore (the historical SettingsGoogle bundle).
+        restores = self.profile.get("source_restores", [])
+        self.restore_path = restores[0] if restores else None
+        self.restore = read_json(child(self.control, self.restore_path)) if restores else None
         self.manifest = child(self.control, self.profile["manifest"])
         self.locked = projects(self.manifest.read_bytes())
         if (self.profile["lunch"] != "lineage_martini-cp2a-userdebug"
-                or self.profile["target"] != "evolution"
+                or self.profile["kernel_variants"]["normal"]["target"] != "evolution"
                 or self.profile["environment"].get("EVO_KEEP_TARGET_FILES") != "true"):
             raise RebuildError("Only the pinned martini profile is supported")
         if kernel not in self.profile["kernel_variants"]:
@@ -151,7 +153,8 @@ class Rebuild:
         patches = []
         for entry in self.series["patches"]:
             if "external_input" in entry:
-                if entry["external_input"] != "settings_google_patch" or not self.settings_patch:
+                if (entry["external_input"] != "settings_google_patch" or not self.settings_patch
+                        or not self.restore):
                     raise RebuildError("prepare/build require explicit --settings-patch FILE")
                 path = self.settings_patch
                 verify_file(path, self.restore["external_inputs"]["settings_google_patch"])
@@ -170,7 +173,9 @@ class Rebuild:
     def input_hashes(self):
         verify_file(self.manifest, self.baseline["manifest"]["portable"])
         paths = ["profiles/martini.json", self.profile["baseline"], self.profile["manifest"],
-                 self.profile["patch_series"], self.restore_path, "certificates/release-info.json"]
+                 self.profile["patch_series"], "certificates/release-info.json"]
+        if self.restore_path:
+            paths.append(self.restore_path)
         inputs = {path: fingerprint(child(self.control, path)) for path in paths}
         inputs["tools/rebuild.py"] = fingerprint(Path(__file__).resolve())
         for entry, path in self.patches():
@@ -208,38 +213,44 @@ class Rebuild:
         self.clean(self.control)
         commit = git(self.control, "rev-parse", "HEAD").decode().strip()
         verify_file(self.manifest, self.baseline["manifest"]["portable"])
-        if not self.bundle:
-            raise RebuildError("init requires explicit --source-bundle FILE from an authorized holder")
-        verify_file(self.bundle, self.restore["external_inputs"]["settings_google_bundle"])
-        project = self.locked[self.restore["repo"]]
-        base, upstream = project["revision"], project["upstream"]
-        if base != self.restore["base_revision"] or not upstream.startswith("refs/heads/"):
-            raise RebuildError("Settings base/upstream is not the expected pinned branch")
+        if self.restore:
+            if not self.bundle:
+                raise RebuildError("init requires explicit --source-bundle FILE from an authorized holder")
+            verify_file(self.bundle, self.restore["external_inputs"]["settings_google_bundle"])
+            project = self.locked[self.restore["repo"]]
+            base, upstream = project["revision"], project["upstream"]
+            if base != self.restore["base_revision"] or not upstream.startswith("refs/heads/"):
+                raise RebuildError("Settings base/upstream is not the expected pinned branch")
         self.source.mkdir(parents=True, exist_ok=True, mode=0o700)
         with workspace_lock(self.source):
             if any(self.source.iterdir()):
                 raise RebuildError("SOURCE became nonempty; refusing init")
-            cache = self.source / ".martini-cache"
-            cache.mkdir(mode=0o700)
-            mirror = child(cache, project["name"] + ".git")
-            mirror.parent.mkdir(parents=True, exist_ok=True)
-            run(["git", "-c", "core.hooksPath=/dev/null", "clone", "--mirror", "--template=",
-                 self.bundle, mirror])
-            git(mirror, "cat-file", "-e", base + "^{commit}")
-            git(mirror, "update-ref", upstream, base)
+            if self.restore:
+                cache = self.source / ".martini-cache"
+                cache.mkdir(mode=0o700)
+                mirror = child(cache, project["name"] + ".git")
+                mirror.parent.mkdir(parents=True, exist_ok=True)
+                run(["git", "-c", "core.hooksPath=/dev/null", "clone", "--mirror", "--template=",
+                     self.bundle, mirror])
+                git(mirror, "cat-file", "-e", base + "^{commit}")
+                git(mirror, "update-ref", upstream, base)
             run(["repo", "init", "-u", self.control, "-b", commit, "-m",
                  self.profile["manifest"], "--git-lfs"], cwd=self.source, stdout=None)
-            local = ET.Element("manifest")
-            ET.SubElement(local, "remote", name="martini-settings-local", fetch=cache.as_uri())
-            ET.SubElement(local, "extend-project", name=project["name"], path=self.restore["repo"],
-                          remote="martini-settings-local")
-            directory = self.source / ".repo/local_manifests"
-            directory.mkdir(parents=True, exist_ok=True)
-            with (directory / "martini-settings.xml").open("xb") as stream:
-                stream.write(ET.tostring(local, encoding="utf-8", xml_declaration=True))
+            if self.restore:
+                self.install_settings_mirror(cache, project)
             run(["repo", "sync", "-c", "--no-clone-bundle", "--no-tags"],
                 cwd=self.source, stdout=None)
         print(f"Initialized pinned SOURCE: {self.source}")
+
+    def install_settings_mirror(self, cache, project):
+        local = ET.Element("manifest")
+        ET.SubElement(local, "remote", name="martini-settings-local", fetch=cache.as_uri())
+        ET.SubElement(local, "extend-project", name=project["name"], path=self.restore["repo"],
+                      remote="martini-settings-local")
+        directory = self.source / ".repo/local_manifests"
+        directory.mkdir(parents=True, exist_ok=True)
+        with (directory / "martini-settings.xml").open("xb") as stream:
+            stream.write(ET.tostring(local, encoding="utf-8", xml_declaration=True))
 
     def update(self):
         # Move a prepared SOURCE to the current CONTROL commit. Only changes proven
@@ -350,7 +361,8 @@ class Rebuild:
                       "validation": "Not performed: APK keyset, native signatures, first boot and OTA"}
             try:
                 env = environment()
-                env.update(self.profile["environment"], **self.profile["kernel_variants"][self.kernel])
+                variant = self.profile["kernel_variants"][self.kernel]
+                env.update(self.profile["environment"], **variant["environment"])
                 env.update(OUT_DIR=str(self.out), EVO_KEEP_TARGET_FILES="true")
                 self.out.mkdir(parents=True, exist_ok=True)
                 marker.write_text(self.kernel + "\n")
@@ -358,7 +370,8 @@ class Rebuild:
                     try:
                         run(["bash", "--noprofile", "--norc", "-c", BUILD_SHELL, "martini-build",
                              self.profile["lunch"], self.out, directory, keys,
-                             release["certificate_der_sha256"] if self.signing == "release" else ""],
+                             release["certificate_der_sha256"] if self.signing == "release" else "",
+                             variant["target"]],
                             cwd=self.source, stdout=log, env=env)
                     except subprocess.CalledProcessError as exc:
                         result["build_exit_code"] = exc.returncode
@@ -366,18 +379,16 @@ class Rebuild:
                 result["build_exit_code"] = 0
                 version = (directory / "lineage-version.txt").read_text().strip()
                 product = self.out / "target/product/martini"
-                package = product / (version + ".zip")
-                target_files = product / "obj/PACKAGING/target_files_intermediates/lineage_martini-target_files"
-                if not package.is_file() or not package.stat().st_size:
-                    raise RebuildError(f"Actual LINEAGE_VERSION ZIP is missing: {package}")
-                for name in ("META", "IMAGES"):
-                    if not (target_files / name).is_dir() or not any((target_files / name).iterdir()):
-                        raise RebuildError(f"Original target-files {name} is missing: {target_files}")
-                shutil.copyfile(package, directory / package.name)
-                archive = directory / "target-files.tar.zst"
-                run(["tar", "--zstd", "-cf", archive, "-C", target_files, "."])
-                result["artifacts"] = {path.name: fingerprint(path)
-                                       for path in (directory / package.name, archive)}
+                if variant["target"] == "bootimage":
+                    # A kernel-only variant: its boot.img pairs with the same-commit normal ROM.
+                    boot = product / "boot.img"
+                    if not boot.is_file() or not boot.stat().st_size:
+                        raise RebuildError(f"boot.img is missing: {boot}")
+                    archived = directory / f"{version}-{self.kernel}-boot.img"
+                    shutil.copyfile(boot, archived)
+                    result["artifacts"] = {archived.name: fingerprint(archived)}
+                else:
+                    self.archive_rom(product, version, directory, result)
                 result["ota_certificate_der_sha256"] = fingerprint(directory / "ota-certificate.der")["sha256"]
                 result.update(status="BUILT_AND_ARCHIVED_UNVALIDATED", exit_code=0)
             except subprocess.CalledProcessError as exc:
@@ -387,14 +398,29 @@ class Rebuild:
                 write_json(directory / "result.json", result)
             print(f"BUILT_AND_ARCHIVED_UNVALIDATED: {directory}")
 
+    def archive_rom(self, product, version, directory, result):
+        package = product / (version + ".zip")
+        target_files = product / "obj/PACKAGING/target_files_intermediates/lineage_martini-target_files"
+        if not package.is_file() or not package.stat().st_size:
+            raise RebuildError(f"Actual LINEAGE_VERSION ZIP is missing: {package}")
+        for name in ("META", "IMAGES"):
+            if not (target_files / name).is_dir() or not any((target_files / name).iterdir()):
+                raise RebuildError(f"Original target-files {name} is missing: {target_files}")
+        shutil.copyfile(package, directory / package.name)
+        archive = directory / "target-files.tar.zst"
+        run(["tar", "--zstd", "-cf", archive, "-C", target_files, "."])
+        result["artifacts"] = {path.name: fingerprint(path)
+                               for path in (directory / package.name, archive)}
+
     def dry_run(self, command):
         print(f"DRY RUN {command}: CONTROL={self.control} SOURCE={self.source}")
         if command == "init":
-            project = self.locked[self.restore["repo"]]
-            print("Require a clean committed CONTROL and nonexistent/empty SOURCE; verify --source-bundle.")
-            print(f"Create private mirror {project['name']}.git; pin {project['upstream']} to {project['revision']}.")
+            print("Require a clean committed CONTROL and nonexistent/empty SOURCE.")
+            if self.restore:
+                project = self.locked[self.restore["repo"]]
+                print(f"Verify --source-bundle; mirror {project['name']}.git at {project['revision']}.")
             print(f"repo init -u {self.control} -b CONTROL_COMMIT -m {self.profile['manifest']} --git-lfs")
-            print("Install only Settings remote override before repo sync -c --no-clone-bundle --no-tags.")
+            print("repo sync -c --no-clone-bundle --no-tags")
         elif command == "update":
             print("Require clean committed CONTROL; verify SOURCE still equals its preparation record.")
             print("Undo only recorded changes, archive the record, then repo init -b CONTROL_COMMIT and repo sync.")
@@ -404,11 +430,11 @@ class Rebuild:
         else:
             print("Check repo manifest -r against lock, prepared hashes and clean unpatched projects.")
             variant = self.profile["kernel_variants"][self.kernel]
-            print(f"Kernel {self.kernel} {variant}; OUT_DIR={self.out} EVO_KEEP_TARGET_FILES=true")
+            print(f"Kernel {self.kernel} {variant['environment']}; OUT_DIR={self.out} EVO_KEEP_TARGET_FILES=true")
             print("Refuse an OUT already used by another kernel variant; source build/envsetup.sh")
-            print(f"lunch {self.profile['lunch']}; check DEFAULT_SYSTEM_DEV_CERTIFICATE; m evolution")
+            print(f"lunch {self.profile['lunch']}; check DEFAULT_SYSTEM_DEV_CERTIFICATE; m {variant['target']}")
             print(f"Use existing {self.source}/vendor/evolution-priv/keys, signing={self.signing}.")
-            print(f"Archive actual LINEAGE_VERSION ZIP, original target-files and records under {self.artifacts}/run-*.")
+            print(f"Archive the ZIP and original target-files (bootimage: boot.img) under {self.artifacts}/run-*.")
             print("Success means only BUILT_AND_ARCHIVED_UNVALIDATED, not native/device/OTA verification.")
 
 
@@ -444,7 +470,7 @@ case "$version" in
 esac
 printf '%s\n' "$version" > "$run_dir/lineage-version.txt"
 printf 'TARGET_KERNEL_SOURCE: %s\n' "$(get_build_var TARGET_KERNEL_SOURCE)"
-m evolution
+m "$6"
 '''
 
 

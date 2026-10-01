@@ -1,22 +1,25 @@
 {
   "schema_version": 1,
-  "id": "martini-20261001-pixel",
+  "id": "martini-20261001-upstream",
   "device": "martini",
-  "baseline": "baselines/20261001-pixel.json",
-  "manifest": "manifests/locked/martini-20261001-pixel.xml",
+  "baseline": "baselines/20261001-upstream.json",
+  "manifest": "manifests/locked/martini-20261001-upstream.xml",
   "patch_series": "patches/series.json",
-  "source_restores": [
-    "sources/settings-google.json"
-  ],
+  "source_restores": [],
   "lunch": "lineage_martini-cp2a-userdebug",
-  "target": "evolution",
   "environment": {
     "EVO_KEEP_TARGET_FILES": "true"
   },
   "kernel_variants": {
-    "normal": {},
+    "normal": {
+      "environment": {},
+      "target": "evolution"
+    },
     "ksu": {
-      "MARTINI_KSU": "true"
+      "environment": {
+        "MARTINI_KSU": "true"
+      },
+      "target": "bootimage"
     }
   },
   "erofs_partitions": [
@@ -31,17 +34,15 @@
     "required_inputs": [
       "locked-manifest",
       "base-revisions",
-      "patch-sha256",
-      "source-restores"
+      "patch-sha256"
     ],
     "requires_existing_out": false,
     "requires_historical_artifacts": false
   },
   "independent_rebuild": {
-    "status": "BLOCKED",
-    "blockers": [
-      "sources/settings-google.json"
-    ],
-    "full_rom_rebuild_tested": false
+    "status": "UNBLOCKED_PENDING_BUILD",
+    "blockers": [],
+    "full_rom_rebuild_tested": false,
+    "note": "Upstream SettingsGoogle now carries the collector fix; no external input remains."
   }
 }

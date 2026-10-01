@@ -44,16 +44,16 @@ NoPrincessHere GitLab vendor仓库。维护者已确认PixelOS使用的OnePlus�
 | vendor/oneplus/martini | 无收益 | 仅删除.lfsconfig |
 | richtap Awinic | 不适用 | martini未启用相关soong配置 |
 
-## 内核（`patches/pixelos/kernel-1-pixelos-picks.patch`，普通与KSU内核相同）
+## 内核（`patches/pixelos/kernel-1-pixelos-picks.patch`，普通与KSU内核相同，基于LineageOS 187d13c）
 
 | 项 | PixelOS提交 | 结论 |
 | --- | --- | --- |
 | SDE early_wakeup sysfs | 09e1ce8 | 集成（powerhint需要） |
 | KCAL | 04075d1 | 集成 |
 | 关闭MSM_PERFORMANCE | 42c6751 | 集成（上下文不同，手工移植） |
-| 移除PASR mem-offline（DTS+配置） | a94c059、711ce68 | 集成 |
+| 移除PASR mem-offline（DTS+配置） | a94c059、711ce68 | 已有等效：LineageOS内核187d13c已合入 |
 | AoD低亮度默认 | e456ff4 | 集成（CRLF文件，手工移植） |
-| securityfs/functionfs genfscon | e4690bd、15df180 | 集成（手工合并） |
+| securityfs/functionfs genfscon | e4690bd、15df180 | 已有等效：LineageOS内核187d13c已合入 |
 | OTG开关默认开启/可写 | 6f28a73、1b53fd0 | 不适用：Lineage内核本就可写；默认开启依赖PixelOS OEM导入中的充电实现 |
 | 整树替换PixelOS内核 | — | 不适用：另一OEM导入（2145文件），不作为可审查补丁 |
 
