@@ -37,8 +37,10 @@ python3 "$CONTROL/tools/rebuild.py" init \
   --source "$SOURCE" --source-bundle "$SETTINGS_BUNDLE"
 ```
 
-仅接受不存在或空的SOURCE，不覆盖已有树。使用
-`manifests/locked/martini-20260930.xml`，不叠加浮动的`manifests/martini.xml`。
+仅接受不存在或空的SOURCE，不覆盖已有树。使用profile指定的当前锁
+`manifests/locked/martini-20261001.xml`，不叠加浮动的`manifests/martini.xml`。
+Evolution-X会改写`cnb`分支历史，部分固定提交已不在分支上；当前锁对其全部项目
+使用`clone-depth="1"`按SHA直接获取，修订本身不变（推导见`baselines/20261001.json`）。
 Settings恢复材料在checkout前以受限本地镜像接入，提交身份不变；其余项目和LFS
 由Repo正常同步。若网络失败，保留现场，不自动清空工作区。
 
@@ -49,7 +51,9 @@ python3 "$CONTROL/tools/rebuild.py" prepare \
   --source "$SOURCE" --settings-patch "$SETTINGS_PATCH"
 ```
 
-核对基线、补丁哈希和工作树，先检查再应用：五份库内diff加一份外部Settings diff。
+核对基线、补丁哈希和工作树，先检查再应用：库内diff（含KSU内核与开关）加一份外部
+Settings diff。普通内核`kernel/oneplus/sm8350`不打补丁；KSU改动只在
+`kernel/oneplus/sm8350-ksu`这一独立checkout中。
 未知修改或部分应用时停止，不reset/clean。准备记录仅用于后续发现输入/工作树变化，
 不代替构建与实机验证。已准备的树直接进入build，不盲目重复应用补丁。
 
@@ -63,11 +67,34 @@ python3 "$CONTROL/tools/rebuild.py" build \
 
 普通目标固定为`lineage_martini-cp2a-userdebug`、`m evolution`，实际导出
 `EVO_KEEP_TARGET_FILES=true`；默认OUT为SOURCE/out，显式更改时始终使用同一路径。
+
+KernelSU Next版本在同一个已准备的SOURCE上另用一个OUT构建：
+
+```sh
+python3 "$CONTROL/tools/rebuild.py" build --kernel ksu \
+  --source "$SOURCE" --settings-patch "$SETTINGS_PATCH" \
+  --out "$OUT_KSU" --artifacts "$ARTIFACTS" --signing release
+```
+
+`--kernel ksu`只导出`MARTINI_KSU=true`：设备树据此改用`kernel/oneplus/sm8350-ksu`、
+追加`vendor/ksu.config`并固定KSU版本号（不依赖Git标签或网络）。OUT首次使用时记录
+内核变体，之后不同变体复用同一OUT会被拒绝，避免两种内核产物混合。
 构建检查实际证书绑定，保留失败退出码和日志，不把tee成功当作构建成功。
 成功后保存实际ZIP、原始target-files及构建记录到新的归档目录，不覆盖旧候选。
 
+### 更新已准备的SOURCE到新的CONTROL提交
+
+```sh
+python3 "$CONTROL/tools/rebuild.py" update --source "$SOURCE"
+python3 "$CONTROL/tools/rebuild.py" prepare --source "$SOURCE" --settings-patch "$SETTINGS_PATCH"
+```
+
+`update`先确认各已修改项目与准备记录逐字节一致，只撤销这些已记录的改动并归档记录到
+`SOURCE/.martini-history/`，再`repo init -b`当前CONTROL提交并`repo sync`。出现记录外
+的改动时停止，不reset/clean。之后重新prepare。
+
 在上述任一命令末尾加 `--dry-run` 只显示计划，不联网、建目录或运行Android代码。
-本机约27GiB可用，仅适合控制仓库工作；首次真实构建需另行确认服务器资源与窗口。
+控制机只适合控制仓库工作；构建服务器为16核/62GiB，源码约211GiB、每个OUT约170GiB。
 
 ## 验收范围
 

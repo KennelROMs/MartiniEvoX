@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "id": "martini-normal-20260930",
+  "id": "martini-20261001",
   "device": "martini",
-  "baseline": "baselines/20260930-a8114027.json",
-  "manifest": "manifests/locked/martini-20260930.xml",
+  "baseline": "baselines/20261001.json",
+  "manifest": "manifests/locked/martini-20261001.xml",
   "patch_series": "patches/series.json",
   "source_restores": [
     "sources/settings-google.json"
@@ -13,7 +13,12 @@
   "environment": {
     "EVO_KEEP_TARGET_FILES": "true"
   },
-  "kernel_profile": "normal",
+  "kernel_variants": {
+    "normal": {},
+    "ksu": {
+      "MARTINI_KSU": "true"
+    }
+  },
   "erofs_partitions": [
     "odm",
     "product",

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-01",
+  "task": "KSU-01",
+  "scope": "Standalone kernel-only compile on the build server with the Android tree's prebuilt toolchain and Lineage kernel.mk make flags. Not a ROM build, boot test or root-function test.",
+  "inputs": {
+    "kernel": "LineageOS android_kernel_oneplus_sm8350 abd4ede9ec6463110b40360a4a772e1285e995dd (5.4.302, vendor QGKI)",
+    "kernelsu_next": "KernelSU-Next/KernelSU-Next legacy cd739c78802333455391df973db17d9f28328b83 (v3.4.0-legacy)",
+    "patch": "patches/ksu/0002-kernel-kernelsu-next-manual-hooks.patch",
+    "config": "vendor/lahaina-qgki_defconfig + vendor/ksu.config; CONFIG_OPLUS_CHG_OP9RT_PMIC_VOOCPHY=y",
+    "toolchain": "prebuilts/clang/host/linux-x86/clang-r596125, LLVM=1 LLVM_IAS=1",
+    "targets": "Image modules"
+  },
+  "results": {
+    "normal_exit": 0,
+    "ksu_exit": 0,
+    "kbuild_reported": {
+      "hook_mode": "Manual",
+      "version": 33304,
+      "version_tag": "v3.4.0-legacy"
+    },
+    "kbuild_source_edits": "none; path_umount/can_umount pre-applied so the in-build sed backports did not run",
+    "ksu_config_retained": [
+      "CONFIG_KSU=y",
+      "CONFIG_KSU_MANUAL_HOOK=y",
+      "CONFIG_CFI_CLANG=y",
+      "CONFIG_LTO_CLANG=y",
+      "CONFIG_THINLTO=y",
+      "CONFIG_SHADOW_CALL_STACK=y",
+      "CONFIG_MODVERSIONS=y",
+      "CONFIG_SECURITY_SELINUX=y"
+    ],
+    "module_count": {
+      "normal": 86,
+      "ksu": 86,
+      "same_set": true
+    },
+    "module_symvers": {
+      "entries": 14611,
+      "only_normal": 0,
+      "only_ksu": 0,
+      "crc_differences": 0
+    },
+    "kernel_release": {
+      "normal": "5.4.302-qgki-gabd4ede9ec64",
+      "ksu": "5.4.302-qgki-gabd4ede9ec64-dirty"
+    },
+    "image_bytes": {
+      "normal": 42238464,
+      "ksu": 42306048
+    }
+  },
+  "interpretation": "Identical exported CRCs mean the KSU kernel is expected to accept the normal build's vendor modules (MODVERSIONS ignores the release string in vermagic). This is unverified until the device test in KSU-02.",
+  "upstream_behavior_kept": "Native KernelSU Next legacy features are compiled and wired as upstream ships them, including default-on selinux_hide and adb_root. The slow_avc_audit hook is wired because upstream's kprobes mode registers it automatically; the avc_spoof feature stays under KernelSU Next's own runtime switch.",
+  "not_performed": [
+    "full ROM build",
+    "DTB/DTBO and vendor_boot/vendor_dlkm comparison",
+    "boot, SELinux enforcing check, module load, Manager grant/deny",
+    "OTA"
+  ],
+  "hooks": {
+    "fs/exec.c __do_execve_file": "ksu_handle_execveat (covers execve, execveat and compat paths)",
+    "fs/open.c do_faccessat": "ksu_handle_faccessat",
+    "fs/stat.c vfs_statx": "ksu_handle_stat",
+    "fs/stat.c newfstat": "ksu_handle_newfstat_ret",
+    "fs/read_write.c ksys_read": "ksu_handle_sys_read",
+    "kernel/reboot.c reboot syscall": "ksu_handle_sys_reboot",
+    "drivers/input/input.c input_handle_event": "ksu_handle_input_handle_event",
+    "security/selinux/avc.c slow_avc_audit": "ksu_handle_slow_avc_audit",
+    "fs/namespace.c, fs/internal.h": "can_umount/path_umount backport (same code as upstream Kbuild would insert)"
+  }
+}

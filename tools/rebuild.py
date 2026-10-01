@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright 2026 MartiniEvoX contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Rebuild the pinned ordinary-kernel martini ROM; no flashing or validation claims."""
+"""Rebuild the pinned martini ROM (normal or KSU kernel); no flashing or validation claims."""
 
 import argparse
 from contextlib import contextmanager
@@ -20,6 +20,7 @@ import xml.etree.ElementTree as ET
 
 CONTROL = Path(__file__).resolve().parents[1]
 PREPARED = ".martini-prepared.json"
+OUT_KERNEL = ".martini-kernel"
 
 
 class RebuildError(Exception):
@@ -114,7 +115,7 @@ def workspace_lock(source):
 
 class Rebuild:
     def __init__(self, control, source, *, source_bundle=None, settings_patch=None,
-                 out=None, artifacts=None, signing="self-build"):
+                 out=None, artifacts=None, signing="self-build", kernel="normal"):
         self.control = Path(control).resolve()
         for path in (source, out, artifacts):
             if path is not None and not Path(path).is_absolute():
@@ -131,6 +132,7 @@ class Rebuild:
         self.bundle = Path(source_bundle).resolve() if source_bundle else None
         self.settings_patch = Path(settings_patch).resolve() if settings_patch else None
         self.signing = signing
+        self.kernel = kernel
         self.profile = read_json(self.control / "profiles/martini.json")
         self.baseline = read_json(child(self.control, self.profile["baseline"]))
         self.series = read_json(child(self.control, self.profile["patch_series"]))
@@ -140,9 +142,10 @@ class Rebuild:
         self.locked = projects(self.manifest.read_bytes())
         if (self.profile["lunch"] != "lineage_martini-cp2a-userdebug"
                 or self.profile["target"] != "evolution"
-                or self.profile["kernel_profile"] != "normal"
                 or self.profile["environment"].get("EVO_KEEP_TARGET_FILES") != "true"):
-            raise RebuildError("Only the pinned ordinary-kernel martini profile is supported")
+            raise RebuildError("Only the pinned martini profile is supported")
+        if kernel not in self.profile["kernel_variants"]:
+            raise RebuildError(f"Unknown kernel variant: {kernel}")
 
     def patches(self):
         patches = []
@@ -238,6 +241,42 @@ class Rebuild:
                 cwd=self.source, stdout=None)
         print(f"Initialized pinned SOURCE: {self.source}")
 
+    def update(self):
+        # Move a prepared SOURCE to the current CONTROL commit. Only changes proven
+        # identical to our own preparation record are undone; anything else stops.
+        with workspace_lock(self.source):
+            self.clean(self.control)
+            commit = git(self.control, "rev-parse", "HEAD").decode().strip()
+            record_path = self.source / PREPARED
+            if record_path.exists():
+                record = read_json(record_path)
+                for name, previous in record["repositories"].items():
+                    if self.snapshot(child(self.source, name)) != previous:
+                        raise RebuildError(f"Prepared worktree changed; inspect manually: {name}")
+                for name, previous in record["repositories"].items():
+                    repo = child(self.source, name)
+                    git(repo, "checkout", "--quiet", "--", ".")
+                    for relative in previous["untracked"]:
+                        # Recorded names are Git paths; do not follow a symlink they may name.
+                        if ".." in Path(relative).parts or Path(relative).is_absolute():
+                            raise RebuildError(f"Unexpected recorded path: {relative}")
+                        path = repo / relative
+                        path.unlink()
+                        parent = path.parent
+                        while parent != repo and not any(parent.iterdir()):
+                            parent.rmdir()
+                            parent = parent.parent
+                    self.clean(repo)
+                history = self.source / ".martini-history"
+                history.mkdir(exist_ok=True)
+                stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+                record_path.rename(history / f"prepared-{stamp}.json")
+            run(["repo", "init", "-u", self.control, "-b", commit, "-m",
+                 self.profile["manifest"], "--git-lfs"], cwd=self.source, stdout=None)
+            run(["repo", "sync", "-c", "--no-clone-bundle", "--no-tags"],
+                cwd=self.source, stdout=None)
+        print(f"Updated SOURCE to CONTROL {commit}; run prepare next")
+
     def prepare(self):
         with workspace_lock(self.source):
             if (self.source / PREPARED).exists():
@@ -289,6 +328,9 @@ class Rebuild:
             self.clean(self.control)
             manifest = self.check_source()
             prepared = self.check_prepared()
+            marker = self.out / OUT_KERNEL
+            if marker.exists() and marker.read_text().strip() != self.kernel:
+                raise RebuildError(f"OUT belongs to kernel variant {marker.read_text().strip()}: {self.out}")
             keys = self.source / "vendor/evolution-priv/keys"
             for name in ("testkey.x509.pem", "testkey.pk8"):
                 path = keys / name
@@ -303,11 +345,15 @@ class Rebuild:
             (directory / "manifest.xml").write_bytes(manifest)
             write_json(directory / "prepared-inputs.json", prepared)
             result = {"status": "FAILED", "control_commit": commit, "signing": self.signing,
+                      "kernel": self.kernel,
                       "out": str(self.out), "build_exit_code": None, "exit_code": 1,
                       "validation": "Not performed: APK keyset, native signatures, first boot and OTA"}
             try:
                 env = environment()
+                env.update(self.profile["environment"], **self.profile["kernel_variants"][self.kernel])
                 env.update(OUT_DIR=str(self.out), EVO_KEEP_TARGET_FILES="true")
+                self.out.mkdir(parents=True, exist_ok=True)
+                marker.write_text(self.kernel + "\n")
                 with (directory / "build.log").open("xb") as log:
                     try:
                         run(["bash", "--noprofile", "--norc", "-c", BUILD_SHELL, "martini-build",
@@ -349,12 +395,17 @@ class Rebuild:
             print(f"Create private mirror {project['name']}.git; pin {project['upstream']} to {project['revision']}.")
             print(f"repo init -u {self.control} -b CONTROL_COMMIT -m {self.profile['manifest']} --git-lfs")
             print("Install only Settings remote override before repo sync -c --no-clone-bundle --no-tags.")
+        elif command == "update":
+            print("Require clean committed CONTROL; verify SOURCE still equals its preparation record.")
+            print("Undo only recorded changes, archive the record, then repo init -b CONTROL_COMMIT and repo sync.")
         elif command == "prepare":
             print("Verify internal patches and explicit --settings-patch; check every base/clean tree/apply first.")
             print(f"Apply grouped diffs with git apply; record HEAD/diff/untracked/input hashes in {PREPARED}.")
         else:
             print("Check repo manifest -r against lock, prepared hashes and clean unpatched projects.")
-            print(f"OUT_DIR={self.out} EVO_KEEP_TARGET_FILES=true; source build/envsetup.sh")
+            variant = self.profile["kernel_variants"][self.kernel]
+            print(f"Kernel {self.kernel} {variant}; OUT_DIR={self.out} EVO_KEEP_TARGET_FILES=true")
+            print("Refuse an OUT already used by another kernel variant; source build/envsetup.sh")
             print(f"lunch {self.profile['lunch']}; check DEFAULT_SYSTEM_DEV_CERTIFICATE; m evolution")
             print(f"Use existing {self.source}/vendor/evolution-priv/keys, signing={self.signing}.")
             print(f"Archive actual LINEAGE_VERSION ZIP, original target-files and records under {self.artifacts}/run-*.")
@@ -392,13 +443,14 @@ case "$version" in
     ''|*[!a-zA-Z0-9._-]*) printf '%s\n' 'Unsafe or empty LINEAGE_VERSION' >&2; exit 2 ;;
 esac
 printf '%s\n' "$version" > "$run_dir/lineage-version.txt"
+printf 'TARGET_KERNEL_SOURCE: %s\n' "$(get_build_var TARGET_KERNEL_SOURCE)"
 m evolution
 '''
 
 
 def main(argv=None, *, control=CONTROL):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("init", "prepare", "build"))
+    parser.add_argument("command", choices=("init", "update", "prepare", "build"))
     parser.add_argument("--source", required=True, type=Path, metavar="ABS")
     parser.add_argument("--source-bundle", type=Path, metavar="FILE")
     parser.add_argument("--settings-patch", type=Path, metavar="FILE",
@@ -406,12 +458,13 @@ def main(argv=None, *, control=CONTROL):
     parser.add_argument("--out", type=Path, metavar="ABS", help="default: SOURCE/out")
     parser.add_argument("--artifacts", type=Path, metavar="ABS", help="default: SOURCE/artifacts")
     parser.add_argument("--signing", choices=("release", "self-build"), default="self-build")
+    parser.add_argument("--kernel", default="normal", help="profile kernel variant: normal or ksu")
     parser.add_argument("--dry-run", action="store_true", help="read configuration and print steps only")
     args = parser.parse_args(argv)
     try:
         work = Rebuild(control, args.source, source_bundle=args.source_bundle,
                        settings_patch=args.settings_patch, out=args.out,
-                       artifacts=args.artifacts, signing=args.signing)
+                       artifacts=args.artifacts, signing=args.signing, kernel=args.kernel)
         if args.dry_run:
             work.dry_run(args.command)
         else:

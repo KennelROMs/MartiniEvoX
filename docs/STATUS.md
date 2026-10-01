@@ -5,8 +5,8 @@
 
 ## 一句话定位
 
-**Android 17 EvoX 首个工程候选已完成安装和首启；最小控制仓库与重建入口已建立。**
-仓库之后按 KernelSU Next → PixelOS 增强 → OTA → 集中修复 → 剩余交付推进。
+**Android 17 EvoX 首个工程候选已完成安装和首启；KernelSU Next内核补丁已独立编译通过。**
+当前在构建服务器上进行REPO-05/KSU-02完整构建，之后PixelOS增强 → OTA → 集中修复。
 
 ## 当前手机候选
 
@@ -59,8 +59,9 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | SettingsGoogle恢复材料公开许可/可获取性 | **BLOCKED**；bundle不入库 |
 | 最小重建脚本及离线回归 | `tools/rebuild.py`仅含init/prepare/build；功能测试已通过，未运行真实Android构建 |
 | 新clone自足性 | 已通过：代码提交`3b34c18`，38项离线测试及build dry-run；见[记录](evidence/control-repository-20261001.json) |
-| 从此Git提交实际重建ROM | PENDING；需独立构建环境与执行窗口 |
+| 从此Git提交实际重建ROM | IN_PROGRESS：构建服务器（16核/62GiB）已确认；首次同步发现上游改写分支，已用新锁修正 |
+| KSU Next内核（KSU-01） | 补丁与独立编译通过；完整ROM构建与实机未执行 |
 | 本次手机/OTA验证 | 未执行 |
 
-下一项是 [KSU-01](TASKS.md#后续功能与交付)，按既定顺序开始可选内核适配。
-真实整包重建仍单独记为待验收。没有远端发布；手机写入与新增付费资源仍需明确授权。
+下一项是 [KSU-02](TASKS.md#后续功能与交付)：同一SOURCE完成普通（兼REPO-05）与KSU构建。
+有GitHub私有远端，未推送或公开发布；手机写入由维护者操作。

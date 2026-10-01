@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "baseline": "baselines/20260930-a8114027.json",
+  "baseline": "baselines/20261001.json",
   "apply": "git apply",
   "check": "git apply --check",
   "order": "patches-array-order",
@@ -51,6 +51,20 @@
       "base_revision": "ab335e0ba751d5bde019f48e1935922f7afd62e4",
       "patch": "patches/vendor_lineage_target_files/0001-optional-target-files-retention.patch",
       "sha256": "06bdcdef5cc681f3bb9e5bb08fd3815420355bb9f58e42847dff4417863da5fd"
+    },
+    {
+      "id": "martini-ksu-kernel-variant",
+      "repo": "device/oneplus/martini",
+      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
+      "patch": "patches/ksu/0001-martini-ksu-kernel-variant.patch",
+      "sha256": "ddff9abf33ff480dd84fe4be58ff213feb1ad0bb659b5b2c6043bbb522caa9d6"
+    },
+    {
+      "id": "kernel-kernelsu-next-manual-hooks",
+      "repo": "kernel/oneplus/sm8350-ksu",
+      "base_revision": "abd4ede9ec6463110b40360a4a772e1285e995dd",
+      "patch": "patches/ksu/0002-kernel-kernelsu-next-manual-hooks.patch",
+      "sha256": "1a0f8025beb9b5f77e66a4a86e78130509fe50649cabc23b9f0bab8d3fb4359c"
     }
   ]
 }

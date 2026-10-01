@@ -4,8 +4,8 @@
 `DONE`；DONE必须有相应范围的验证记录。未分配未来任务的执行者不作推断。
 提交记录可由 `git log --oneline --all` 查看；提交说明使用任务ID。
 
-**下一项：KSU-01。** 仓库最小闭环已完成；REPO-05的真实重建验收仍待确认资源，
-不把未执行事项写成通过，也不再插入额外仓库审计阶段。
+**下一项：KSU-02。** KSU-01已完成补丁与独立内核编译；REPO-05与KSU-02在构建服务器
+同一棵新SOURCE上进行（普通与KSU各一个OUT）。未执行事项不写成通过。
 
 ## 控制仓库
 
@@ -15,7 +15,7 @@
 | REPO-02 | DONE | 1262项目便携锁、六步补丁清单、普通profile、外部恢复描述 | 数据合同9/9通过；独立公共恢复缺口仍见SRC-01 |
 | REPO-03 | DONE | 一个最小重建脚本及关键功能测试 | `tools/rebuild.py`实现init/prepare/build；无通用审计/镜像验证框架，真实构建仍见REPO-05 |
 | REPO-04 | DONE | 本地提交与一次干净clone功能验证 | `3b34c18`：38项测试通过、dry-run无写入；见evidence/control-repository-20261001.json |
-| REPO-05 | PENDING_VALIDATION | 从控制提交实际同步/重建/归档/验收ROM | 待确认构建机、已有签名材料和执行窗口；持有合法外部输入即可运行，不等待公开分发缺口解决 |
+| REPO-05 | IN_PROGRESS | 从控制提交实际同步/重建/归档/验收ROM | 构建服务器已确认。按`0e2348e`的init因Evolution-X改写分支、10个固定提交不在分支上而同步失败；新锁`martini-20261001`对Evolution-X项目按SHA浅获取，用`update`继续 |
 | SRC-01 | BLOCKED | SettingsGoogle旧基线的合法、公开可获取恢复材料 | bundle对象已验证，整份分发许可不足；不入Git，记录外部受控输入 |
 | LIC-01 | DONE | 确定本次公开范围与第三方边界 | Settings原材料外置，其他保留原声明；见PROVENANCE，未声称上游许可缺口已解决 |
 
@@ -23,9 +23,9 @@
 
 | ID | 状态 | 交付/验收 | 下一动作 |
 | --- | --- | --- | --- |
-| KSU-01 | TODO | 固定legacy源码、手动hooks映射、兼容改动清单 | 仓库阶段后优先开展；不先加Root模块 |
-| KSU-02 | TODO | 可选内核、模块/镜像一致性与最小实机验收 | 依赖KSU-01，手机操作另获批准 |
-| PIXEL-01 | TODO | 完整差异/来源/许可/依赖台账 | 补审hardware、kernel、vendor，不限于已有设备/common研究 |
+| KSU-01 | DONE | 固定legacy源码、手动hooks映射、兼容改动清单 | legacy `cd739c78`；8处手动hook+path_umount回移植；独立内核编译通过，86模块与14611个导出CRC同普通内核一致；见evidence/ksu-kernel-compile-20261001.json |
+| KSU-02 | TODO | 可选内核、模块/镜像一致性与最小实机验收 | 完整KSU构建、dtb/dtbo/vendor_boot/vendor_dlkm对比；实机刷写由维护者操作 |
+| PIXEL-01 | TODO | 完整差异/来源/许可/依赖台账 | 已有一轮研究：A17对应common `seventeen` c2beeae；hardware/oplus为锁定提交的快进；维护者确认OnePlus公开blob可取用 |
 | PIXEL-02 | TODO | 可行有价值项逐项集成及范围内验证 | 每项独立任务、提交、结果与不采纳理由 |
 | OTA-01 | TODO | 普通/KSU、同签名保数据升级与snapshot验证 | 依赖配套产物，专门设计升级/恢复场景 |
 | FIX-01 | TODO | 集中修复开放问题并回归 | OTA阶段后集中收敛；阻塞/数据安全问题提前处理 |

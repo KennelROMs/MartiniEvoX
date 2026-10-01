@@ -16,19 +16,22 @@
 ## 2. KSU — KernelSU Next 可选内核适配
 
 - 当前5.4.302厂商QGKI内核，按固定legacy/manual-hooks路线研究，不套用通用GKI2镜像。
-- 已研究候选：`5e2f85327336185a8330429422ad04b84c6e6d38`；开始实施前再核对实际接口和来源。
+- 固定legacy分支`cd739c78802333455391df973db17d9f28328b83`（v3.4.0-legacy，内核部分GPL-2.0）。
 - 拆分接线、配置、手动hooks及必要兼容回移植；不得让Kbuild暗中联网或修改源树。
 - 普通/KSU源码和输出隔离。核对86个原有模块、vendor_dlkm、vendor_boot及受影响
   DTB/DTBO/AVB关联，不能假定交付一个boot.img就足够。
 - 保持CFI、SELinux、MODVERSIONS及Manager身份验证。Root授权/拒绝与metamodule
-  系统覆盖是不同验收项；不加入SUSFS或隐藏/检测绕过改动。
+  系统覆盖是不同验收项。
+- 维护者决定（2026-10-01）：按KernelSU Next上游原生行为接入，不刻意移除其默认的
+  selinux_hide、adb_root、avc_spoof等功能；也不额外加入SUSFS等第三方补丁。
 
 **本阶段验收：**可审查补丁、编译/模块一致性、匹配镜像和经授权的最小启动/
 Manager授权与拒绝验证。完整日用稳定性不提前成为本阶段的总门槛。
 
 ## 3. PIXEL — 可借鉴的PixelOS增强
 
-不是只挑几项后宣称“全部借鉴”，也不是直接整树覆盖。对设备、common、hardware、
+维护者确认（2026-10-01）：PixelOS已采用的组件均可取用，包括其使用的OnePlus公开
+blob（OPlus Camera、Dolby等）。不是只挑几项后宣称“全部借鉴”，也不是直接整树覆盖。对设备、common、hardware、
 kernel、vendor建立完整差异/依赖清单，每项记录来源、许可、收益、兼容性和验收。
 
 | 候选组 | 已知需覆盖的内容 |

@@ -70,7 +70,11 @@ class RebuildTests(unittest.TestCase):
                      "@@ -1 +1 @@\n-before\n+after\n")
             if name == "first":
                 patch += ("diff --git a/new-file b/new-file\nnew file mode 100644\n"
-                          "--- /dev/null\n+++ b/new-file\n@@ -0,0 +1 @@\n+created\n")
+                          "--- /dev/null\n+++ b/new-file\n@@ -0,0 +1 @@\n+created\n"
+                          # Like drivers/kernelsu: a symlink leaving the project.
+                          "diff --git a/sub/outside-link b/sub/outside-link\nnew file mode 120000\n"
+                          "--- /dev/null\n+++ b/sub/outside-link\n@@ -0,0 +1 @@\n"
+                          "+../../settings\n\\ No newline at end of file\n")
             path = self.control / "patches/first.patch" if name == "first" else self.patch
             path.parent.mkdir(exist_ok=True)
             path.write_text(patch)
@@ -83,7 +87,8 @@ class RebuildTests(unittest.TestCase):
             "baseline": "baselines/base.json", "manifest": "manifests/locked/test.xml",
             "patch_series": "patches/series.json", "source_restores": ["sources/settings-google.json"],
             "lunch": "lineage_martini-cp2a-userdebug", "target": "evolution",
-            "kernel_profile": "normal", "environment": {"EVO_KEEP_TARGET_FILES": "true"},
+            "environment": {"EVO_KEEP_TARGET_FILES": "true"},
+            "kernel_variants": {"normal": {}, "ksu": {"MARTINI_KSU": "true"}},
         }
         manifest = ET.Element("manifest")
         for name, head in self.heads.items():
@@ -187,7 +192,7 @@ class RebuildTests(unittest.TestCase):
         with mock.patch.object(subprocess, "run", side_effect=AssertionError("subprocess")), \
              mock.patch.object(subprocess, "Popen", side_effect=AssertionError("subprocess")), \
              contextlib.redirect_stdout(io.StringIO()) as output:
-            for command in ("init", "prepare", "build"):
+            for command in ("init", "prepare", "build", "update"):
                 self.assertEqual(rebuild.main(
                     [command, "--source", str(missing), "--dry-run"], control=self.control), 0)
         self.assertIn("BUILT_AND_ARCHIVED_UNVALIDATED", output.getvalue())
@@ -224,6 +229,80 @@ class RebuildTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAILED")
         self.assertIn("synthetic build failed", (runs[0] / "build.log").read_text())
         self.assertFalse(list(runs[0].glob("*.zip")))
+
+    def fake_android_build(self):
+        keys = self.source / "vendor/evolution-priv/keys"
+        keys.mkdir(parents=True)
+        shutil.copyfile(self.control / "certificates/martini-release.x509.pem", keys / "testkey.x509.pem")
+        (keys / "testkey.pk8").write_bytes(b"fixture placeholder; never parsed or printed")
+        envsetup = self.source / "build/envsetup.sh"
+        envsetup.parent.mkdir()
+        envsetup.write_text(
+            'lunch() { return 0; }\n'
+            'get_build_var() {\n'
+            ' case "$1" in\n'
+            ' DEFAULT_SYSTEM_DEV_CERTIFICATE) printf "%s\\n" vendor/evolution-priv/keys/testkey;;\n'
+            ' LINEAGE_VERSION) printf "%s\\n" synthetic-build;;\n'
+            ' esac\n}\n'
+            'm() { printf "MARTINI_KSU=%s\\n" "${MARTINI_KSU-unset}"; return 23; }\n')
+        return (self.control / self.profile["manifest"]).read_bytes()
+
+    @unittest.skipUnless(shutil.which("openssl"), "public certificate parsing needs openssl")
+    def test_kernel_variant_sets_environment_and_owns_its_out(self):
+        self.workspace().prepare()
+        manifest = self.fake_android_build()
+        out = self.root / "out-ksu"
+
+        def build(kernel):
+            with mock.patch.object(rebuild.Rebuild, "check_source", return_value=manifest), \
+                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                return rebuild.main(["build", "--source", str(self.source), "--kernel", kernel,
+                                     "--out", str(out), "--settings-patch", str(self.patch)],
+                                    control=self.control)
+
+        self.assertEqual(build("ksu"), 23)
+        run = next((self.source / "artifacts").iterdir())
+        self.assertIn("MARTINI_KSU=true", (run / "build.log").read_text())
+        self.assertEqual(json.loads((run / "result.json").read_text())["kernel"], "ksu")
+        # A normal build must not reuse (and silently mix into) the KSU OUT.
+        self.assertEqual(build("normal"), 1)
+        self.assertEqual(len(list((self.source / "artifacts").iterdir())), 1)
+        self.assertEqual(build("unknown"), 1)
+
+    def test_update_undoes_only_recorded_changes_before_resync(self):
+        self.workspace().prepare()
+        (self.control / "README.md").write_text("next control commit\n")
+        self.commit_control()
+        commit = git(self.control, "rev-parse", "HEAD").decode().strip()
+        unknown = self.source / "first/unknown"
+        unknown.write_text("not ours\n")
+        original_run = rebuild.run
+        calls = []
+
+        def repo_recorded(command, **kwargs):
+            if command[0] != "repo":
+                return original_run(command, **kwargs)
+            calls.append(command)
+            return b""
+
+        with mock.patch.object(rebuild, "run", side_effect=repo_recorded):
+            with self.assertRaises(rebuild.RebuildError):
+                self.workspace().update()
+        self.assertEqual(calls, [])
+        self.assertEqual((self.source / "first/tracked").read_text(), "after\n")
+        unknown.unlink()
+        with mock.patch.object(rebuild, "run", side_effect=repo_recorded), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.workspace().update()
+        self.assertEqual([c[:2] for c in calls], [["repo", "init"], ["repo", "sync"]])
+        self.assertIn(commit, calls[0])
+        for name in self.heads:
+            self.assertEqual(git(self.source / name, "status", "--porcelain"), b"")
+        self.assertFalse((self.source / "first/sub").exists())
+        self.assertTrue((self.source / "settings/tracked").is_file())
+        self.assertFalse((self.source / ".martini-prepared.json").exists())
+        self.assertEqual(len(list((self.source / ".martini-history").iterdir())), 1)
+        self.workspace().prepare()
 
     def test_build_refuses_uncommitted_control_before_source_work(self):
         work = self.workspace()

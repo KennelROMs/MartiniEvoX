@@ -1,0 +1,303 @@
+diff --git a/arch/arm64/configs/vendor/ksu.config b/arch/arm64/configs/vendor/ksu.config
+new file mode 100644
+index 000000000000..ed78d1f5dfa8
+--- /dev/null
++++ b/arch/arm64/configs/vendor/ksu.config
+@@ -0,0 +1,3 @@
++# KernelSU Next (legacy branch), manual hooks
++CONFIG_KSU=y
++CONFIG_KSU_MANUAL_HOOK=y
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index e0eda1a5c3f9..fe50d5165135 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -230,4 +230,6 @@ source "drivers/interconnect/Kconfig"
+ 
+ source "drivers/counter/Kconfig"
+ 
++source "drivers/kernelsu/Kconfig"
++
+ endmenu
+diff --git a/drivers/Makefile b/drivers/Makefile
+index aaef17cc6512..6f1b12a55edd 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -186,3 +186,4 @@ obj-$(CONFIG_SIOX)		+= siox/
+ obj-$(CONFIG_GNSS)		+= gnss/
+ obj-$(CONFIG_INTERCONNECT)	+= interconnect/
+ obj-$(CONFIG_COUNTER)		+= counter/
++obj-$(CONFIG_KSU)		+= kernelsu/
+diff --git a/drivers/input/input.c b/drivers/input/input.c
+index 45fdb9bdf08d..56b28705ef44 100644
+--- a/drivers/input/input.c
++++ b/drivers/input/input.c
+@@ -375,10 +375,20 @@ static int input_get_disposition(struct input_dev *dev,
+ 	return disposition;
+ }
+ 
++#ifdef CONFIG_KSU
++extern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code,
++					 int *value);
++#endif
++
+ static void input_handle_event(struct input_dev *dev,
+ 			       unsigned int type, unsigned int code, int value)
+ {
+-	int disposition = input_get_disposition(dev, type, code, &value);
++	int disposition;
++
++#ifdef CONFIG_KSU
++	ksu_handle_input_handle_event(&type, &code, &value);
++#endif
++	disposition = input_get_disposition(dev, type, code, &value);
+ 
+ 	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
+ 		add_input_randomness(type, code, value);
+diff --git a/drivers/kernelsu b/drivers/kernelsu
+new file mode 120000
+index 000000000000..7f5f3343119d
+--- /dev/null
++++ b/drivers/kernelsu
+@@ -0,0 +1 @@
++../../../../external/KernelSU-Next/kernel
+\ No newline at end of file
+diff --git a/fs/exec.c b/fs/exec.c
+index 910b407d267e..10ae98cdf127 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -1745,6 +1745,11 @@ static int exec_binprm(struct linux_binprm *bprm)
+ /*
+  * sys_execve() executes a new program.
+  */
++#ifdef CONFIG_KSU
++extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr,
++			       void *argv, void *envp, int *flags);
++#endif
++
+ static int __do_execve_file(int fd, struct filename *filename,
+ 			    struct user_arg_ptr argv,
+ 			    struct user_arg_ptr envp,
+@@ -1758,6 +1763,10 @@ static int __do_execve_file(int fd, struct filename *filename,
+ 	if (IS_ERR(filename))
+ 		return PTR_ERR(filename);
+ 
++#ifdef CONFIG_KSU
++	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
++#endif
++
+ 	/*
+ 	 * We move the actual failure in case of RLIMIT_NPROC excess from
+ 	 * set*uid() to execve() because too many poorly written programs
+diff --git a/fs/internal.h b/fs/internal.h
+index 377f984e9226..9badc3b8cc11 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -85,6 +85,7 @@ extern int finish_automount(struct vfsmount *, struct path *);
+ extern int sb_prepare_remount_readonly(struct super_block *);
+ 
+ extern void __init mnt_init(void);
++int path_umount(struct path *path, int flags);
+ 
+ extern int __mnt_want_write_file(struct file *);
+ extern void __mnt_drop_write_file(struct file *);
+diff --git a/fs/namespace.c b/fs/namespace.c
+index 176bccdf6f30..3b51956cd0d9 100644
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -1756,6 +1756,40 @@ SYSCALL_DEFINE1(oldumount, char __user *, name)
+ 
+ #endif
+ 
++static int can_umount(const struct path *path, int flags)
++{
++	struct mount *mnt = real_mount(path->mnt);
++
++	if (flags & ~(MNT_FORCE | MNT_DETACH | MNT_EXPIRE | UMOUNT_NOFOLLOW))
++		return -EINVAL;
++	if (!may_mount())
++		return -EPERM;
++	if (path->dentry != path->mnt->mnt_root)
++		return -EINVAL;
++	if (!check_mnt(mnt))
++		return -EINVAL;
++	if (mnt->mnt.mnt_flags & MNT_LOCKED) /* Check optimistically */
++		return -EINVAL;
++	if (flags & MNT_FORCE && !capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	return 0;
++}
++
++int path_umount(struct path *path, int flags)
++{
++	struct mount *mnt = real_mount(path->mnt);
++	int ret;
++
++	ret = can_umount(path, flags);
++	if (!ret)
++		ret = do_umount(mnt, flags);
++
++	/* we mustn't call path_put() as that would clear mnt_expiry_mark */
++	dput(path->dentry);
++	mntput_no_expire(mnt);
++	return ret;
++}
++
+ static bool is_mnt_ns_file(struct dentry *dentry)
+ {
+ 	/* Is this a proxy for a mount namespace? */
+diff --git a/fs/open.c b/fs/open.c
+index 3f9f5fda8ebf..65b206e6147f 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -345,6 +345,11 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
+  * We do this by temporarily clearing all FS-related capabilities and
+  * switching the fsuid/fsgid around to the real ones.
+  */
++#ifdef CONFIG_KSU
++extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user,
++				int *mode, int *flags);
++#endif
++
+ long do_faccessat(int dfd, const char __user *filename, int mode)
+ {
+ 	const struct cred *old_cred;
+@@ -354,6 +359,10 @@ long do_faccessat(int dfd, const char __user *filename, int mode)
+ 	int res;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW;
+ 
++#ifdef CONFIG_KSU
++	ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
++#endif
++
+ 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
+ 		return -EINVAL;
+ 
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 301c4a4ba1d0..19edfc0f47c6 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -573,11 +573,20 @@ static inline loff_t *file_ppos(struct file *file)
+ 	return file->f_mode & FMODE_STREAM ? NULL : &file->f_pos;
+ }
+ 
++#ifdef CONFIG_KSU
++extern void ksu_handle_sys_read(unsigned int fd);
++#endif
++
+ ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count)
+ {
+-	struct fd f = fdget_pos(fd);
++	struct fd f;
+ 	ssize_t ret = -EBADF;
+ 
++#ifdef CONFIG_KSU
++	ksu_handle_sys_read(fd);
++#endif
++	f = fdget_pos(fd);
++
+ 	if (f.file) {
+ 		loff_t pos, *ppos = file_ppos(f.file);
+ 		if (ppos) {
+diff --git a/fs/stat.c b/fs/stat.c
+index 298eb77668a7..47c9f8ec5d44 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -165,6 +165,11 @@ EXPORT_SYMBOL(vfs_statx_fd);
+  *
+  * 0 will be returned on success, and a -ve error code if unsuccessful.
+  */
++#ifdef CONFIG_KSU
++extern int ksu_handle_stat(int *dfd, const char __user **filename_user,
++			   int *flags);
++#endif
++
+ int vfs_statx(int dfd, const char __user *filename, int flags,
+ 	      struct kstat *stat, u32 request_mask)
+ {
+@@ -172,6 +177,10 @@ int vfs_statx(int dfd, const char __user *filename, int flags,
+ 	int error = -EINVAL;
+ 	unsigned int lookup_flags = LOOKUP_FOLLOW | LOOKUP_AUTOMOUNT;
+ 
++#ifdef CONFIG_KSU
++	ksu_handle_stat(&dfd, &filename, &flags);
++#endif
++
+ 	if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |
+ 		       AT_EMPTY_PATH | KSTAT_QUERY_FLAGS)) != 0)
+ 		return -EINVAL;
+@@ -371,6 +380,11 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
+ }
+ #endif
+ 
++#ifdef CONFIG_KSU
++extern void ksu_handle_newfstat_ret(unsigned int *fd,
++				    struct stat __user **statbuf_ptr);
++#endif
++
+ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
+ {
+ 	struct kstat stat;
+@@ -378,6 +392,10 @@ SYSCALL_DEFINE2(newfstat, unsigned int, fd, struct stat __user *, statbuf)
+ 
+ 	if (!error)
+ 		error = cp_new_stat(&stat, statbuf);
++#ifdef CONFIG_KSU
++	if (!error)
++		ksu_handle_newfstat_ret(&fd, &statbuf);
++#endif
+ 
+ 	return error;
+ }
+diff --git a/kernel/reboot.c b/kernel/reboot.c
+index 790c2f514a55..826fe18f53c7 100644
+--- a/kernel/reboot.c
++++ b/kernel/reboot.c
+@@ -310,6 +310,11 @@ DEFINE_MUTEX(system_transition_mutex);
+  *
+  * reboot doesn't sync: do that yourself before calling this.
+  */
++#ifdef CONFIG_KSU
++extern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
++				 void __user **arg);
++#endif
++
+ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
+ 		void __user *, arg)
+ {
+@@ -317,6 +322,10 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
+ 	char buffer[256];
+ 	int ret = 0;
+ 
++#ifdef CONFIG_KSU
++	ksu_handle_sys_reboot(magic1, magic2, cmd, &arg);
++#endif
++
+ 	/* We only trust the superuser with rebooting the system. */
+ 	if (!ns_capable(pid_ns->user_ns, CAP_SYS_BOOT))
+ 		return -EPERM;
+diff --git a/security/selinux/avc.c b/security/selinux/avc.c
+index 7e1e6bc881b0..8a530a55ca26 100644
+--- a/security/selinux/avc.c
++++ b/security/selinux/avc.c
+@@ -754,6 +754,10 @@ static void avc_audit_post_callback(struct audit_buffer *ab, void *a)
+ }
+ 
+ /* This is the slow part of avc audit with big stack footprint */
++#ifdef CONFIG_KSU
++extern int ksu_handle_slow_avc_audit(u32 *tsid);
++#endif
++
+ noinline int slow_avc_audit(struct selinux_state *state,
+ 			    u32 ssid, u32 tsid, u16 tclass,
+ 			    u32 requested, u32 audited, u32 denied, int result,
+@@ -762,6 +766,10 @@ noinline int slow_avc_audit(struct selinux_state *state,
+ 	struct common_audit_data stack_data;
+ 	struct selinux_audit_data sad;
+ 
++#ifdef CONFIG_KSU
++	ksu_handle_slow_avc_audit(&tsid);
++#endif
++
+ 	if (WARN_ON(!tclass || tclass >= ARRAY_SIZE(secclass_map)))
+ 		return -EINVAL;
+ 

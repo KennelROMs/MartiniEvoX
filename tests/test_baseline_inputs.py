@@ -17,6 +17,12 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = "baselines/20260930-a8114027.json"
 MANIFEST = "manifests/locked/martini-20260930.xml"
+# Active inputs derived from the historical candidate lock above.
+ACTIVE_BASELINE = "baselines/20261001.json"
+ACTIVE_MANIFEST = "manifests/locked/martini-20261001.xml"
+KSU_KERNEL = "kernel/oneplus/sm8350-ksu"
+KSU_SOURCE = "external/KernelSU-Next"
+KSU_REVISION = "cd739c78802333455391df973db17d9f28328b83"
 SERIES = "patches/series.json"
 SOURCE = "sources/settings-google.json"
 SETTINGS_PATCH_BYTES = 1357
@@ -156,11 +162,16 @@ class TestBaselineInputs(unittest.TestCase):
         baseline = self.load_json(BASELINE)
         series = self.load_json(SERIES)
         self.assertEqual(baseline["repo_heads"], HEADS)
-        self.assertEqual(series["baseline"], BASELINE)
-        projects = ET.fromstring(self.required_file(MANIFEST).read_bytes()).findall("project")
+        self.assertEqual(series["baseline"], ACTIVE_BASELINE)
+        active = self.load_json(ACTIVE_BASELINE)["repo_heads"]
+        projects = ET.fromstring(self.required_file(ACTIVE_MANIFEST).read_bytes()).findall("project")
         revisions = {p.get("path", p.get("name")): p.get("revision") for p in projects}
         for repo, revision in HEADS.items():
             self.assertEqual(revisions[repo], revision)
+            self.assertEqual(active[repo], revision)
+        for entry in series["patches"]:
+            self.assertEqual(entry["base_revision"], active[entry["repo"]])
+            self.assertEqual(entry["base_revision"], revisions[entry["repo"]])
         expected = []
         for name, repo, patch, digest in PATCHES:
             entry = {"id": name, "repo": repo, "base_revision": HEADS[repo], "sha256": digest}
@@ -169,7 +180,8 @@ class TestBaselineInputs(unittest.TestCase):
             else:
                 entry["patch"] = patch
             expected.append(entry)
-        self.assertEqual(series["patches"], expected)
+        # The candidate's patch set stays first and unchanged; later work only appends.
+        self.assertEqual(series["patches"][:len(expected)], expected)
         source = self.load_json(SOURCE)
         for entry in series["patches"]:
             self.relative_path(entry["repo"])
@@ -192,7 +204,9 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertEqual(series["on_mismatch"], "stop-and-inspect")
         self.assertEqual(series["already_applied"], "stop-and-inspect")
         self.assertNotIn("git am", json.dumps(series))
-        self.assertNotIn("kernel/", " ".join(p["repo"] for p in series["patches"]))
+        kernel_repos = {p["repo"] for p in series["patches"] if p["repo"].startswith("kernel/")}
+        # The normal kernel source is never patched; KSU changes live in their own checkout.
+        self.assertEqual(kernel_repos, {KSU_KERNEL})
 
     def test_candidate_identity_and_historical_trust_scope(self):
         baseline = self.load_json(BASELINE)
@@ -232,7 +246,8 @@ class TestBaselineInputs(unittest.TestCase):
     def test_profile_uses_locked_inputs_and_normal_build_rules(self):
         profile = self.load_json("profiles/martini.json")
         self.assertEqual(profile["device"], "martini")
-        for key, path in {"baseline": BASELINE, "manifest": MANIFEST, "patch_series": SERIES}.items():
+        for key, path in {"baseline": ACTIVE_BASELINE, "manifest": ACTIVE_MANIFEST,
+                          "patch_series": SERIES}.items():
             self.assertEqual(profile[key], path)
             self.required_file(path)
         self.assertEqual(profile["source_restores"], [SOURCE])
@@ -240,7 +255,7 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertEqual(profile["lunch"], "lineage_martini-cp2a-userdebug")
         self.assertEqual(profile["target"], "evolution")
         self.assertEqual(profile["environment"], {"EVO_KEEP_TARGET_FILES": "true"})
-        self.assertEqual(profile["kernel_profile"], "normal")
+        self.assertEqual(profile["kernel_variants"], {"normal": {}, "ksu": {"MARTINI_KSU": "true"}})
         self.assertEqual(profile["erofs_partitions"], ["odm", "product", "system", "system_ext", "vendor", "vendor_dlkm"])
         self.assertEqual(profile["prebuild"], {
             "required_inputs": ["locked-manifest", "base-revisions", "patch-sha256", "source-restores"],
@@ -250,6 +265,40 @@ class TestBaselineInputs(unittest.TestCase):
             "status": "BLOCKED", "blockers": [SOURCE], "full_rom_rebuild_tested": False,
         })
         self.assertNotIn("manifests/martini.xml", json.dumps(profile))
+
+    def test_active_lock_only_adds_documented_changes(self):
+        old = ET.fromstring(self.required_file(MANIFEST).read_bytes())
+        new = ET.fromstring(self.required_file(ACTIVE_MANIFEST).read_bytes())
+        baseline = self.load_json(ACTIVE_BASELINE)
+        raw = self.required_file(ACTIVE_MANIFEST).read_bytes()
+        self.assertEqual(baseline["manifest"]["portable"],
+                         {"path": ACTIVE_MANIFEST, "bytes": len(raw), "sha256": sha256(raw)})
+        self.assertEqual([element_record(e) for e in new if e.tag != "project"],
+                         [element_record(e) for e in old if e.tag != "project"])
+        old_projects = {p.get("path", p.get("name")): p for p in old.findall("project")}
+        new_projects = {p.get("path", p.get("name")): p for p in new.findall("project")}
+        self.assertEqual(set(new_projects) - set(old_projects), {KSU_KERNEL, KSU_SOURCE})
+        self.assertEqual(set(old_projects) - set(new_projects), set())
+        self.assertEqual(baseline["manifest"]["project_count"], len(new_projects))
+        deepened = 0
+        for path, before in old_projects.items():
+            after = copy.deepcopy(new_projects[path])
+            if after.get("clone-depth") != before.get("clone-depth"):
+                self.assertEqual((before.get("remote"), after.get("clone-depth")), ("evo", "1"), path)
+                del after.attrib["clone-depth"]
+                deepened += 1
+            self.assertEqual(element_record(after), element_record(before), path)
+        self.assertEqual(deepened, 67)
+        # SettingsGoogle keeps the branch fetch served by the private mirror.
+        self.assertIsNone(new_projects["vendor/google/apps/SettingsGoogle"].get("clone-depth"))
+        kernel, ksu = new_projects["kernel/oneplus/sm8350"], new_projects[KSU_KERNEL]
+        self.assertEqual((ksu.get("name"), ksu.get("revision")), (kernel.get("name"), kernel.get("revision")))
+        source = new_projects[KSU_SOURCE]
+        self.assertEqual((source.get("revision"), source.get("upstream")), (KSU_REVISION, "refs/heads/legacy"))
+        # Kbuild runs "git fetch --unshallow" on shallow checkouts; keep the full history.
+        self.assertIsNone(source.get("clone-depth"))
+        variant = baseline["kernel"]["variants"]["ksu"]
+        self.assertEqual((variant["repo"], variant["kernelsu_next"]["revision"]), (KSU_KERNEL, KSU_REVISION))
 
     def test_source_descriptor_is_explicitly_external_and_blocked(self):
         source = self.load_json(SOURCE)
@@ -286,7 +335,7 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertFalse(list((ROOT / "sources").rglob("*.bundle")))
 
     def test_new_json_is_host_independent(self):
-        for relative in (BASELINE, "profiles/martini.json", SERIES, SOURCE):
+        for relative in (BASELINE, ACTIVE_BASELINE, "profiles/martini.json", SERIES, SOURCE):
             text = self.required_file(relative).read_text()
             self.load_json(relative)
             self.assertNotRegex(text, r"/(?:home|Users|tmp|mnt)/")

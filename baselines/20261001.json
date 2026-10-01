@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "id": "martini-20261001",
+  "device": "martini",
+  "derived_from": {
+    "baseline": "baselines/20260930-a8114027.json",
+    "manifest": "manifests/locked/martini-20260930.xml",
+    "operations": [
+      {
+        "operation": "add_clone_depth",
+        "value": "1",
+        "projects": "all remote=evo without clone-depth, except vendor/google/apps/SettingsGoogle",
+        "count": 67,
+        "reason": "Evolution-X rewrote cnb; 10 pinned commits are no longer on the branch (GitHub compare 2026-10-01: diverged). Shallow SHA fetch keeps the same revisions syncable."
+      },
+      {
+        "operation": "add_project",
+        "path": "kernel/oneplus/sm8350-ksu",
+        "reason": "separate KernelSU Next kernel source; same repository and revision as kernel/oneplus/sm8350"
+      },
+      {
+        "operation": "add_project",
+        "path": "external/KernelSU-Next",
+        "reason": "KernelSU Next legacy branch, linked as drivers/kernelsu by the KSU kernel patch"
+      }
+    ],
+    "revisions_changed": false
+  },
+  "manifest": {
+    "portable": {
+      "path": "manifests/locked/martini-20261001.xml",
+      "bytes": 309769,
+      "sha256": "81f5457cc2f67e3c1b5d0036936024a5d6a712bf297586be8d47399da83149bc"
+    },
+    "project_count": 1264
+  },
+  "repo_heads": {
+    "device/oneplus/martini": "3c226659a17d07f17a661e2571370af88cc16fb6",
+    "device/oneplus/sm8350-common": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
+    "vendor/google/apps/SettingsGoogle": "86a6033a534f7e8039e3af6b7e53c9e244621512",
+    "system/update_engine": "5b9591570c6603d73ab86f8526f4280ccfea1849",
+    "vendor/lineage": "ab335e0ba751d5bde019f48e1935922f7afd62e4",
+    "kernel/oneplus/sm8350": "abd4ede9ec6463110b40360a4a772e1285e995dd",
+    "kernel/oneplus/sm8350-ksu": "abd4ede9ec6463110b40360a4a772e1285e995dd"
+  },
+  "kernel": {
+    "variants": {
+      "normal": {
+        "repo": "kernel/oneplus/sm8350",
+        "base_revision": "abd4ede9ec6463110b40360a4a772e1285e995dd",
+        "ksu_enabled": false
+      },
+      "ksu": {
+        "repo": "kernel/oneplus/sm8350-ksu",
+        "base_revision": "abd4ede9ec6463110b40360a4a772e1285e995dd",
+        "ksu_enabled": true,
+        "kernelsu_next": {
+          "repo": "external/KernelSU-Next",
+          "branch": "legacy",
+          "revision": "cd739c78802333455391df973db17d9f28328b83",
+          "version": 33304,
+          "version_tag": "v3.4.0-legacy",
+          "hook_mode": "manual",
+          "license_kernel_part": "GPL-2.0-only"
+        },
+        "build_switch": "MARTINI_KSU=true"
+      }
+    }
+  },
+  "candidate_rom": null,
+  "signing": {
+    "configuration": "inherited-no-key-changes",
+    "private_keys_included": false
+  }
+}
