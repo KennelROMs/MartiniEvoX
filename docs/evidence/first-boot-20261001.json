@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-01",
+  "evidence_kind": "maintainer_recorded_user_report",
+  "direct_device_access_by_control_host": false,
+  "raw_capture_in_repository": false,
+  "candidate_zip_sha256": "a8114027f2a22ff1f16ef042a3fd4562487f03599844d9525d95e3668bfce9a8",
+  "installation": "user reported successful full sideload after using original A-to-C cable, then setup wizard/desktop",
+  "observations": {
+    "model": "MT2110",
+    "device_alias": "MT2111_IND",
+    "android_release": "17",
+    "sdk": 37,
+    "slot_suffix": "_a",
+    "boot_completed": "1",
+    "selinux": "Enforcing",
+    "read_only_erofs_mounts": ["/", "/system_ext", "/product", "/vendor", "/odm", "/vendor_dlkm"]
+  },
+  "open_reports": ["high refresh rate appears inactive", "camera 0.9x blurry"],
+  "not_verified": ["normal reboot/cold boot", "encrypted data unlock after reboot", "complete hardware matrix", "long-term stability", "OTA/snapshot upgrade", "rollback"],
+  "notes": [
+    "No serial number, IMEI or full device log is included.",
+    "This is a structured summary, not fabricated raw terminal output.",
+    "A-to-C success does not prove all C-to-C links are incompatible."
+  ]
+}

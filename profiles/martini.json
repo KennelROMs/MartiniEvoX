@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "id": "martini-normal-20260930",
+  "device": "martini",
+  "baseline": "baselines/20260930-a8114027.json",
+  "manifest": "manifests/locked/martini-20260930.xml",
+  "patch_series": "patches/series.json",
+  "source_restores": [
+    "sources/settings-google.json"
+  ],
+  "lunch": "lineage_martini-cp2a-userdebug",
+  "target": "evolution",
+  "environment": {
+    "EVO_KEEP_TARGET_FILES": "true"
+  },
+  "kernel_profile": "normal",
+  "erofs_partitions": [
+    "odm",
+    "product",
+    "system",
+    "system_ext",
+    "vendor",
+    "vendor_dlkm"
+  ],
+  "prebuild": {
+    "required_inputs": [
+      "locked-manifest",
+      "base-revisions",
+      "patch-sha256",
+      "source-restores"
+    ],
+    "requires_existing_out": false,
+    "requires_historical_artifacts": false
+  },
+  "independent_rebuild": {
+    "status": "BLOCKED",
+    "blockers": [
+      "sources/settings-google.json"
+    ],
+    "full_rom_rebuild_tested": false
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "sanitized_summary_of_archived_build_validation",
+  "build_finished_utc": "2026-09-30T10:31:29Z",
+  "reexecuted_during_repository_setup": false,
+  "rom": {
+    "name": "EvolutionX-17.0-20260930-martini-12.2-Unofficial.zip",
+    "bytes": 3648582850,
+    "sha256": "a8114027f2a22ff1f16ef042a3fd4562487f03599844d9525d95e3668bfce9a8"
+  },
+  "target_files_archive": {
+    "name": "target-files.tar.zst",
+    "bytes": 8006081243,
+    "sha256": "49fc33eae98c50a4d840cf5d6117cdb2c778a17d8e7e808d47c3425f95fbd882",
+    "included_in_control_repository": false
+  },
+  "recorded_checks": {
+    "build_exit": 0,
+    "whole_file_signature_exit": 0,
+    "payload_signature_positive_exit": 0,
+    "payload_signature_wrong_key_exit": 1,
+    "original_target_files_meta_retained": true,
+    "original_target_files_matches_signed_payload_images": true,
+    "six_full_erofs_checks_passed": true,
+    "dynamic_total_bytes": 4709871616,
+    "dynamic_group_bytes": 5591007232,
+    "avb_top_flags": 3,
+    "avb_trust_scope": "Inherited public test key; not enforced device Verified Boot",
+    "ksu_enabled": false
+  },
+  "limitations": [
+    "Raw historical host logs and large artifacts are not redistributed here.",
+    "This summary is not a fresh build, independent signature verification or device/OTA result.",
+    "New builds need their own identities and checks; matching this ZIP hash is not assumed."
+  ]
+}

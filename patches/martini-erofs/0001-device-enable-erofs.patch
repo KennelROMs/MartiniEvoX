@@ -1,0 +1,14 @@
+diff --git a/device.mk b/device.mk
+index 27c1097655bf00d70de74215e3ce408a57a23d09..4a5f70b6513329d6bad503f358cd76799f72a38c 100644
+--- a/device.mk
++++ b/device.mk
+@@ -69,6 +69,9 @@ PRODUCT_SOONG_NAMESPACES += \
+ # Vibrator
+ $(call soong_config_set_bool,OPLUS_LINEAGE_VIBRATOR_HAL,USE_EFFECT_STREAM,true)
+ 
++# EROFS for martini's read-only system partitions.
++$(call soong_config_set_bool,oneplus_sm8350,martini_erofs,true)
++
+ # Inherit from the common OEM chipset makefile.
+ $(call inherit-product, device/oneplus/sm8350-common/common.mk)
+ 

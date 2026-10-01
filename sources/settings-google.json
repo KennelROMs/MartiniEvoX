@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "id": "settings-google-86a6033a",
+  "status": "BLOCKED",
+  "status_scope": "independent-public-recovery",
+  "repo": "vendor/google/apps/SettingsGoogle",
+  "base_revision": "86a6033a534f7e8039e3af6b7e53c9e244621512",
+  "corrected_reference_revision": "f38977d0fcfd117e76d5f18e4bbd453884122a4e",
+  "upstream_repository": "https://github.com/Evolution-X/vendor_google_apps_SettingsGoogle",
+  "upstream_availability": "not-checked-offline",
+  "reason": "The preserved base is recoverable from a verified external bundle, but redistribution rights for the complete history and a public authorized recovery location are not established. A public upstream URL is not a license or a promise that the rewritten base is fetchable.",
+  "external_inputs": {
+    "settings_google_bundle": {
+      "type": "git-bundle",
+      "argument": "--source-bundle",
+      "filename": "SettingsGoogle-86a6033a-f38977d0.bundle",
+      "bytes": 1648368,
+      "sha256": "57eafcf7b3a9b4823bf2b0404ab2673b9c9438e1d0bebb8f51531c36e8c67179",
+      "included": false,
+      "repository_path": null,
+      "download_url": null
+    },
+    "settings_google_patch": {
+      "type": "git-diff",
+      "argument": "--settings-patch",
+      "filename": "0001-fix-screen-collector.patch",
+      "bytes": 1357,
+      "sha256": "039b2f1591745b6168eef871cef9aebd135b0a48981979e4ece0206cdf109359",
+      "included": false,
+      "repository_path": null,
+      "download_url": null,
+      "historical_source": "patches/vendor_google_apps_SettingsGoogle/0001-fix-screen-collector.patch"
+    }
+  },
+  "local_recovery": {
+    "status": "REQUIRES_EXPLICIT_INPUTS",
+    "required_inputs": [
+      "settings_google_bundle",
+      "settings_google_patch"
+    ],
+    "validation_is_distribution_permission": false
+  },
+  "validation": {
+    "implicit_host_lookup": false,
+    "scope": "historical-offline-verification-not-a-test-entrypoint",
+    "checks": [
+      "bytes",
+      "sha256",
+      "git bundle verify",
+      "git fsck --full --strict",
+      "advertised-refs",
+      "commit-objects",
+      "patched-collector"
+    ]
+  },
+  "bundle_refs": {
+    "refs/heads/evox/cnb-martini-bringup": "86a6033a534f7e8039e3af6b7e53c9e244621512",
+    "refs/remotes/evo/cnb": "f38977d0fcfd117e76d5f18e4bbd453884122a4e",
+    "refs/remotes/m/cnb": "f38977d0fcfd117e76d5f18e4bbd453884122a4e",
+    "HEAD": "86a6033a534f7e8039e3af6b7e53c9e244621512"
+  },
+  "restore_contract": {
+    "base_ref": "refs/heads/evox/cnb-martini-bringup",
+    "required_head_before_patch": "86a6033a534f7e8039e3af6b7e53c9e244621512",
+    "patch_id": "settings-google-collector",
+    "checkout_corrected_reference_as_base": false,
+    "scope": "An authorized existing holder may explicitly supply the exact bundle and original patch for local validation and subsequent source preparation. Validation does not modify an Android source checkout, grant redistribution rights, clear the independent-public-recovery BLOCKED status, or substitute the corrected tip for the pinned base."
+  },
+  "offline_audit": {
+    "date": "2026-10-01",
+    "bundle_verify_exit": 0,
+    "bundle_import_exit": 0,
+    "fsck_full_strict_exit": 0,
+    "complete_history": true,
+    "object_counts": {
+      "commit": 42,
+      "tree": 1419,
+      "blob": 1498
+    },
+    "object_inventory_sha256": "f2423c5c6f18aa009670a0fee3f4b239b5c5a09bcfb42f5618d4e3202879c9fe",
+    "object_inventory_encoding": "SHA256 of lexicographically sorted git cat-file --batch-all-objects --batch-check='%(objectname) %(objecttype) %(objectsize)' lines, UTF-8, each including a newline.",
+    "all_history_path_count": 491,
+    "tree_file_modes": [
+      "100644"
+    ],
+    "baseline_file_count": 487,
+    "corrected_reference_file_count": 491,
+    "file_extensions": [
+      ".bp",
+      ".flags",
+      ".java",
+      ".json",
+      ".kt",
+      ".mp4",
+      ".xml"
+    ],
+    "non_utf8_blob_count": 1,
+    "lfs_pointer_blob_count": 0,
+    "secret_scan_object_count": 2959,
+    "secret_patterns": [
+      "private-key-PEM",
+      "GitHub-token",
+      "AWS-access-key-id",
+      "Google-API-key",
+      "quoted-credential-assignment"
+    ],
+    "secret_pattern_match_count": 0,
+    "absence_of_secrets_guaranteed": false,
+    "scope": "All imported objects and all 42 commit trees were inspected offline. Pattern scanning is bounded, not a comprehensive security or legal assurance. No network availability check or Android build was performed."
+  },
+  "redistribution_review": {
+    "status": "BLOCKED",
+    "license_files_found": [],
+    "license_filename_scope": "LICENSE, LICENCE, NOTICE, COPYING, AUTHORS and COPYRIGHT names across all commit trees",
+    "package_default_license_found": false,
+    "collector_file_license_found": false,
+    "apache_header_blob_count": 29,
+    "whole_bundle_license_established": false,
+    "source_evidence": {
+      "build_definition_blob": "dba728e98a92256b3a216372e4941b91e60b09f3",
+      "collector_baseline_blob": "7babcdca201d562dda986ccbca355e1086d0b2be",
+      "collector_corrected_blob": "9ba996fbca0d651e6fba39bc1b164fc9a8f130df",
+      "stock_app_icon_import_commit": "7510d82c7f73bc7520e09f28e39a8cb51f62c88a",
+      "stock_overlay_import_commit": "aba998edebe9be6f66f6dc77fa2597a5b84c0f14"
+    },
+    "unlicensed_binary_review_item": {
+      "path": "res/raw/fingerprint_location_animation.mp4",
+      "blob": "076aa0fb9fcdb85edf573910b389b5e93c39c380",
+      "bytes": 102691,
+      "introducing_commit": "0854ddecd618f8381ad702fac09ddff58b17f71f",
+      "license_established": false
+    },
+    "excluded_historical_materials": [
+      "tests/fixtures/settings_google_screen_collector.before.json",
+      "patches/vendor_google_apps_SettingsGoogle/0001-fix-screen-collector.patch"
+    ],
+    "scope": "File-specific Apache headers on some other files do not cover the collector, imported stock resources or the entire history. The bundle, original patch, complete collector fixture and historical source copies are excluded from the public control repository. Historical path strings are provenance only, never default input paths. This descriptor grants no distribution rights; public synthetic tests do not establish original-source equivalence."
+  },
+  "unblock_requirements": [
+    "Obtain verifiable redistribution permission covering the preserved source, stock resources and all bundled history, with required original license texts and notices; alternatively design and review an authorized replacement recovery input without claiming this baseline is unchanged.",
+    "Establish an authorized acquisition route for the original patch as well as the bundle. Keep the complete collector fixture and historical source copies excluded unless separately authorized; the control repository's original-work license is not their license.",
+    "Provide an authorized retrievable recovery artifact, preserve its provenance, pin its bytes and SHA256, and repeat object/content verification before updating this BLOCKED status.",
+    "Separately verify other locked sources, build prerequisites and signing inputs; successful local bundle validation alone does not establish a complete independent ROM rebuild."
+  ]
+}

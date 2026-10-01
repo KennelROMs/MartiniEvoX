@@ -1,0 +1,44 @@
+# Private historical originals remain on the control host, not in public history.
+/recovery.log
+/docs/status/
+/docs/research/
+/docs/superpowers/
+/patches/*/README.md
+/patches/*/evidence/
+/patches/*/change.json
+# SettingsGoogle source redistribution is unresolved; explicit external inputs only.
+/patches/vendor_google_apps_SettingsGoogle/0001-fix-screen-collector.patch
+/tests/fixtures/settings_google_screen_collector.before.json
+
+# Android workspaces, generated output and local credentials are external inputs.
+/.repo/
+/out/
+/artifacts/
+/logs/
+/keys/
+/private/
+/local/
+/.env
+/.env.*
+/*.local.json
+/.claude/
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.pk8
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.key
+*.img
+*.zip
+*.tar
+*.tar.*
+*.bin
+*.bundle
+
+# Public certificates and source recovery exceptions additionally require
+# explicit entries in repository-files.json; an ignore rule is not approval.

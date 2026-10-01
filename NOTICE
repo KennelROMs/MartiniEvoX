@@ -1,0 +1,26 @@
+MartiniEvoX control repository
+
+Original control tools, new configuration and project documentation authored for
+this repository are licensed under Apache License 2.0; see LICENSE.
+
+This license does not replace third-party notices or grant rights to referenced
+Android, Linux, Google, OPlus, Qualcomm or other upstream components. The frozen
+manifest is a source-identity inventory, not a sublicense of those projects.
+
+Retained fixture and patch material includes notices from the Android Open Source
+Project, the LineageOS Project, Unlegacy-Android Project, and The Linux Foundation.
+Their original notices and applicable license terms remain in the files/fixtures.
+The Linux Foundation fstab material carries its own three-clause terms; it is not
+relicensed merely by appearing beside the top-level Apache license.
+
+SettingsGoogle recovery source, the original collector fixture and original
+context-bearing patch are NOT included in the public file inventory. Their
+redistribution license has not been established. Explicit external input metadata
+and synthetic tests do not grant a license to redistribute those external inputs.
+
+No ROM, proprietary vendor blob, signing private key or raw device log is included.
+The selected OTA verification certificate/public key contain only public material;
+the generic Android certificate subject is not a claim of Google authorization.
+
+See docs/PROVENANCE.md for scope, sources and exclusions. Stage only explicitly
+reviewed files; no automatic publishing or general audit framework is provided.

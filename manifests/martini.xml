@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Local manifest for OnePlus 9RT (martini, sm8350) on Evolution-X (branch: cnb).
+
+    Adds the 7 device-support repositories from LineageOS / TheMuppets
+    (revision lineage-24.0). The default Evolution-X manifest snapshot
+    (HEAD 32fdfa5bb6f46f61ce1618795a52a958e3a2cf33) tracks none of these
+    paths, so no remove-project entries are needed.
+
+    Verified lineage-24.0 HEADs at audit time (for reference only; revision
+    is pinned to the branch, not the commit):
+      LineageOS/android_device_oneplus_martini            3c226659a17d07f17a661e2571370af88cc16fb6
+      LineageOS/android_device_oneplus_sm8350-common      88ef16a01303b36544633ee55c2d9bf413d4bd3c
+      LineageOS/android_kernel_oneplus_sm8350             abd4ede9ec6463110b40360a4a772e1285e995dd
+      LineageOS/android_hardware_oplus                    6e6f3dd8d41abbc99c30ce91e78d6cf5515607d0
+      LineageOS/android_hardware_pixelworks_interfaces    462ccb7db689de0a92cafdde5efb3c81fa617448
+      TheMuppets/proprietary_vendor_oneplus_martini      52ed9183111719515caa07a135dda7ce9e95de88
+      TheMuppets/proprietary_vendor_oneplus_sm8350-common 445ead080f9ffb2be428405cea6e474e0fc3db05
+-->
+<manifest>
+    <remote name="martini-los" fetch="https://github.com/LineageOS/" />
+    <remote name="martini-vendor" fetch="https://github.com/TheMuppets/" />
+
+    <project name="android_device_oneplus_martini"
+             path="device/oneplus/martini"
+             remote="martini-los"
+             revision="lineage-24.0" />
+
+    <project name="android_device_oneplus_sm8350-common"
+             path="device/oneplus/sm8350-common"
+             remote="martini-los"
+             revision="lineage-24.0" />
+
+    <project name="android_kernel_oneplus_sm8350"
+             path="kernel/oneplus/sm8350"
+             remote="martini-los"
+             revision="lineage-24.0" />
+
+    <project name="android_hardware_oplus"
+             path="hardware/oplus"
+             remote="martini-los"
+             revision="lineage-24.0" />
+
+    <project name="android_hardware_pixelworks_interfaces"
+             path="hardware/pixelworks/interfaces"
+             remote="martini-los"
+             revision="lineage-24.0" />
+
+    <project name="proprietary_vendor_oneplus_martini"
+             path="vendor/oneplus/martini"
+             remote="martini-vendor"
+             revision="lineage-24.0" />
+
+    <project name="proprietary_vendor_oneplus_sm8350-common"
+             path="vendor/oneplus/sm8350-common"
+             remote="martini-vendor"
+             revision="lineage-24.0" />
+</manifest>

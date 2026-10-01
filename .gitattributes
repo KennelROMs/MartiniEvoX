@@ -1,0 +1,15 @@
+# Preserve historical patches, fixtures, snapshots and evidence byte-for-byte.
+*.patch -text -whitespace
+tests/fixtures/** -text
+manifests/locked/** -text -whitespace
+certificates/*.pem -text -whitespace
+sources/** -text
+docs/evidence/** -text
+
+# Newly authored control code and prose use LF.
+*.py text eol=lf
+*.md text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+LICENSE -text -whitespace
+NOTICE text eol=lf

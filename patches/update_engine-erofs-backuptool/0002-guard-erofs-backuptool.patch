@@ -1,0 +1,251 @@
+diff --git a/Android.bp b/Android.bp
+index 99164d6c..6cf1efe8 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -1109,6 +1109,7 @@ filegroup {
+         "common/action_pipe_unittest.cc",
+         "common/action_processor_unittest.cc",
+         "common/action_unittest.cc",
++        "common/backuptool_utils_unittest.cc",
+         "common/cow_operation_convert_unittest.cc",
+         "common/cpu_limiter_unittest.cc",
+         "common/fake_prefs.cc",
+diff --git a/common/utils.cc b/common/utils.cc
+index d859618f..11a6fc52 100644
+--- a/common/utils.cc
++++ b/common/utils.cc
+@@ -360,6 +360,40 @@ bool ReadFileChunk(const string& path,
+   return ReadFileChunkAndAppend(path, offset, size, out_p);
+ }
+ 
++bool ShouldRunBackuptool(const string& partition_name,
++                        const string& target_filesystem_type,
++                        const string& source_path) {
++  if (partition_name != "system" || target_filesystem_type != "ext4" ||
++      source_path.empty()) {
++    return false;
++  }
++
++  constexpr off64_t kSuperblockOffset = 0x400;
++  constexpr size_t kHeaderSize = 0x3a;
++  brillo::Blob header;
++  if (!ReadFileChunk(source_path, kSuperblockOffset, kHeaderSize, &header) ||
++      header.size() != kHeaderSize) {
++    LOG(WARNING) << "Skipping backuptool: cannot read filesystem header from "
++                 << source_path;
++    return false;
++  }
++
++  // EROFS stores other data where ext filesystems store the mount count/magic.
++  // Recognize it first, even if those unrelated bytes resemble ext metadata.
++  const bool is_erofs = header[0] == 0xe2 && header[1] == 0xe1 &&
++                        header[2] == 0xf5 && header[3] == 0xe0;
++  if (is_erofs || header[0x38] != 0x53 || header[0x39] != 0xef) {
++    LOG(INFO) << "Skipping backuptool: source is not an ext filesystem: "
++              << source_path;
++    return false;
++  }
++
++  const uint16_t mount_count = static_cast<uint16_t>(header[0x34]) |
++                              (static_cast<uint16_t>(header[0x35]) << 8);
++  LOG(INFO) << source_path << " ext mount count since fsck: " << mount_count;
++  return mount_count > 0;
++}
++
+ off64_t BlockDevSize(const char* path) {
+   android::base::unique_fd fd(open(path, O_RDONLY | O_CLOEXEC));
+   if (fd == -1) {
+diff --git a/common/utils.h b/common/utils.h
+index 255b89a1..1be57334 100644
+--- a/common/utils.h
++++ b/common/utils.h
+@@ -143,6 +143,12 @@ bool ReadFileChunk(const std::string& path,
+                    off64_t size,
+                    brillo::Blob* out_p);
+ 
++// Whether legacy writable-system addon restoration is applicable. Does not
++// mount or modify either partition. Read errors and unsupported inputs skip it.
++bool ShouldRunBackuptool(const std::string& partition_name,
++                        const std::string& target_filesystem_type,
++                        const std::string& source_path);
++
+ // Invokes |cmd| in a pipe and appends its stdout to the container pointed to by
+ // |out_p|. Returns true upon successfully reading all of the output, false
+ // otherwise, in which case the state of the output container is unknown.
+diff --git a/payload_consumer/postinstall_runner_action.cc b/payload_consumer/postinstall_runner_action.cc
+index 83969f63..769c3670 100644
+--- a/payload_consumer/postinstall_runner_action.cc
++++ b/payload_consumer/postinstall_runner_action.cc
+@@ -184,41 +184,22 @@ bool PostinstallRunnerAction::MountPartition(
+ 
+ #ifdef __ANDROID__
+ #if !defined(__ANDROID_RECOVERY__)
+-  // Check the currently installed /system partition to see if it's ever
+-  // been mounted R/W. If it has, we'll run backuptool scripts for it
+-  // since we can safely assume something on the partition has been
+-  // changed and we won't be breaking verity (since it's already been
+-  // broken). If it hasn't ever been mounted R/W, we can assume that
+-  // the rom that the user is upgrading to will have everything they
+-  // need and no addon.d scripts will need to be run to retain stuff
+-  // after the upgrade.
+-  //
+-  // Use the following disk layout info to make the determination
+-  // https://ext4.wiki.kernel.org/index.php/Ext4_Disk_Layout
+-  // Super block starts from block 0, offset 0x400
+-  //   0x2C: len32 Mount time
+-  //   0x30: len32 Write time
+-  //   0x34: len16 Number of mounts since the last fsck
+-  //   0x38: len16 Magic signature 0xEF53
++  // Legacy addon.d restoration can write only an ext4 system target.
++  // Do not interpret EROFS or unknown source data as ext metadata. The mount
++  // count remains a compatibility heuristic, not an audit of system changes.
+ 
+   string source_path;
+ 
+-  if (install_plan_.source_slot != BootControlInterface::kInvalidSlot) {
+-    boot_control_->GetPartitionDevice(partition.name, install_plan_.source_slot, &source_path);
++  if (install_plan_.source_slot != BootControlInterface::kInvalidSlot &&
++      !boot_control_->GetPartitionDevice(
++          partition.name, install_plan_.source_slot, &source_path)) {
++    LOG(WARNING) << "Unable to resolve source partition for backuptool: "
++                 << partition.name;
++    source_path.clear();
+   }
+ 
+-  uint16_t mount_count = 0;
+-
+-  if (!source_path.empty()) {
+-    brillo::Blob chunk;
+-
+-    utils::ReadFileChunk(source_path, 0x400 + 0x34, sizeof(uint16_t), &chunk);
+-    mount_count = *reinterpret_cast<uint16_t*>(chunk.data());
+-  }
+-
+-  LOG(INFO) << source_path << " has been mounted R/W " << mount_count << " times.";
+-
+-  if (mount_count > 0) {
++  if (utils::ShouldRunBackuptool(
++          partition.name, partition.filesystem_type, source_path)) {
+     if (!utils::SetBlockDeviceReadOnly(mountable_device, false)) {
+       LOG(ERROR) << "Error marking the device " << mountable_device << " writeable.";
+       return false;
+diff --git a/common/backuptool_utils_unittest.cc b/common/backuptool_utils_unittest.cc
+new file mode 100644
+index 00000000..75374213
+--- /dev/null
++++ b/common/backuptool_utils_unittest.cc
+@@ -0,0 +1,114 @@
++//
++// Copyright (C) 2009 The Android Open Source Project
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++//
++
++#include "update_engine/common/utils.h"
++
++#include <array>
++#include <cstdint>
++#include <cstdlib>
++#include <string>
++
++#include <gtest/gtest.h>
++
++namespace chromeos_update_engine {
++
++class BackuptoolEligibilityTest : public ::testing::Test {
++ protected:
++  brillo::Blob Header(uint16_t count, bool ext_magic, bool erofs_magic) {
++    brillo::Blob data(0x400 + 0x3a, 0);
++    data[0x434] = static_cast<uint8_t>(count & 0xff);
++    data[0x435] = static_cast<uint8_t>(count >> 8);
++    if (ext_magic) {
++      data[0x438] = 0x53;
++      data[0x439] = 0xef;
++    }
++    if (erofs_magic) {
++      data[0x400] = 0xe2;
++      data[0x401] = 0xe1;
++      data[0x402] = 0xf5;
++      data[0x403] = 0xe0;
++    }
++    return data;
++  }
++
++  ScopedTempFile source_{"backuptool_source.XXXXXX"};
++};
++
++TEST_F(BackuptoolEligibilityTest, FilesystemMatrix) {
++  struct Case {
++    const char* name;
++    const char* partition;
++    const char* target;
++    bool ext_magic;
++    bool erofs_magic;
++    uint16_t count;
++    bool expected;
++  };
++  const Case cases[] = {
++      {"ext-zero", "system", "ext4", true, false, 0, false},
++      {"ext-one", "system", "ext4", true, false, 1, true},
++      {"ext-high-byte", "system", "ext4", true, false, 0x0100, true},
++      {"ext-to-erofs", "system", "erofs", true, false, 1, false},
++      {"erofs-to-erofs", "system", "erofs", false, true, 1, false},
++      {"erofs-to-ext", "system", "ext4", false, true, 1, false},
++      {"erofs-magic-collision", "system", "ext4", true, true, 1, false},
++      {"unknown-source", "system", "ext4", false, false, 1, false},
++      {"non-system", "vendor", "ext4", true, false, 1, false},
++      {"unknown-target", "system", "", true, false, 1, false},
++  };
++  for (const auto& test : cases) {
++    SCOPED_TRACE(test.name);
++    const auto data = Header(test.count, test.ext_magic, test.erofs_magic);
++    ASSERT_TRUE(utils::WriteFile(source_.path().c_str(), data.data(), data.size()));
++    EXPECT_EQ(utils::ShouldRunBackuptool(
++                  test.partition, test.target, source_.path()),
++              test.expected);
++  }
++}
++
++TEST_F(BackuptoolEligibilityTest, EmptySourcePath) {
++  EXPECT_FALSE(utils::ShouldRunBackuptool("system", "ext4", ""));
++}
++
++TEST_F(BackuptoolEligibilityTest, MissingSourceFile) {
++  const std::string source_path = source_.path() + ".missing";
++  EXPECT_EXIT(
++      {
++        const bool run = utils::ShouldRunBackuptool("system", "ext4", source_path);
++        std::_Exit(run ? 1 : 0);
++      },
++      ::testing::ExitedWithCode(0),
++      ".*");
++}
++
++TEST_F(BackuptoolEligibilityTest, ShortSourceFiles) {
++  for (const size_t size : std::array<size_t, 4>{0, 0x400, 0x435, 0x439}) {
++    SCOPED_TRACE(size);
++    auto data = Header(1, true, false);
++    data.resize(size);
++    ASSERT_TRUE(utils::WriteFile(source_.path().c_str(), data.data(), data.size()));
++    const std::string source_path = source_.path();
++    EXPECT_EXIT(
++        {
++          const bool run = utils::ShouldRunBackuptool("system", "ext4", source_path);
++          std::_Exit(run ? 1 : 0);
++        },
++        ::testing::ExitedWithCode(0),
++        ".*");
++  }
++}
++
++}  // namespace chromeos_update_engine

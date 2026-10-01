@@ -1,0 +1,76 @@
+diff --git a/payload_consumer/payload_verifier.cc b/payload_consumer/payload_verifier.cc
+index 9c135f45..83ef8c9e 100644
+--- a/payload_consumer/payload_verifier.cc
++++ b/payload_consumer/payload_verifier.cc
+@@ -95,9 +95,7 @@ std::unique_ptr<PayloadVerifier> PayloadVerifier::CreateInstanceFromZipPath(
+ 
+ bool PayloadVerifier::VerifySignature(
+     const string& signature_proto, const brillo::Blob& sha256_hash_data) const {
+-  LOG(INFO) << "Payload signature verification skipped";
+-  return true;
+-  /*TEST_AND_RETURN_FALSE(!public_keys_.empty());
++  TEST_AND_RETURN_FALSE(!public_keys_.empty());
+ 
+   Signatures signatures;
+   LOG(INFO) << "signature blob size = " << signature_proto.size();
+@@ -142,7 +140,7 @@ bool PayloadVerifier::VerifySignature(
+   for (const auto& sig_hash_data : tested_hashes) {
+     utils::HexDumpVector(sig_hash_data);
+   }
+-  return false;*/
++  return false;
+ }
+ 
+ bool PayloadVerifier::VerifyRawSignature(
+diff --git a/payload_generator/payload_signer_unittest.cc b/payload_generator/payload_signer_unittest.cc
+index ac11fcfd..afe4e65c 100644
+--- a/payload_generator/payload_signer_unittest.cc
++++ b/payload_generator/payload_signer_unittest.cc
+@@ -173,4 +173,47 @@ TEST_F(PayloadSignerTest, VerifySignedPayloadTest) {
+       payload_file.path(), GetBuildArtifactsPath(kUnittestPublicKeyPath)));
+ }
+ 
++TEST_F(PayloadSignerTest, RejectInvalidSignatureInputs) {
++  string signature;
++  SignSampleData(&signature, {GetBuildArtifactsPath(kUnittestPrivateKeyPath)});
++
++  string public_key;
++  ASSERT_TRUE(utils::ReadFile(GetBuildArtifactsPath(kUnittestPublicKeyPath),
++                              &public_key));
++  auto verifier = PayloadVerifier::CreateInstance(public_key);
++  ASSERT_NE(verifier, nullptr);
++  ASSERT_TRUE(verifier->VerifySignature(signature, hash_data_));
++
++  auto wrong_hash = hash_data_;
++  wrong_hash[0] ^= 1;
++  EXPECT_FALSE(verifier->VerifySignature(signature, wrong_hash));
++
++  Signatures parsed;
++  ASSERT_TRUE(parsed.ParseFromString(signature));
++  ASSERT_EQ(parsed.signatures_size(), 1);
++  ASSERT_GT(parsed.signatures(0).data().size(), 1U);
++
++  vector<string> invalid_signatures = {string(), string("\x0a\x80", 2)};
++
++  auto corrupted = parsed;
++  (*corrupted.mutable_signatures(0)->mutable_data())[0] ^= 1;
++  invalid_signatures.push_back(corrupted.SerializeAsString());
++
++  auto truncated = parsed;
++  auto* entry = truncated.mutable_signatures(0);
++  entry->mutable_data()->pop_back();
++  entry->set_unpadded_signature_size(entry->data().size());
++  invalid_signatures.push_back(truncated.SerializeAsString());
++
++  auto oversized = parsed;
++  entry = oversized.mutable_signatures(0);
++  entry->set_unpadded_signature_size(entry->data().size() + 1);
++  invalid_signatures.push_back(oversized.SerializeAsString());
++
++  for (size_t i = 0; i < invalid_signatures.size(); ++i) {
++    SCOPED_TRACE(i);
++    EXPECT_FALSE(verifier->VerifySignature(invalid_signatures[i], hash_data_));
++  }
++}
++
+ }  // namespace chromeos_update_engine

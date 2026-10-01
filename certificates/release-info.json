@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "scope": "Existing project OTA public identity only; not a complete APK keyset or AVB identity",
+  "certificate": "certificates/martini-release.x509.pem",
+  "public_key": "certificates/martini-release.public.pem",
+  "certificate_pem_sha256": "223c85974aa58e39c92fd5e3eda3ed5b31f1b722cec504d79d703dff4830a1f7",
+  "public_key_pem_sha256": "d7386e0f8a53579d77554c90bd2dbf8bd15f28126ab8b9a3cf9e808f50abbfb4",
+  "certificate_der_sha256": "d6310c4135f42e1cb4087d6a21c88d3f8d5c04f89e7db0ef1e08a2122b41f9af",
+  "public_key_spki_der_sha256": "5a34b5891d03033f4bdc30e37375c51051e41e1ced2b0eab7c8392184856966a",
+  "subject_scope": "generic Android development template, not maintainer personal identity or Google authorization",
+  "private_keys_in_repository": false,
+  "complete_apk_keyset_pinned": false,
+  "ota_upgrade_runtime_validated": false
+}
