@@ -4,6 +4,9 @@
 `DONE`；DONE必须有相应范围的验证记录。未分配未来任务的执行者不作推断。
 提交记录可由 `git log --oneline --all` 查看；提交说明使用任务ID。
 
+**下一项：KSU-01。** 仓库最小闭环已完成；REPO-05的真实重建验收仍待确认资源，
+不把未执行事项写成通过，也不再插入额外仓库审计阶段。
+
 ## 控制仓库
 
 | ID | 状态 | 交付/验收 | 阻塞与下一动作 |
@@ -11,8 +14,8 @@
 | REPO-01 | DONE | 公开边界、原创许可、唯一接手入口与本地Git | 基线提交`fd506e5`；原始私密材料和草稿不入Git |
 | REPO-02 | DONE | 1262项目便携锁、六步补丁清单、普通profile、外部恢复描述 | 数据合同9/9通过；独立公共恢复缺口仍见SRC-01 |
 | REPO-03 | DONE | 一个最小重建脚本及关键功能测试 | `tools/rebuild.py`实现init/prepare/build；无通用审计/镜像验证框架，真实构建仍见REPO-05 |
-| REPO-04 | PENDING_VALIDATION | 审查后的提交、临时clone测试及无聊天接手 | 正在完成一次干净clone验收 |
-| REPO-05 | BLOCKED | 从控制提交实际同步/重建/归档/验收ROM | SRC-01、构建服务器资源与执行窗口未闭合；不在小控制机编译 |
+| REPO-04 | DONE | 本地提交与一次干净clone功能验证 | `3b34c18`：38项测试通过、dry-run无写入；见evidence/control-repository-20261001.json |
+| REPO-05 | PENDING_VALIDATION | 从控制提交实际同步/重建/归档/验收ROM | 待确认构建机、已有签名材料和执行窗口；持有合法外部输入即可运行，不等待公开分发缺口解决 |
 | SRC-01 | BLOCKED | SettingsGoogle旧基线的合法、公开可获取恢复材料 | bundle对象已验证，整份分发许可不足；不入Git，记录外部受控输入 |
 | LIC-01 | DONE | 确定本次公开范围与第三方边界 | Settings原材料外置，其他保留原声明；见PROVENANCE，未声称上游许可缺口已解决 |
 

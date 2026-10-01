@@ -58,9 +58,9 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | SettingsGoogle恢复对象完整性 | 已在临时仓库离线验证 |
 | SettingsGoogle恢复材料公开许可/可获取性 | **BLOCKED**；bundle不入库 |
 | 最小重建脚本及离线回归 | `tools/rebuild.py`仅含init/prepare/build；功能测试已通过，未运行真实Android构建 |
-| 新clone自足性/接手验收 | PENDING |
+| 新clone自足性 | 已通过：代码提交`3b34c18`，38项离线测试及build dry-run；见[记录](evidence/control-repository-20261001.json) |
 | 从此Git提交实际重建ROM | PENDING；需独立构建环境与执行窗口 |
 | 本次手机/OTA验证 | 未执行 |
 
-下一步见 [REPO任务](TASKS.md#控制仓库)。没有远端发布。所有手机写入与新增付费资源
-均不在本阶段授权内。
+下一项是 [KSU-01](TASKS.md#后续功能与交付)，按既定顺序开始可选内核适配。
+真实整包重建仍单独记为待验收。没有远端发布；手机写入与新增付费资源仍需明确授权。

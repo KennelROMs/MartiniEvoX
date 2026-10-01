@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-01",
+  "tested_code_commit": "3b34c18974ac3f86eaa41c78368fefdbb00b249f",
+  "environment": "clean local Git clone with no hardlinks",
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s CLONE/tests -q",
+    "run": 38,
+    "passed": 38,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "scope": "frozen inputs, retained ROM patch/configuration contracts and minimal rebuild-script behavior"
+  },
+  "smoke_checks": {
+    "help_and_three_dry_runs_in_working_checkout": "passed",
+    "build_dry_run_from_clean_clone": "passed",
+    "planned_source_directory_created": false,
+    "clone_worktree_clean_after_checks": true
+  },
+  "excluded_from_clone": [
+    "raw recovery.log",
+    "local drafts and private historical evidence",
+    "SettingsGoogle original patch and full collector fixture",
+    "SettingsGoogle source bundle",
+    "private signing keys and ROM artifacts"
+  ],
+  "not_performed": [
+    "real Repo sync or LFS retrieval",
+    "full Android build from this control commit",
+    "real artifact archive or native signature verification",
+    "phone operations or OTA upgrade",
+    "remote repository creation or publication"
+  ],
+  "note": "This records one clean-clone acceptance, not a general audit framework or independent security certification."
+}
