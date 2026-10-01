@@ -1,0 +1,14 @@
+diff --git a/config/BoardConfigKernel.mk b/config/BoardConfigKernel.mk
+index 85fb54d..6650afd 100644
+--- a/config/BoardConfigKernel.mk
++++ b/config/BoardConfigKernel.mk
+@@ -217,7 +217,8 @@ endif
+ # This needs to be an absolute path, so only set this if the standard out dir isn't used
+ OUT_DIR_PREFIX := $(shell echo $(OUT_DIR) | sed -e 's|/target/.*$$||g')
+ KERNEL_BUILD_OUT_PREFIX :=
+-ifeq ($(OUT_DIR_PREFIX),out)
++# Any relative OUT_DIR (not only "out") is relative to the top, not the kernel dir.
++ifeq ($(filter /%,$(OUT_DIR_PREFIX)),)
+     KERNEL_BUILD_OUT_PREFIX := $(BUILD_TOP)/
+ endif
+ 

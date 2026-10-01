@@ -45,6 +45,13 @@
       "sha256": "06bdcdef5cc681f3bb9e5bb08fd3815420355bb9f58e42847dff4417863da5fd"
     },
     {
+      "id": "vendor-lineage-kernel-relative-out",
+      "repo": "vendor/lineage",
+      "base_revision": "ed19f3ad5ed5501579ac4f0b30f3f7d35cda6f63",
+      "patch": "patches/vendor_lineage_kernel_out/0001-kernel-relative-out-dir.patch",
+      "sha256": "6413abe5369687142778b62827eba18421c7d0a52ae1ba17d5edd5da4c96d75f"
+    },
+    {
       "id": "martini-ksu-kernel-variant",
       "repo": "device/oneplus/martini",
       "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
