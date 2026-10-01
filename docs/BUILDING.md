@@ -107,6 +107,17 @@ python3 "$CONTROL/tools/rebuild.py" prepare --source "$SOURCE"
 在上述任一命令末尾加 `--dry-run` 只显示计划，不联网、建目录或运行Android代码。
 控制机只适合控制仓库工作；构建服务器为16核/62GiB，源码约211GiB、每个OUT约170GiB。
 
+## OTA更新条目
+
+```sh
+python3 "$CONTROL/tools/ota_json.py" EvolutionX-*.zip --url "<最终下载地址>" > martini.json
+```
+
+条目字段与Evolution X Updater的解析要求一致，时间戳取自包内OTA元数据（等于该构建的
+`ro.build.date.utc`）。设备上的Updater默认指向官方`Evolution-X/OTA`，其中没有martini；
+在线更新需要先确定托管位置并为设备覆盖`updater_server_url`，未决定前只能用
+`push-update.sh`本地推送。
+
 ## 验收范围
 
 - 离线测试验证脚本的实际关键行为和已有ROM补丁/配置，不以测试数量代表质量。

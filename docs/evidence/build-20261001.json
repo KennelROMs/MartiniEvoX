@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-01",
+  "tasks": ["REPO-05", "SYNC-01", "PIXEL-02", "KSU-02", "OTA-01"],
+  "scope": "Server build from a committed control revision, archive and offline package checks. No device operation, first boot or OTA install was performed.",
+  "control_commit": "7d060c8cda6234ee8120f93c4d3e0ef7a54babe8",
+  "lock": "manifests/locked/martini-20261001-upstream.xml",
+  "source_history": [
+    "rebuild.py init from e24b1f8 into an empty SOURCE: exit 0 (after the earlier 0e2348e attempt failed on 10 rewritten Evolution-X pins)",
+    "rebuild.py update to the refreshed lock, then prepare: exit 0 (all series patches applied on real upstream source)",
+    "Two paths changed project identity upstream (external/KernelSU-Next, packages/modules/common); their clean checkouts and gitdirs were moved out of SOURCE instead of --force-sync"
+  ],
+  "build_fixes_found": [
+    "Siso cannot load its config with an absolute OUT_DIR; rebuild.py exports OUT_DIR relative to SOURCE",
+    "LineageOS only prefixed the kernel O= path for OUT_DIR=out; patched to accept any relative OUT_DIR (out-ksu)"
+  ],
+  "normal_rom": {
+    "run": "run-20261001T194406Z-aus0bz2p",
+    "status": "BUILT_AND_ARCHIVED_UNVALIDATED",
+    "target": "lineage_martini-cp2a-userdebug / m evolution",
+    "signing": "release",
+    "kernel_source": "kernel/oneplus/sm8350",
+    "zip": {
+      "name": "EvolutionX-17.0-20261001-martini-12.2-Unofficial.zip",
+      "bytes": 3739561981,
+      "sha256": "8485008b6f7a166a78618820a41a471832669a578f56969ea38c8de54fe94050"
+    },
+    "target_files_tar_zst": {
+      "bytes": 7781770538,
+      "sha256": "689d4a1e7db0708280bbbeabda1d9ae040252b08c2d63f402cab99e527374301"
+    }
+  },
+  "ksu_boot": {
+    "run": "run-20261001T200051Z-b_671v4a",
+    "status": "BUILT_AND_ARCHIVED_UNVALIDATED",
+    "target": "m bootimage with MARTINI_KSU=true",
+    "kernel_source": "kernel/oneplus/sm8350-ksu",
+    "image": {
+      "name": "EvolutionX-17.0-20261001-martini-12.2-Unofficial-ksu-boot.img",
+      "bytes": 201326592,
+      "sha256": "7cf2b85236704a9610bbe1626f1449534f7c011e94c87307aeb6cfb28a0b7c2a"
+    },
+    "kernelsu_next": {"revision": "cd739c78802333455391df973db17d9f28328b83", "version": 33304, "tag": "v3.4.0-legacy", "hook_mode": "Manual"},
+    "config": ["CONFIG_KSU=y", "CONFIG_KSU_MANUAL_HOOK=y", "CONFIG_CFI_CLANG=y", "CONFIG_THINLTO=y", "CONFIG_SHADOW_CALL_STACK=y", "CONFIG_MODVERSIONS=y"]
+  },
+  "pairing_checks": {
+    "module_symvers_entries": 14610,
+    "crc_differences": 0,
+    "normal_kernel_has_ksu_config": false,
+    "kernel_release": "5.4.302-qgki-g187d13cd30e2-dirty (both)",
+    "boot_header_and_avb_algorithm": "identical except kernel",
+    "boot_ramdisk_difference": "only /init GNU build ID (16 bytes)"
+  },
+  "ota_offline_checks": {
+    "metadata": {
+      "ota_type": "AB",
+      "pre_device": "MT2111_IND,OP5155L1",
+      "post_security_patch_level": "2026-09-01",
+      "post_timestamp": 1790883857,
+      "installed_candidate_timestamp": 1790763673
+    },
+    "payload_signature_project_key_exit": 0,
+    "payload_signature_wrong_key_exit": 1,
+    "whole_file_signature_exit": 0,
+    "ota_certificate_der_sha256": "d6310c4135f42e1cb4087d6a21c88d3f8d5c04f89e7db0ef1e08a2122b41f9af",
+    "tools": "out/host/linux-x86/bin/delta_generator --in_file --public_key; check_ota_package_signature"
+  },
+  "not_performed": [
+    "flashing, first boot, KSU temporary boot or Manager grant/deny",
+    "OTA install from a8114027, data retention, snapshot merge",
+    "PixelOS feature checks on device, performance/thermal comparison"
+  ]
+}

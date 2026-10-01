@@ -5,9 +5,19 @@
 
 ## 一句话定位
 
-**手机运行首个工程候选`a8114027`。控制仓库已跟随上游刷新，PixelOS增强与KernelSU Next
-补丁在真实源码上`prepare`通过；普通ROM正在构建服务器整包构建，随后构建配对的KSU boot。**
-实机验证（KSU、PixelOS项、OTA、问题复核）统一放在全部工作完成之后。
+**交付物已从控制提交`7d060c8`构建完成：整合PixelOS增强、跟随上游的普通ROM，以及与之配对的
+KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。手机仍运行`a8114027`，实机验证
+（OTA升级、PixelOS项、问题复核、KSU）按维护者安排在最后进行。**
+
+## 当前交付物（未实机验证）
+
+| 产物 | SHA256 | 归档（构建服务器 `~/martini/artifacts/`） |
+| --- | --- | --- |
+| `EvolutionX-17.0-20261001-martini-12.2-Unofficial.zip`（3739561981字节） | `8485008b6f7a166a78618820a41a471832669a578f56969ea38c8de54fe94050` | `run-20261001T194406Z-aus0bz2p`（含target-files） |
+| `EvolutionX-17.0-20261001-martini-12.2-Unofficial-ksu-boot.img` | `7cf2b85236704a9610bbe1626f1449534f7c011e94c87307aeb6cfb28a0b7c2a` | `run-20261001T200051Z-b_671v4a` |
+
+两者内核模块CRC一致（14610项），boot仅内核不同；OTA证书与`a8114027`相同，payload对项目公钥
+验签通过、对错误密钥拒绝，post-timestamp晚于候选。详见[构建记录](evidence/build-20261001.json)。
 
 ## 当前手机候选
 
@@ -62,10 +72,10 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | SettingsGoogle外部输入 | 不再需要：上游已含同一修复；历史bundle描述保留 |
 | 重建/同步脚本及离线回归 | `rebuild.py` init/update/prepare/build（`--kernel normal|ksu`）、`refresh_lock.py`；40项测试通过 |
 | 新clone自足性 | 已通过：代码提交`3b34c18`，38项离线测试及build dry-run；见[记录](evidence/control-repository-20261001.json) |
-| 从此Git提交实际重建ROM | IN_PROGRESS：全新`init`成功；`update`+`prepare`到当前锁成功；普通ROM构建中 |
-| KSU Next内核 | 补丁与独立编译通过，普通/KSU导出CRC一致；配对boot待整包后构建 |
+| 从此Git提交实际重建ROM | 已构建并归档（`BUILT_AND_ARCHIVED_UNVALIDATED`）：全新init→update→prepare→build |
+| KSU Next内核 | 配对boot已构建；CRC一致；未实机 |
 | 本次手机/OTA验证 | 未执行（按维护者安排放在最后） |
 
 构建服务器：`~/martini/source`（SOURCE，OUT在其内的`out`与`out-ksu`），归档在
-`~/martini/artifacts/run-*`。旧工作区`~/evo`待新构建成功后退役。
+`~/martini/artifacts/run-*`。旧工作区`~/evo`已在核对密钥一致后删除。
 有GitHub私有远端，未推送或公开发布；手机写入由维护者操作。

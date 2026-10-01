@@ -15,7 +15,7 @@
 | REPO-02 | DONE | 历史候选的便携锁、补丁清单、普通profile | `20260930`锁与基线保留为历史记录 |
 | REPO-03 | DONE | 最小重建脚本及关键功能测试 | `tools/rebuild.py` |
 | REPO-04 | DONE | 本地提交与干净clone功能验证 | evidence/control-repository-20261001.json |
-| REPO-05 | IN_PROGRESS | 从控制提交实际同步/重建/归档ROM | 构建服务器全新`init`成功（`e24b1f8`锁）；`update`到上游刷新锁后`prepare`通过，普通ROM构建中 |
+| REPO-05 | DONE | 从控制提交实际同步/重建/归档ROM | `7d060c8`：全新init→update→prepare→build，构建与归档成功；见evidence/build-20261001.json（实机属OTA-01/PIXEL-02） |
 | SYNC-01 | DONE | 跟随上游的锁刷新 | `tools/refresh_lock.py`；首个刷新锁`20261001-upstream`（1268项目），全部补丁在真实源码上`prepare`通过 |
 | SRC-01 | DONE | SettingsGoogle外部输入 | 上游SettingsGoogle已含同一修复（文件SHA256一致），当前锁无外部输入；历史bundle描述保留 |
 | LIC-01 | DONE | 公开范围与第三方边界 | 见PROVENANCE；PixelOS所用OnePlus公开blob经维护者确认可取用 |
@@ -25,12 +25,12 @@
 | ID | 状态 | 交付/验收 | 记录与下一动作 |
 | --- | --- | --- | --- |
 | PIXEL-01 | DONE | 完整差异/来源/依赖台账 | [PIXELOS](PIXELOS.md)，逐项结论 |
-| PIXEL-02 | IN_PROGRESS | 可行项整合及范围内验证 | 补丁与锁已进入当前序列；整包构建中；实机检查待最终阶段 |
+| PIXEL-02 | PENDING_VALIDATION | 可行项整合及范围内验证 | 已进入交付ROM并构建成功；实机检查见DEVICE-VALIDATION第2节 |
 | KSU-01 | DONE | legacy源码、手动hooks、兼容回移植 | legacy `cd739c78`；独立编译通过；evidence/ksu-kernel-compile-20261001.json |
-| KSU-02 | IN_PROGRESS | 与普通ROM配对的KSU `boot.img` | `--kernel ksu`只构建bootimage；加入PixelOS内核补丁后普通/KSU 14610个导出CRC仍一致；整包后构建 |
-| OTA-01 | TODO | OTA包与升级验证 | 普通ROM构建后离线核对整包/payload签名与元数据；实机`a8114027`→新构建保数据升级待最终阶段 |
+| KSU-02 | PENDING_VALIDATION | 与普通ROM配对的KSU `boot.img` | 已构建；CRC一致、boot仅内核不同；实机临时启动与授权/拒绝见DEVICE-VALIDATION第4节 |
+| OTA-01 | PENDING_VALIDATION | OTA包与升级验证 | 离线：整包与payload签名、错误密钥拒绝、设备断言/SPL/时间戳均通过；`tools/ota_json.py`生成Updater条目；实机升级待最终阶段 |
 | FIX-01 | IN_PROGRESS | 集中修复开放问题并回归 | 见下方问题表 |
-| DELIVERY-01 | TODO | 发布前同步上游、最终构建、发布说明 | Git推送与公开发布需另行授权 |
+| DELIVERY-01 | BLOCKED | 发布前同步上游、最终构建、发布说明 | 需维护者决定OTA托管位置（Updater的`updater_server_url`）及是否公开发布；Git推送另行授权 |
 
 ## 问题
 
