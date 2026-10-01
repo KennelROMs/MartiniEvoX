@@ -29,7 +29,7 @@
 | KSU-01 | DONE | legacy源码、手动hooks、兼容回移植 | legacy `cd739c78`；独立编译通过；evidence/ksu-kernel-compile-20261001.json |
 | KSU-02 | PENDING_VALIDATION | 与普通ROM配对的KSU `boot.img` | 已构建；CRC一致、boot仅内核不同；实机临时启动与授权/拒绝见DEVICE-VALIDATION第4节 |
 | OTA-01 | PENDING_VALIDATION | OTA包与升级验证 | 离线：整包与payload签名、错误密钥拒绝、设备断言/SPL/时间戳均通过；`tools/ota_json.py`生成Updater条目；实机升级待最终阶段 |
-| FIX-01 | IN_PROGRESS | 集中修复开放问题并回归 | 见下方问题表 |
+| FIX-01 | PENDING_VALIDATION | 集中修复开放问题并回归 | 两项已完成源码侧分析（见下表），剩余结论需实机数据 |
 | DELIVERY-01 | BLOCKED | 发布前同步上游、最终构建、发布说明 | 需维护者决定OTA托管位置（Updater的`updater_server_url`）及是否公开发布；Git推送另行授权 |
 
 ## 问题
