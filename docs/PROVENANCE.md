@@ -7,11 +7,14 @@ Apache-2.0。尚未创建远端或公开分发；[LICENSE](../LICENSE)不替代�
 
 - 五份库内ROM diff、EROFS和target-files fixture保留LineageOS、Unlegacy-Android、
   AOSP及Linux Foundation原声明，见[NOTICE](../NOTICE)。不伪造作者/DCO。
-- [补丁清单](../patches/series.json)和[基线](../baselines/20260930-a8114027.json)保存
+- [补丁清单](../patches/series.json)和`baselines/`下各锁的基线保存
   仓库、提交与字节哈希。完整manifest只做已记录的remote规范化。
 - Android、Linux、vendor、固件和GApps仍按各自条件取得；源码URL不是分发授权。
 
 ## SettingsGoogle外部输入
+
+2026-10-01起，上游`vendor_google_apps_SettingsGoogle`的collector文件与此前外部补丁的结果
+逐字节相同，当前锁直接使用上游，不再需要下列外部输入。以下内容只适用于历史候选`20260930`。
 
 未找到覆盖历史bundle和collector源码的明确再分发许可。维护者确认采用
 **公开控制仓库＋外部输入**，不把bundle、原补丁或完整源码fixture纳入Git。

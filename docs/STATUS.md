@@ -5,8 +5,9 @@
 
 ## 一句话定位
 
-**Android 17 EvoX 首个工程候选已完成安装和首启；KernelSU Next内核补丁已独立编译通过。**
-当前在构建服务器上进行REPO-05/KSU-02完整构建，之后PixelOS增强 → OTA → 集中修复。
+**手机运行首个工程候选`a8114027`。控制仓库已跟随上游刷新，PixelOS增强与KernelSU Next
+补丁在真实源码上`prepare`通过；普通ROM正在构建服务器整包构建，随后构建配对的KSU boot。**
+实机验证（KSU、PixelOS项、OTA、问题复核）统一放在全部工作完成之后。
 
 ## 当前手机候选
 
@@ -38,8 +39,10 @@
 
 ## 尚未通过或存在问题
 
-- 高刷新率疑似未生效：尚未确定设置、活动显示模式或应用帧率的具体原因。
-- 相机0.9×模糊：尚未确定App、Camera ID及对应镜头；微距只是候选解释。
+- 高刷新率疑似未生效：静态配置正确（peak 120、内容检测、4秒空闲回落60Hz），待实机区分
+  设计行为与故障。
+- 相机0.9×模糊：新构建由OplusCamera取代Aperture；原因最可能是Aperture对定焦微距镜头的
+  标注，待实机确认。
 - 正常重启/冷启动、设置密码后的解锁、完整硬件矩阵、长期待机/温控未验收。
 - OTA/snapshot、保留数据的升级和可选KSU升级行为未验证。
 - 旧PixelOS回退材料已有准备记录，但未实测回退；另一槽不是保证可用备份。
@@ -54,14 +57,15 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | --- | --- |
 | 本地Git初始化与工作分支 | 已完成；版本记录以`git log`为准 |
 | 当前文档、公开范围、原创Apache-2.0 | 已完成；基线提交`fd506e5` |
-| 完整可移植源码锁/补丁序列 | 已完成：1262项目，五份库内diff加一步外部Settings输入 |
-| SettingsGoogle恢复对象完整性 | 已在临时仓库离线验证 |
-| SettingsGoogle恢复材料公开许可/可获取性 | **BLOCKED**；bundle不入库 |
-| 最小重建脚本及离线回归 | `tools/rebuild.py`仅含init/prepare/build；功能测试已通过，未运行真实Android构建 |
+| 历史候选锁/补丁序列 | 已完成：`20260930`锁（1262项目）保留为历史记录 |
+| 当前锁 | `20261001-upstream`：Evolution-X清单`b3001cf`+本地清单，1268项目；`refresh_lock.py`生成 |
+| SettingsGoogle外部输入 | 不再需要：上游已含同一修复；历史bundle描述保留 |
+| 重建/同步脚本及离线回归 | `rebuild.py` init/update/prepare/build（`--kernel normal|ksu`）、`refresh_lock.py`；40项测试通过 |
 | 新clone自足性 | 已通过：代码提交`3b34c18`，38项离线测试及build dry-run；见[记录](evidence/control-repository-20261001.json) |
-| 从此Git提交实际重建ROM | IN_PROGRESS：构建服务器（16核/62GiB）已确认；首次同步发现上游改写分支，已用新锁修正 |
-| KSU Next内核（KSU-01） | 补丁与独立编译通过；完整ROM构建与实机未执行 |
-| 本次手机/OTA验证 | 未执行 |
+| 从此Git提交实际重建ROM | IN_PROGRESS：全新`init`成功；`update`+`prepare`到当前锁成功；普通ROM构建中 |
+| KSU Next内核 | 补丁与独立编译通过，普通/KSU导出CRC一致；配对boot待整包后构建 |
+| 本次手机/OTA验证 | 未执行（按维护者安排放在最后） |
 
-下一项是 [KSU-02](TASKS.md#后续功能与交付)：同一SOURCE完成普通（兼REPO-05）与KSU构建。
+构建服务器：`~/martini/source`（SOURCE，OUT在其内的`out`与`out-ksu`），归档在
+`~/martini/artifacts/run-*`。旧工作区`~/evo`待新构建成功后退役。
 有GitHub私有远端，未推送或公开发布；手机写入由维护者操作。

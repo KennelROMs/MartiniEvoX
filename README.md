@@ -19,14 +19,15 @@ OnePlus 9RT（MT2110 / martini）的 **Evolution X Android 17 控制仓库**。
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -v
 python3 tools/rebuild.py --help
+python3 tools/refresh_lock.py --help
 ```
 
 重建通过一个脚本完成源码准备、补丁应用和构建，具体前提与参数见
 [BUILDING](docs/BUILDING.md)。真实构建需要有足够资源的Linux机器、Repo/Git LFS、
 Android主机依赖和外部签名材料，不在小型控制机上自动进行。
 
-历史SettingsGoogle源码及原补丁未确认再分发许可，**不在Git中**；合法持有者需显式
-提供其固定哈希对应的材料。详情见 [sources/README](sources/README.md)。
+当前锁跟随上游，不需要外部源码输入；`tools/refresh_lock.py`用于与上游同步。
+历史候选所用的SettingsGoogle外部材料只作记录，见 [sources/README](sources/README.md)。
 有构建入口不等于已完成从此Git版本的真实重建；验收状态以STATUS为准。
 
 ## 许可

@@ -1,48 +1,48 @@
 # 任务与问题台账
 
 更新：2026-10-01。状态为 `TODO`、`IN_PROGRESS`、`PENDING_VALIDATION`、`BLOCKED`、
-`DONE`；DONE必须有相应范围的验证记录。未分配未来任务的执行者不作推断。
-提交记录可由 `git log --oneline --all` 查看；提交说明使用任务ID。
+`DONE`；DONE必须有相应范围的验证记录。提交说明使用任务ID，记录见 `git log`。
 
-**下一项：KSU-02。** KSU-01已完成补丁与独立内核编译；REPO-05与KSU-02在构建服务器
-同一棵新SOURCE上进行（普通与KSU各一个OUT）。未执行事项不写成通过。
+最终交付见 [ROADMAP](ROADMAP.md)：一个普通版ROM + 一个配对的KernelSU Next `boot.img`。
+**实机验证统一放在全部工作完成之后**，步骤见 [DEVICE-VALIDATION](DEVICE-VALIDATION.md)；
+因此需要实机的验收项在此之前只能到 `PENDING_VALIDATION`。
 
-## 控制仓库
+## 控制仓库与上游同步
 
-| ID | 状态 | 交付/验收 | 阻塞与下一动作 |
+| ID | 状态 | 交付/验收 | 记录与下一动作 |
 | --- | --- | --- | --- |
-| REPO-01 | DONE | 公开边界、原创许可、唯一接手入口与本地Git | 基线提交`fd506e5`；原始私密材料和草稿不入Git |
-| REPO-02 | DONE | 1262项目便携锁、六步补丁清单、普通profile、外部恢复描述 | 数据合同9/9通过；独立公共恢复缺口仍见SRC-01 |
-| REPO-03 | DONE | 一个最小重建脚本及关键功能测试 | `tools/rebuild.py`实现init/prepare/build；无通用审计/镜像验证框架，真实构建仍见REPO-05 |
-| REPO-04 | DONE | 本地提交与一次干净clone功能验证 | `3b34c18`：38项测试通过、dry-run无写入；见evidence/control-repository-20261001.json |
-| REPO-05 | IN_PROGRESS | 从控制提交实际同步/重建/归档/验收ROM | 构建服务器已确认。按`0e2348e`的init因Evolution-X改写分支、10个固定提交不在分支上而同步失败；新锁`martini-20261001`对Evolution-X项目按SHA浅获取，用`update`继续 |
-| SRC-01 | BLOCKED | SettingsGoogle旧基线的合法、公开可获取恢复材料 | bundle对象已验证，整份分发许可不足；不入Git，记录外部受控输入 |
-| LIC-01 | DONE | 确定本次公开范围与第三方边界 | Settings原材料外置，其他保留原声明；见PROVENANCE，未声称上游许可缺口已解决 |
+| REPO-01 | DONE | 公开边界、原创许可、唯一接手入口与本地Git | 基线提交`fd506e5` |
+| REPO-02 | DONE | 历史候选的便携锁、补丁清单、普通profile | `20260930`锁与基线保留为历史记录 |
+| REPO-03 | DONE | 最小重建脚本及关键功能测试 | `tools/rebuild.py` |
+| REPO-04 | DONE | 本地提交与干净clone功能验证 | evidence/control-repository-20261001.json |
+| REPO-05 | IN_PROGRESS | 从控制提交实际同步/重建/归档ROM | 构建服务器全新`init`成功（`e24b1f8`锁）；`update`到上游刷新锁后`prepare`通过，普通ROM构建中 |
+| SYNC-01 | DONE | 跟随上游的锁刷新 | `tools/refresh_lock.py`；首个刷新锁`20261001-upstream`（1268项目），全部补丁在真实源码上`prepare`通过 |
+| SRC-01 | DONE | SettingsGoogle外部输入 | 上游SettingsGoogle已含同一修复（文件SHA256一致），当前锁无外部输入；历史bundle描述保留 |
+| LIC-01 | DONE | 公开范围与第三方边界 | 见PROVENANCE；PixelOS所用OnePlus公开blob经维护者确认可取用 |
 
-## 后续功能与交付
+## 功能
 
-| ID | 状态 | 交付/验收 | 下一动作 |
+| ID | 状态 | 交付/验收 | 记录与下一动作 |
 | --- | --- | --- | --- |
-| KSU-01 | DONE | 固定legacy源码、手动hooks映射、兼容改动清单 | legacy `cd739c78`；8处手动hook+path_umount回移植；独立内核编译通过，86模块与14611个导出CRC同普通内核一致；见evidence/ksu-kernel-compile-20261001.json |
-| KSU-02 | TODO | 可选内核、模块/镜像一致性与最小实机验收 | 完整KSU构建、dtb/dtbo/vendor_boot/vendor_dlkm对比；实机刷写由维护者操作 |
-| PIXEL-01 | DONE | 完整差异/来源/许可/依赖台账 | 见[PIXELOS](PIXELOS.md)：每项给出集成/已有等效/无收益/不适用结论；维护者确认OnePlus公开blob可取用 |
-| PIXEL-02 | IN_PROGRESS | 可行有价值项逐项集成及范围内验证 | 锁`martini-20261001-pixel`与9个补丁已在干净基线逐仓库检查通过；待完整构建与实机 |
-| OTA-01 | TODO | 普通/KSU、同签名保数据升级与snapshot验证 | 依赖配套产物，专门设计升级/恢复场景 |
-| FIX-01 | TODO | 集中修复开放问题并回归 | OTA阶段后集中收敛；阻塞/数据安全问题提前处理 |
-| DELIVERY-01 | TODO | 剩余发布、可选CI、分发与长期维护 | 不在本阶段创建远端或公开发布 |
+| PIXEL-01 | DONE | 完整差异/来源/依赖台账 | [PIXELOS](PIXELOS.md)，逐项结论 |
+| PIXEL-02 | IN_PROGRESS | 可行项整合及范围内验证 | 补丁与锁已进入当前序列；整包构建中；实机检查待最终阶段 |
+| KSU-01 | DONE | legacy源码、手动hooks、兼容回移植 | legacy `cd739c78`；独立编译通过；evidence/ksu-kernel-compile-20261001.json |
+| KSU-02 | IN_PROGRESS | 与普通ROM配对的KSU `boot.img` | `--kernel ksu`只构建bootimage；加入PixelOS内核补丁后普通/KSU 14610个导出CRC仍一致；整包后构建 |
+| OTA-01 | TODO | OTA包与升级验证 | 普通ROM构建后离线核对整包/payload签名与元数据；实机`a8114027`→新构建保数据升级待最终阶段 |
+| FIX-01 | IN_PROGRESS | 集中修复开放问题并回归 | 见下方问题表 |
+| DELIVERY-01 | TODO | 发布前同步上游、最终构建、发布说明 | Git推送与公开发布需另行授权 |
 
-## 已知非阻塞问题
+## 问题
 
-| ID | 状态 | 已有现象/证据 | 未确定的内容与验证需求 |
+| ID | 状态 | 已知事实 | 下一动作 |
 | --- | --- | --- | --- |
-| ISSUE-DISPLAY-01 | TODO | 用户报告高刷疑似未生效 | 支持模式、系统限制、活动模式和App帧率；不直接判驱动缺失 |
-| ISSUE-CAMERA-01 | TODO | 用户报告0.9×模糊 | App、Camera ID、镜头与焦距；微距解释未证实 |
+| ISSUE-DISPLAY-01 | PENDING_VALIDATION | 配置正确：peak 120、默认0、内容检测+4秒空闲计时器，空闲/60fps内容时回落60Hz属设计行为；Evo设置可把最低刷新率设为120 | 实机`dumpsys display/SurfaceFlinger`区分设计行为与故障 |
+| ISSUE-CAMERA-01 | PENDING_VALIDATION | 整合的OplusCamera覆盖Aperture/Camera2；原0.9×最可能是Aperture把定焦微距镜头按焦距标为辅助镜头 | 实机确认OPlus Camera各镜头；若仍有问题再收集`dumpsys media.camera` |
 
 重启、加密解锁、完整硬件矩阵、长期稳定性是**未验收项**，不是已确认缺陷。
-AVB测试身份、未演练回退是**已知边界**，不能通过修改标签变成已解决问题。
+AVB测试身份、未演练回退是**已知边界**。
 
 ## 每项任务的交接记录
 
-完成或阻塞时补充：输入baseline/控制commit、修改路径、验证命令与退出状态、
-证据位置、已知局限、下一项任务。原始设备日志不写进台账；公开摘要注明是用户回报
-或维护者记录，不伪装为本机直接测量。
+完成或阻塞时补充：控制提交、修改路径、验证命令与退出状态、证据位置、已知局限、
+下一项任务。原始设备日志不写进台账。
