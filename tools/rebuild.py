@@ -130,7 +130,7 @@ class Rebuild:
                 or inside(self.artifacts, self.out) or inside(self.out, self.artifacts)):
             raise RebuildError("OUT and ARTIFACTS must not overlap each other or contain SOURCE")
         if not inside(self.out, self.source):
-            # Siso cannot load its generated config from an OUT outside the source tree.
+            # Siso only loads its generated config through an OUT_DIR relative to SOURCE.
             raise RebuildError(f"OUT must be inside SOURCE (e.g. SOURCE/out-ksu): {self.out}")
         self.bundle = Path(source_bundle).resolve() if source_bundle else None
         self.settings_patch = Path(settings_patch).resolve() if settings_patch else None
@@ -370,13 +370,14 @@ class Rebuild:
                 env = environment()
                 variant = self.profile["kernel_variants"][self.kernel]
                 env.update(self.profile["environment"], **variant["environment"])
-                env.update(OUT_DIR=str(self.out), EVO_KEEP_TARGET_FILES="true")
+                out_dir = os.path.relpath(self.out, self.source)
+                env.update(OUT_DIR=out_dir, EVO_KEEP_TARGET_FILES="true")
                 self.out.mkdir(parents=True, exist_ok=True)
                 marker.write_text(self.kernel + "\n")
                 with (directory / "build.log").open("xb") as log:
                     try:
                         run(["bash", "--noprofile", "--norc", "-c", BUILD_SHELL, "martini-build",
-                             self.profile["lunch"], self.out, directory, keys,
+                             self.profile["lunch"], out_dir, directory, keys,
                              release["certificate_der_sha256"] if self.signing == "release" else "",
                              variant["target"]],
                             cwd=self.source, stdout=log, env=env)

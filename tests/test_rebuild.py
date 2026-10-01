@@ -246,7 +246,7 @@ class RebuildTests(unittest.TestCase):
             ' LINEAGE_VERSION) printf "%s\\n" synthetic-build;;\n'
             ' esac\n}\n'
             'm() {\n'
-            ' printf "MARTINI_KSU=%s target=%s\\n" "${MARTINI_KSU-unset}" "$1"\n'
+            ' printf "MARTINI_KSU=%s target=%s OUT_DIR=%s\\n" "${MARTINI_KSU-unset}" "$1" "$OUT_DIR"\n'
             ' [ -n "$FAKE_BOOT_OK" ] || return 23\n'
             ' mkdir -p "$OUT_DIR/target/product/martini"\n'
             ' printf boot > "$OUT_DIR/target/product/martini/boot.img"\n}\n')
@@ -267,7 +267,7 @@ class RebuildTests(unittest.TestCase):
 
         self.assertEqual(build("ksu"), 23)
         run = next((self.source / "artifacts").iterdir())
-        self.assertIn("MARTINI_KSU=true target=bootimage", (run / "build.log").read_text())
+        self.assertIn("MARTINI_KSU=true target=bootimage OUT_DIR=out-ksu", (run / "build.log").read_text())
         self.assertEqual(json.loads((run / "result.json").read_text())["kernel"], "ksu")
         # A normal build must not reuse (and silently mix into) the KSU OUT.
         self.assertEqual(build("normal"), 1)

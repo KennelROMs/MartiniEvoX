@@ -61,8 +61,8 @@ python3 "$CONTROL/tools/rebuild.py" build \
 ```
 
 普通目标固定为`lineage_martini-cp2a-userdebug`、`m evolution`，实际导出
-`EVO_KEEP_TARGET_FILES=true`；默认OUT为SOURCE/out。OUT必须位于SOURCE内：siso无法从源码树外的
-OUT加载其生成的配置（Soong会跳过带`.out-dir`标记的OUT目录）。
+`EVO_KEEP_TARGET_FILES=true`；默认OUT为SOURCE/out。OUT必须位于SOURCE内，脚本以相对SOURCE的
+`OUT_DIR`导出：siso在绝对路径的配置目录下无法加载`main.star`（Soong会跳过带`.out-dir`标记的OUT）。
 
 配对的KernelSU Next内核在同一个已准备的SOURCE上另用一个OUT构建，只构建`bootimage`：
 
