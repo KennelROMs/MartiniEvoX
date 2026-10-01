@@ -282,6 +282,10 @@ class Rebuild:
                 history.mkdir(exist_ok=True)
                 stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
                 record_path.rename(history / f"prepared-{stamp}.json")
+            settings = self.source / ".repo/local_manifests/martini-settings.xml"
+            if not self.restore and settings.exists():
+                # Written by an earlier init with the SettingsGoogle restore; no longer used.
+                settings.unlink()
             run(["repo", "init", "-u", self.control, "-b", commit, "-m",
                  self.profile["manifest"], "--git-lfs"], cwd=self.source, stdout=None)
             run(["repo", "sync", "-c", "--no-clone-bundle", "--no-tags"],

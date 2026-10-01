@@ -282,7 +282,13 @@ class RebuildTests(unittest.TestCase):
 
     def test_update_undoes_only_recorded_changes_before_resync(self):
         self.workspace().prepare()
-        (self.control / "README.md").write_text("next control commit\n")
+        self.profile["source_restores"] = []
+        write_json(self.control / "profiles/martini.json", self.profile)
+        stale = self.source / ".repo/local_manifests/martini-settings.xml"
+        stale.parent.mkdir(parents=True)
+        stale.write_text("<manifest/>")
+        self.series["patches"] = self.series["patches"][:1]
+        write_json(self.control / "patches/series.json", self.series)
         self.commit_control()
         commit = git(self.control, "rev-parse", "HEAD").decode().strip()
         unknown = self.source / "first/unknown"
@@ -313,6 +319,7 @@ class RebuildTests(unittest.TestCase):
         self.assertTrue((self.source / "settings/tracked").is_file())
         self.assertFalse((self.source / ".martini-prepared.json").exists())
         self.assertEqual(len(list((self.source / ".martini-history").iterdir())), 1)
+        self.assertFalse(stale.exists())
         self.workspace().prepare()
 
     def test_build_refuses_uncommitted_control_before_source_work(self):
