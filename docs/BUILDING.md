@@ -57,7 +57,8 @@ python3 "$CONTROL/tools/rebuild.py" prepare \
 
 ```sh
 python3 "$CONTROL/tools/rebuild.py" build \
-  --source "$SOURCE" --artifacts "$ARTIFACTS" --signing self-build
+  --source "$SOURCE" --settings-patch "$SETTINGS_PATCH" \
+  --artifacts "$ARTIFACTS" --signing self-build
 ```
 
 普通目标固定为`lineage_martini-cp2a-userdebug`、`m evolution`，实际导出

@@ -5,7 +5,7 @@
 
 ## 一句话定位
 
-**Android 17 EvoX 首个工程候选已完成安装和首启；正在建立可交接的控制仓库。**
+**Android 17 EvoX 首个工程候选已完成安装和首启；最小控制仓库与重建入口已建立。**
 仓库之后按 KernelSU Next → PixelOS 增强 → OTA → 集中修复 → 剩余交付推进。
 
 ## 当前手机候选
@@ -53,11 +53,11 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | 验收层 | 当前状态 |
 | --- | --- |
 | 本地Git初始化与工作分支 | 已完成；版本记录以`git log`为准 |
-| 当前文档、公开范围、原创Apache-2.0 | 实施中 |
-| 完整可移植源码锁/补丁序列 | 实施中 |
+| 当前文档、公开范围、原创Apache-2.0 | 已完成；基线提交`fd506e5` |
+| 完整可移植源码锁/补丁序列 | 已完成：1262项目，五份库内diff加一步外部Settings输入 |
 | SettingsGoogle恢复对象完整性 | 已在临时仓库离线验证 |
 | SettingsGoogle恢复材料公开许可/可获取性 | **BLOCKED**；bundle不入库 |
-| 新工具及离线回归 | 实施中，未报告通过 |
+| 最小重建脚本及离线回归 | `tools/rebuild.py`仅含init/prepare/build；功能测试已通过，未运行真实Android构建 |
 | 新clone自足性/接手验收 | PENDING |
 | 从此Git提交实际重建ROM | PENDING；需独立构建环境与执行窗口 |
 | 本次手机/OTA验证 | 未执行 |

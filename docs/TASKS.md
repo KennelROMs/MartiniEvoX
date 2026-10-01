@@ -8,10 +8,10 @@
 
 | ID | 状态 | 交付/验收 | 阻塞与下一动作 |
 | --- | --- | --- | --- |
-| REPO-01 | IN_PROGRESS | 公开边界、原创许可、唯一接手入口与本地Git | 完成文档/文件清单和敏感内容检查 |
+| REPO-01 | DONE | 公开边界、原创许可、唯一接手入口与本地Git | 基线提交`fd506e5`；原始私密材料和草稿不入Git |
 | REPO-02 | DONE | 1262项目便携锁、六步补丁清单、普通profile、外部恢复描述 | 数据合同9/9通过；独立公共恢复缺口仍见SRC-01 |
-| REPO-03 | IN_PROGRESS | 一个最小重建脚本及关键功能测试 | 只实现init/prepare/build，不新增通用审计和镜像验证框架 |
-| REPO-04 | TODO | 审查后的提交、临时clone测试及无聊天接手 | 依赖REPO-01/02/03与可入库材料审核 |
+| REPO-03 | DONE | 一个最小重建脚本及关键功能测试 | `tools/rebuild.py`实现init/prepare/build；无通用审计/镜像验证框架，真实构建仍见REPO-05 |
+| REPO-04 | PENDING_VALIDATION | 审查后的提交、临时clone测试及无聊天接手 | 正在完成一次干净clone验收 |
 | REPO-05 | BLOCKED | 从控制提交实际同步/重建/归档/验收ROM | SRC-01、构建服务器资源与执行窗口未闭合；不在小控制机编译 |
 | SRC-01 | BLOCKED | SettingsGoogle旧基线的合法、公开可获取恢复材料 | bundle对象已验证，整份分发许可不足；不入Git，记录外部受控输入 |
 | LIC-01 | DONE | 确定本次公开范围与第三方边界 | Settings原材料外置，其他保留原声明；见PROVENANCE，未声称上游许可缺口已解决 |

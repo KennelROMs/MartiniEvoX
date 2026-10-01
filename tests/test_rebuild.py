@@ -1,0 +1,297 @@
+# Copyright 2026 MartiniEvoX contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Offline functional tests; tiny Git repositories, never Android sync/build."""
+
+import contextlib
+import copy
+import hashlib
+import importlib.util
+import io
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import unittest
+from unittest import mock
+import xml.etree.ElementTree as ET
+
+
+CONTROL = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location("rebuild", CONTROL / "tools/rebuild.py")
+rebuild = importlib.util.module_from_spec(SPEC)
+if SPEC.loader and Path(SPEC.origin).exists():
+    SPEC.loader.exec_module(rebuild)
+
+
+def fingerprint(path):
+    data = path.read_bytes()
+    return {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+
+
+def write_json(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value), encoding="utf-8")
+
+
+def git(path, *args):
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", GIT_TEMPLATE_DIR="")
+    return subprocess.check_output(
+        ["git", "-c", "core.hooksPath=/dev/null", "-C", str(path), *args],
+        env=env, stderr=subprocess.PIPE,
+    )
+
+
+class RebuildTests(unittest.TestCase):
+    def setUp(self):
+        self.assertTrue(hasattr(rebuild, "Rebuild"), "tools/rebuild.py must implement Rebuild")
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.control = self.root / "control"
+        self.source = self.root / "source"
+        self.control.mkdir()
+        self.source.mkdir()
+        self.patch = self.root / "settings.patch"
+        self.heads = {}
+        entries = []
+        for name in ("first", "settings"):
+            repo = self.source / name
+            repo.mkdir()
+            git(repo, "init", "--quiet")
+            (repo / "tracked").write_text("before\n")
+            git(repo, "add", "tracked")
+            git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                "commit", "--quiet", "-m", "synthetic baseline\n\nCo-Authored-By: Claude Code <noreply@anthropic.com>")
+            self.heads[name] = git(repo, "rev-parse", "HEAD").decode().strip()
+            patch = ("diff --git a/tracked b/tracked\n--- a/tracked\n+++ b/tracked\n"
+                     "@@ -1 +1 @@\n-before\n+after\n")
+            if name == "first":
+                patch += ("diff --git a/new-file b/new-file\nnew file mode 100644\n"
+                          "--- /dev/null\n+++ b/new-file\n@@ -0,0 +1 @@\n+created\n")
+            path = self.control / "patches/first.patch" if name == "first" else self.patch
+            path.parent.mkdir(exist_ok=True)
+            path.write_text(patch)
+            entry = {"id": name, "repo": name, "base_revision": self.heads[name],
+                     **fingerprint(path)}
+            entry.update({"patch": "patches/first.patch"} if name == "first" else
+                         {"external_input": "settings_google_patch"})
+            entries.append(entry)
+        self.profile = {
+            "baseline": "baselines/base.json", "manifest": "manifests/locked/test.xml",
+            "patch_series": "patches/series.json", "source_restores": ["sources/settings-google.json"],
+            "lunch": "lineage_martini-cp2a-userdebug", "target": "evolution",
+            "kernel_profile": "normal", "environment": {"EVO_KEEP_TARGET_FILES": "true"},
+        }
+        manifest = ET.Element("manifest")
+        for name, head in self.heads.items():
+            ET.SubElement(manifest, "project", name=name, path=name,
+                          revision=head, upstream="refs/heads/cnb")
+        manifest_path = self.control / self.profile["manifest"]
+        manifest_path.parent.mkdir(parents=True)
+        manifest_path.write_bytes(ET.tostring(manifest))
+        self.series = {"patches": entries}
+        self.restore = {
+            "repo": "settings", "base_revision": self.heads["settings"],
+            "external_inputs": {"settings_google_patch": fingerprint(self.patch)},
+        }
+        write_json(self.control / "profiles/martini.json", self.profile)
+        write_json(self.control / "baselines/base.json", {
+            "repo_heads": self.heads, "manifest": {"portable": fingerprint(manifest_path)},
+        })
+        write_json(self.control / "patches/series.json", self.series)
+        write_json(self.control / "sources/settings-google.json", self.restore)
+        (self.control / "certificates").mkdir()
+        for name in ("release-info.json", "martini-release.x509.pem"):
+            shutil.copyfile(CONTROL / "certificates" / name, self.control / "certificates" / name)
+        git(self.control, "init", "--quiet")
+        self.commit_control()
+
+    def commit_control(self):
+        git(self.control, "add", ".")
+        git(self.control, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+            "commit", "--quiet", "-m", "synthetic control inputs\n\nCo-Authored-By: Claude Code <noreply@anthropic.com>")
+
+    def workspace(self, **kwargs):
+        return rebuild.Rebuild(self.control, self.source, settings_patch=self.patch, **kwargs)
+
+    def test_prepare_applies_grouped_diffs_without_committing(self):
+        # Deliberately inherited Git redirection must not redirect our Git commands.
+        with mock.patch.dict(os.environ, {"GIT_DIR": "/nonexistent/host.git",
+                                          "GIT_CONFIG_COUNT": "99"}):
+            work = self.workspace()
+            work.prepare()
+            work.check_prepared()
+        for name, head in self.heads.items():
+            self.assertEqual((self.source / name / "tracked").read_text(), "after\n")
+            self.assertEqual(git(self.source / name, "rev-parse", "HEAD").decode().strip(), head)
+            self.assertEqual(git(self.source / name, "diff", "--cached"), b"")
+        record = json.loads((self.source / ".martini-prepared.json").read_text())
+        self.assertIn("new-file", record["repositories"]["first"]["untracked"])
+        with self.assertRaises(rebuild.RebuildError):
+            work.prepare()
+
+    def test_invalid_patch_base_or_dirty_tree_refuses_before_applying_anything(self):
+        for case in ("hash", "size", "base", "dirty", "apply-check"):
+            with self.subTest(case=case):
+                series = copy.deepcopy(self.series)
+                patch_before = self.patch.read_bytes()
+                settings = self.source / "settings"
+                if case == "hash":
+                    series["patches"][-1]["sha256"] = "0" * 64
+                elif case == "size":
+                    series["patches"][-1]["bytes"] += 1
+                elif case == "base":
+                    series["patches"][-1]["base_revision"] = "0" * 40
+                elif case == "dirty":
+                    (settings / "unexpected").write_text("unknown\n")
+                else:
+                    self.patch.write_bytes(patch_before.replace(b"-before", b"-not-the-base"))
+                    series["patches"][-1].update(fingerprint(self.patch))
+                    restore = copy.deepcopy(self.restore)
+                    restore["external_inputs"]["settings_google_patch"] = fingerprint(self.patch)
+                    write_json(self.control / "sources/settings-google.json", restore)
+                write_json(self.control / "patches/series.json", series)
+                before = {p.relative_to(self.source): p.read_bytes()
+                          for p in self.source.rglob("*") if p.is_file()}
+                with self.assertRaises((rebuild.RebuildError, subprocess.CalledProcessError)):
+                    self.workspace().prepare()
+                after = {p.relative_to(self.source): p.read_bytes()
+                         for p in self.source.rglob("*") if p.is_file()}
+                self.assertEqual(after, before)
+                self.patch.write_bytes(patch_before)
+                (settings / "unexpected").unlink(missing_ok=True)
+                write_json(self.control / "sources/settings-google.json", self.restore)
+        write_json(self.control / "patches/series.json", self.series)
+
+    def test_prepared_record_detects_content_and_input_drift_not_document_commits(self):
+        work = self.workspace()
+        work.prepare()
+        (self.control / "README.md").write_text("Documentation-only change\n")
+        self.commit_control()
+        work.check_prepared()
+        for path in (self.source / "first/tracked", self.source / "first/new-file",
+                     self.control / "profiles/martini.json"):
+            original = path.read_bytes()
+            path.write_bytes(original + b"\n")
+            with self.subTest(path=path), self.assertRaises(rebuild.RebuildError):
+                self.workspace().check_prepared()
+            path.write_bytes(original)
+        work.check_prepared()
+
+    def test_dry_run_all_commands_has_no_subprocess_or_filesystem_writes(self):
+        missing = self.root / "not-created"
+        before = sorted(str(p) for p in self.root.rglob("*"))
+        with mock.patch.object(subprocess, "run", side_effect=AssertionError("subprocess")), \
+             mock.patch.object(subprocess, "Popen", side_effect=AssertionError("subprocess")), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            for command in ("init", "prepare", "build"):
+                self.assertEqual(rebuild.main(
+                    [command, "--source", str(missing), "--dry-run"], control=self.control), 0)
+        self.assertIn("BUILT_AND_ARCHIVED_UNVALIDATED", output.getvalue())
+        self.assertEqual(sorted(str(p) for p in self.root.rglob("*")), before)
+
+    @unittest.skipUnless(shutil.which("openssl"), "public certificate parsing needs openssl")
+    def test_build_failure_exit_code_survives_logging(self):
+        work = self.workspace()
+        work.prepare()
+        keys = self.source / "vendor/evolution-priv/keys"
+        keys.mkdir(parents=True)
+        shutil.copyfile(self.control / "certificates/martini-release.x509.pem", keys / "testkey.x509.pem")
+        (keys / "testkey.pk8").write_bytes(b"fixture placeholder; never parsed or printed")
+        envsetup = self.source / "build/envsetup.sh"
+        envsetup.parent.mkdir()
+        envsetup.write_text(
+            'lunch() { return 0; }\n'
+            'get_build_var() {\n'
+            ' case "$1" in\n'
+            ' DEFAULT_SYSTEM_DEV_CERTIFICATE) printf "%s\\n" vendor/evolution-priv/keys/testkey;;\n'
+            ' LINEAGE_VERSION) printf "%s\\n" synthetic-build;;\n'
+            ' esac\n}\n'
+            'm() { printf "synthetic build failed\\n"; return 23; }\n')
+        manifest = (self.control / self.profile["manifest"]).read_bytes()
+        with mock.patch.object(rebuild.Rebuild, "check_source", return_value=manifest), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            code = rebuild.main(["build", "--source", str(self.source),
+                                 "--settings-patch", str(self.patch)], control=self.control)
+        self.assertEqual(code, 23)
+        runs = list((self.source / "artifacts").iterdir())
+        self.assertEqual(len(runs), 1)
+        result = json.loads((runs[0] / "result.json").read_text())
+        self.assertEqual(result["exit_code"], 23)
+        self.assertEqual(result["status"], "FAILED")
+        self.assertIn("synthetic build failed", (runs[0] / "build.log").read_text())
+        self.assertFalse(list(runs[0].glob("*.zip")))
+
+    def test_build_refuses_uncommitted_control_before_source_work(self):
+        work = self.workspace()
+        (self.control / "README.md").write_text("uncommitted control change\n")
+        with mock.patch.object(work, "check_source", side_effect=rebuild.RebuildError("source reached")) as source:
+            with self.assertRaises(rebuild.RebuildError):
+                work.build()
+            source.assert_not_called()
+        self.assertFalse((self.source / "artifacts").exists())
+
+    def test_init_refuses_existing_tree_without_running_commands(self):
+        before = sorted(str(p) for p in self.source.rglob("*"))
+        with mock.patch.object(subprocess, "run", side_effect=AssertionError("subprocess")):
+            with self.assertRaises(rebuild.RebuildError):
+                self.workspace().init()
+        self.assertEqual(sorted(str(p) for p in self.source.rglob("*")), before)
+
+    def test_init_recovers_manifest_upstream_in_private_mirror_before_sync(self):
+        bundle = self.root / "authorized-synthetic.bundle"
+        git(self.source / "settings", "bundle", "create", str(bundle), "--all")
+        bundle_before = fingerprint(bundle)
+        self.restore["external_inputs"]["settings_google_bundle"] = bundle_before
+        write_json(self.control / "sources/settings-google.json", self.restore)
+        self.commit_control()
+        new_source = self.root / "fresh-source"
+        work = rebuild.Rebuild(self.control, new_source, source_bundle=bundle)
+        original_run = rebuild.run
+        calls = []
+
+        def local_only(command, **kwargs):
+            if command[0] != "repo":
+                return original_run(command, **kwargs)
+            calls.append(command)
+            if command[1] == "init":
+                (new_source / ".repo").mkdir()
+            else:
+                local = ET.parse(new_source / ".repo/local_manifests/martini-settings.xml").getroot()
+                override = local.find("extend-project")
+                self.assertEqual(override.get("path"), "settings")
+                self.assertIsNone(override.get("revision"))
+                mirror = new_source / ".martini-cache/settings.git"
+                self.assertEqual(git(mirror, "rev-parse", "refs/heads/cnb").decode().strip(),
+                                 self.heads["settings"])
+                self.assertEqual(local.find("remote").get("fetch"), mirror.parent.as_uri())
+            return b""
+
+        with mock.patch.object(rebuild, "run", side_effect=local_only):
+            work.init()
+        self.assertEqual([c[1] for c in calls], ["init", "sync"])
+        self.assertIn("--git-lfs", calls[0])
+        self.assertEqual(fingerprint(bundle), bundle_before)
+
+    def test_build_source_mapping_rejects_changed_revision(self):
+        self.workspace().prepare()
+        manifest = ET.parse(self.control / self.profile["manifest"])
+        manifest.getroot().find("project").set("revision", "0" * 40)
+        original_run = rebuild.run
+
+        def manifest_only(command, **kwargs):
+            if command[:3] == ["repo", "manifest", "-r"]:
+                return ET.tostring(manifest.getroot())
+            return original_run(command, **kwargs)
+
+        with mock.patch.object(rebuild, "run", side_effect=manifest_only):
+            with self.assertRaises(rebuild.RebuildError):
+                self.workspace().check_source()
+        self.assertFalse((self.source / "artifacts").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
