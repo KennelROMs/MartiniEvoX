@@ -27,7 +27,8 @@
     "vendor/lineage": "ed19f3ad5ed5501579ac4f0b30f3f7d35cda6f63",
     "kernel/oneplus/sm8350-ksu": "187d13cd30e2b22e7c4405b62f162e5218025299",
     "vendor/oneplus/sm8350-common": "445ead080f9ffb2be428405cea6e474e0fc3db05",
-    "kernel/oneplus/sm8350": "187d13cd30e2b22e7c4405b62f162e5218025299"
+    "kernel/oneplus/sm8350": "187d13cd30e2b22e7c4405b62f162e5218025299",
+    "frameworks/base": "b2d713f89c27ba99d1a414a03d93309e376ec6b0"
   },
   "kernel": {
     "variants": {

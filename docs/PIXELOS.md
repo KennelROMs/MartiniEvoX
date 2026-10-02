@@ -34,6 +34,19 @@ NoPrincessHere GitLab vendor仓库。维护者已确认PixelOS使用的OnePlus�
 | 三段键提示位置 | b2bd6c8 | 已有等效 | Lineage KeyHandler RRO已设19.2% |
 | PixelOS品牌化 | a86283a | 不适用 | 同上 |
 
+## frameworks/base（`patches/pixelos/frameworks-base-1-oplus-camera-compat.patch`）
+
+OPlus Camera在设备上因`com.oplus.util.OplusTypeCastingHelper`缺失而启动即崩溃（2026-10-02实机日志）。
+PixelOS把这类OPlus兼容桩放在自己的frameworks/base，而非设备树或hardware/oplus，前一轮对照未覆盖。
+
+| 项 | PixelOS提交 | 结论 |
+| --- | --- | --- |
+| OplusTypeCastingHelper、OplusThemeUtil桩 | 5d1265df | 集成（修复启动崩溃） |
+| camera2向后兼容方法（CameraMetadataNative） | 158cc507 | 集成 |
+| StreamConfigurationMap兼容构造函数 | 3ae9a8ce | 集成 |
+| CaptureResultExtras构造函数、mLogicalCameraSettings可访问 | f5ac784a、f2c4fd77 | 已有等效（Evo已含） |
+| 辅助摄像头暴露、特权应用跳过HFR/流尺寸检查 | 61a3e755、d8945be4、99e555d2 | 已有等效（Evo以`vendor.camera.aux.packagelist`与`persist.vendor.camera.privapp.list`实现） |
+
 ## 其他仓库
 
 | 仓库 | 结论 | 说明 |
@@ -48,7 +61,7 @@ NoPrincessHere GitLab vendor仓库。维护者已确认PixelOS使用的OnePlus�
 
 | 项 | PixelOS提交 | 结论 |
 | --- | --- | --- |
-| SDE early_wakeup sysfs | 09e1ce8 | 集成（powerhint需要） |
+| SDE early_wakeup sysfs | 09e1ce8 | 集成（powerhint需要）；节点为root只写，`fixes/0001`在boot时改为system可写（PixelOS同样缺失，实机见DAC拒绝） |
 | KCAL | 04075d1 | 集成 |
 | 关闭MSM_PERFORMANCE | 42c6751 | 集成（上下文不同，手工移植） |
 | 移除PASR mem-offline（DTS+配置） | a94c059、711ce68 | 已有等效：LineageOS内核187d13c已合入 |

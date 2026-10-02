@@ -32,7 +32,7 @@ adb shell getenforce                       # Enforcing
 
 - 显示：挖孔区域、状态栏边距、锁屏提示与指纹区距离、电源键位置提示。
 - 亮度：低亮度与滑杆手感、自动亮度。
-- 性能：`adb shell getprop init.svc.vendor.power-hal-aidl` 为 `running`；
+- 性能：`adb shell pidof android.hardware.power-service.lineage-libperfmgr` 有进程号；
   `adb shell su -c 'dumpsys android.hardware.power.IPower/default'` 可见libperfmgr节点状态
   （普通shell执行会得到`FAILED_TRANSACTION`：系统策略只允许dumpstate/root把输出fd交给
   电源HAL，并非HAL故障）。日常流畅度、发热、续航主观对照。

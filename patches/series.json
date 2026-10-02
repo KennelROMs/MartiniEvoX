@@ -94,6 +94,13 @@
       "sha256": "6ec52e1c016765e9bd213b661e9fabdf1352f838a822bb7d01d83a3fcbe1c4c2"
     },
     {
+      "id": "fix-common-early-wakeup-permissions",
+      "repo": "device/oneplus/sm8350-common",
+      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
+      "patch": "patches/fixes/0001-common-early-wakeup-permissions.patch",
+      "sha256": "4132d519e73d70c9b39920df1a67e52d99d9b0798f0c6ed7c6264ae10db9f37e"
+    },
+    {
       "id": "pixelos-martini-brightness",
       "repo": "device/oneplus/martini",
       "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
@@ -127,6 +134,13 @@
       "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
       "patch": "patches/pixelos/kernel-1-pixelos-picks.patch",
       "sha256": "61e5b34f3d9f74f134860e7af63c9abb3c90eb2db50f6631db2feaaa3c37bcf1"
+    },
+    {
+      "id": "pixelos-frameworks-base-oplus-camera-compat",
+      "repo": "frameworks/base",
+      "base_revision": "b2d713f89c27ba99d1a414a03d93309e376ec6b0",
+      "patch": "patches/pixelos/frameworks-base-1-oplus-camera-compat.patch",
+      "sha256": "a68c935550b8edb9c0cbf2319fbb6a3c599d74a4703227878d9e33fc3ba73765"
     }
   ]
 }
