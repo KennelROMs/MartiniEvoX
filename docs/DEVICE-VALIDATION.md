@@ -32,8 +32,10 @@ adb shell getenforce                       # Enforcing
 
 - 显示：挖孔区域、状态栏边距、锁屏提示与指纹区距离、电源键位置提示。
 - 亮度：低亮度与滑杆手感、自动亮度。
-- 性能：`adb shell dumpsys android.hardware.power.IPower/default` 可见libperfmgr；
-  日常流畅度、发热、续航主观对照。
+- 性能：`adb shell getprop init.svc.vendor.power-hal-aidl` 为 `running`；
+  `adb shell su -c 'dumpsys android.hardware.power.IPower/default'` 可见libperfmgr节点状态
+  （普通shell执行会得到`FAILED_TRANSACTION`：系统策略只允许dumpstate/root把输出fd交给
+  电源HAL，并非HAL故障）。日常流畅度、发热、续航主观对照。
 - 传感器：拿起/抬手亮屏、AOD、通话接近熄屏、熄屏指纹。
 - 相机：OPlus Camera各镜头（含超广角）拍照、录像。
 - 音频：Dolby开关与效果、扬声器、耳机、蓝牙、通话。
