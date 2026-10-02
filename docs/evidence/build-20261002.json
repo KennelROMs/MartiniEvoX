@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "tasks": [
+    "FIX-01",
+    "ISSUE-CAMERA-02",
+    "ISSUE-POWER-01",
+    "OTA-01",
+    "KSU-02"
+  ],
+  "scope": "Rebuild after device feedback; server build, archive and offline checks only.",
+  "control_commit": "b394ff9",
+  "lock": "manifests/locked/martini-20261001-upstream.xml",
+  "changes": [
+    "PixelOS frameworks/base OPlus stubs (OplusTypeCastingHelper, OplusThemeUtil) and camera2 compatibility methods",
+    "early_wakeup sysfs node handed to system at boot for libperfmgr DisplayWakeup"
+  ],
+  "installed_checks": {
+    "framework_jar_has_OplusTypeCastingHelper": true,
+    "odm_init_oplus_rc_sets_early_wakeup_owner": true
+  },
+  "normal_rom": {
+    "run": "run-20261002T142541Z-xwl6wh9t",
+    "zip": {
+      "name": "EvolutionX-17.0-20261002-martini-12.2-Unofficial.zip",
+      "bytes": 3739546881,
+      "sha256": "15e17eb4db63797c781429abe109d04d5938e07238c8ffb97c67dea85ff006c7"
+    },
+    "target_files_tar_zst": {
+      "bytes": 7781885140,
+      "sha256": "95079c7a81e7b61d38fd2ed1d6f4e5c8b4c520caa68c5e9bf0ee560cc4976775"
+    }
+  },
+  "ksu_boot": {
+    "run": "run-20261002T152021Z-8g8y1wlk",
+    "image": {
+      "name": "EvolutionX-17.0-20261002-martini-12.2-Unofficial-ksu-boot.img",
+      "bytes": 201326592,
+      "sha256": "b8f202f51a0624418d64faa443f67e1031e887319a3b9c0ae832c9202b75c12c"
+    }
+  },
+  "pairing_checks": {
+    "crc_differences": 0,
+    "module_symvers_sets_equal": true
+  },
+  "ota_offline_checks": {
+    "pre_device": "MT2111_IND,OP5155L1",
+    "post_security_patch_level": "2026-09-01",
+    "post_timestamp": 1790951152,
+    "previous_build_timestamp": 1790883857,
+    "payload_signature_project_key_exit": 0,
+    "payload_signature_wrong_key_exit": 1,
+    "whole_file_signature_exit": 0
+  },
+  "device_feedback_20261002": {
+    "ksu_kernel": "as expected",
+    "high_refresh": "as expected",
+    "selinux": "Enforcing",
+    "pixelos_features_other_than_camera": "as expected",
+    "oplus_camera": "crashed: ClassNotFoundException com.oplus.util.OplusTypeCastingHelper (fixed in this build, unverified)",
+    "power_hal": "running; DisplayWakeup DAC denial (fixed in this build, unverified)"
+  },
+  "not_performed": [
+    "device verification of this build"
+  ]
+}

@@ -13,8 +13,12 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。手机仍�
 
 | 产物 | SHA256 | 归档（构建服务器 `~/martini/artifacts/`） |
 | --- | --- | --- |
-| `EvolutionX-17.0-20261001-martini-12.2-Unofficial.zip`（3739561981字节） | `8485008b6f7a166a78618820a41a471832669a578f56969ea38c8de54fe94050` | `run-20261001T194406Z-aus0bz2p`（含target-files） |
-| `EvolutionX-17.0-20261001-martini-12.2-Unofficial-ksu-boot.img` | `7cf2b85236704a9610bbe1626f1449534f7c011e94c87307aeb6cfb28a0b7c2a` | `run-20261001T200051Z-b_671v4a` |
+| `EvolutionX-17.0-20261002-martini-12.2-Unofficial.zip`（3739546881字节） | `15e17eb4db63797c781429abe109d04d5938e07238c8ffb97c67dea85ff006c7` | `run-20261002T142541Z-xwl6wh9t`（含target-files） |
+| `EvolutionX-17.0-20261002-martini-12.2-Unofficial-ksu-boot.img` | `b8f202f51a0624418d64faa443f67e1031e887319a3b9c0ae832c9202b75c12c` | `run-20261002T152021Z-8g8y1wlk` |
+
+20261002版（控制`b394ff9`）修复实机发现的OPlus Camera启动崩溃与DisplayWakeup节点权限，见
+[记录](evidence/build-20261002.json)。20261001版已实机验证：KSU内核、高刷、SELinux Enforcing、
+相机以外的PixelOS增强符合预期。
 
 两者内核模块CRC一致（14610项），boot仅内核不同；OTA证书与`a8114027`相同，payload对项目公钥
 验签通过、对错误密钥拒绝，post-timestamp晚于候选。详见[构建记录](evidence/build-20261001.json)。
