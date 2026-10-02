@@ -140,7 +140,7 @@
       "repo": "frameworks/base",
       "base_revision": "b2d713f89c27ba99d1a414a03d93309e376ec6b0",
       "patch": "patches/pixelos/frameworks-base-1-oplus-camera-compat.patch",
-      "sha256": "a68c935550b8edb9c0cbf2319fbb6a3c599d74a4703227878d9e33fc3ba73765"
+      "sha256": "7df7de4a9778e5359e562c8b3c6ff25213168d1ffe24f1b871f865d0103274a7"
     }
   ]
 }

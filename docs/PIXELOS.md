@@ -43,7 +43,7 @@ PixelOS把这类OPlus兼容桩放在自己的frameworks/base，而非设备树�
 | --- | --- | --- |
 | OplusTypeCastingHelper、OplusThemeUtil桩 | 5d1265df | 集成（修复启动崩溃） |
 | camera2向后兼容方法（CameraMetadataNative） | 158cc507 | 集成 |
-| StreamConfigurationMap兼容构造函数 | 3ae9a8ce | 集成 |
+| StreamConfigurationMap兼容构造函数 | 3ae9a8ce | 已有等效：Evo已在别处定义同签名构造函数（叠加会重复定义，编译失败） |
 | CaptureResultExtras构造函数、mLogicalCameraSettings可访问 | f5ac784a、f2c4fd77 | 已有等效（Evo已含） |
 | 辅助摄像头暴露、特权应用跳过HFR/流尺寸检查 | 61a3e755、d8945be4、99e555d2 | 已有等效（Evo以`vendor.camera.aux.packagelist`与`persist.vendor.camera.privapp.list`实现） |
 
