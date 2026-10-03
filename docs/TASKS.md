@@ -40,7 +40,7 @@
 | ISSUE-CAMERA-01 | PENDING_VALIDATION | 整合的OplusCamera覆盖Aperture/Camera2；原0.9×最可能是Aperture把定焦微距镜头按焦距标为辅助镜头 | 实机确认OPlus Camera各镜头；若仍有问题再收集`dumpsys media.camera` |
 | ISSUE-CAMERA-02 | DONE | 实机：OPlus Camera启动即崩溃，`ClassNotFoundException: com.oplus.util.OplusTypeCastingHelper` | 20261002版引入PixelOS frameworks/base兼容桩后，维护者实机确认相机完全正常（2026-10-03） |
 | ISSUE-POWER-01 | PENDING_VALIDATION | 实机：libperfmgr正常运行（root dumpsys可见节点）；DisplayWakeup写`early_wakeup`遭DAC拒绝（节点root只写）；普通shell dumpsys因策略只认dumpstate fd而`FAILED_TRANSACTION`属预期 | 20261002版boot时把节点交给system（odm init.oplus.rc已确认）；待实机复测无`dac_override` |
-| ISSUE-CHARGE-01 | IN_PROGRESS | 实机：快充似乎未生效（2026-10-03回报）。内核已按9RT选择voocphy路径并编入oplus_voocphy/adsp_voocphy；本项目未改动充电代码与配置 | 收集`/sys/class/oplus_chg`节点、电流电压、dmesg中vooc日志及充电器型号后定位 |
+| ISSUE-CHARGE-01 | PENDING_VALIDATION | 实机数据（原厂65W充电器，69%）：`voocchg_ing=1`、`fast_charge=1`、`fast_chg_type=0x14`、ADSP `fastchg ongoing`、`cool_down=0`；martini为双电芯串联（DTS `vbatt_num=2`），单芯4.45–4.49V已到恒压段，1.4–1.8A≈13–16W属正常尾段；`dumpsys battery`的5V/2A只是USB电源描述 | 从≤30%、熄屏充电采样电流，应明显高于尾段；若低电量仍只有十余瓦再查ADSP/适配器握手 |
 
 重启、加密解锁、完整硬件矩阵、长期稳定性是**未验收项**，不是已确认缺陷。
 AVB测试身份、未演练回退是**已知边界**。
