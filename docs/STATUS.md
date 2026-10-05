@@ -1,13 +1,14 @@
 # 当前状态
 
-更新日期：2026-10-01。本文是当前状态入口；历史时间点的报告不能覆盖较新的
+更新日期：2026-10-05。本文是当前状态入口；历史时间点的报告不能覆盖较新的
 实机回报。状态变化同时更新 [任务台账](TASKS.md)，不得用未验证的推测填 PASS。
 
 ## 一句话定位
 
-**交付物已从控制提交`7d060c8`构建完成：整合PixelOS增强、跟随上游的普通ROM，以及与之配对的
-KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。手机仍运行`a8114027`，实机验证
-（OTA升级、PixelOS项、问题复核、KSU）按维护者安排在最后进行。**
+**交付物（控制`b394ff9`，20261002版）已构建：整合PixelOS增强、跟随上游的普通ROM，以及配对的
+KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者已日用数日，此前登记的问题
+（高刷、相机、电源HAL节点、快充）均回报已解决。挖孔进度环偏上（ISSUE-DISPLAY-02）已有修正待构建；
+以及OTA保数据升级等尚无记录的验收层。**
 
 ## 当前交付物（未实机验证）
 
@@ -18,12 +19,12 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。手机仍�
 
 20261002版（控制`b394ff9`）修复实机发现的OPlus Camera启动崩溃与DisplayWakeup节点权限，见
 [记录](evidence/build-20261002.json)。20261001版已实机验证：KSU内核、高刷、SELinux Enforcing、
-相机以外的PixelOS增强符合预期。
+相机以外的PixelOS增强符合预期。2026-10-05维护者回报：20261002版日用数日，此前问题均已解决。
 
 两者内核模块CRC一致（14610项），boot仅内核不同；OTA证书与`a8114027`相同，payload对项目公钥
 验签通过、对错误密钥拒绝，post-timestamp晚于候选。详见[构建记录](evidence/build-20261001.json)。
 
-## 当前手机候选
+## 历史首刷候选（`a8114027`）
 
 | 项目 | 当前记录 |
 | --- | --- |
@@ -53,10 +54,10 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。手机仍�
 
 ## 尚未通过或存在问题
 
-- 高刷新率疑似未生效：静态配置正确（peak 120、内容检测、4秒空闲回落60Hz），待实机区分
-  设计行为与故障。
-- 相机0.9×模糊：新构建由OplusCamera取代Aperture；原因最可能是Aperture对定焦微距镜头的
-  标注，待实机确认。
+- 挖孔进度环（Evolution X `CutoutRingView`，下载/充电/音乐环）比物理挖孔偏上几个像素；
+  环以`config_mainBuiltInDisplayCutout`的中心定位，该值来自PixelOS `60c876f`（圆心y 67、r 29，
+  原LineageOS为y 68.5、r 34）。实机标定+1.0 dp（=+3 px），`fixes/0002`改为圆心y 70，待构建，
+  见ISSUE-DISPLAY-02。
 - 正常重启/冷启动、设置密码后的解锁、完整硬件矩阵、长期待机/温控未验收。
 - OTA/snapshot、保留数据的升级和可选KSU升级行为未验证。
 - 旧PixelOS回退材料已有准备记录，但未实测回退；另一槽不是保证可用备份。
@@ -78,7 +79,7 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | 新clone自足性 | 已通过：代码提交`3b34c18`，38项离线测试及build dry-run；见[记录](evidence/control-repository-20261001.json) |
 | 从此Git提交实际重建ROM | 已构建并归档（`BUILT_AND_ARCHIVED_UNVALIDATED`）：全新init→update→prepare→build |
 | KSU Next内核 | 配对boot已构建；CRC一致；未实机 |
-| 本次手机/OTA验证 | 未执行（按维护者安排放在最后） |
+| 本次手机/OTA验证 | 20261002版已日用、问题复核通过（维护者回报）；OTA保数据升级无记录 |
 
 构建服务器：`~/martini/source`（SOURCE，OUT在其内的`out`与`out-ksu`），归档在
 `~/martini/artifacts/run-*`。旧工作区`~/evo`已在核对密钥一致后删除。

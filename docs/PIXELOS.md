@@ -29,7 +29,7 @@ NoPrincessHere GitLab vendor仓库。维护者已确认PixelOS使用的OnePlus�
 | 项 | PixelOS提交 | 结论 | 说明 |
 | --- | --- | --- | --- |
 | 亮度gamma转换关闭 | 688acbb | 集成（martini-1） | Evo frameworks支持该属性 |
-| 挖孔/状态栏/UDFPS锁屏间距/电源键位置/热点SSID | 60c876f、5cea0c1、58f0843、e0510cb、5a5c867 | 集成（martini-2） | 需实机查看 |
+| 挖孔/状态栏/UDFPS锁屏间距/电源键位置/热点SSID | 60c876f、5cea0c1、58f0843、e0510cb、5a5c867 | 集成（martini-2）；挖孔圆心y由`fixes/0002`实机标定下移3 px | 需实机查看 |
 | 亮度配置迁移displayconfig | 66537e9、e09695c | 无收益 | PixelOS已自行回退 |
 | 三段键提示位置 | b2bd6c8 | 已有等效 | Lineage KeyHandler RRO已设19.2% |
 | PixelOS品牌化 | a86283a | 不适用 | 同上 |
