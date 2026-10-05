@@ -5,21 +5,23 @@
 
 ## 一句话定位
 
-**交付物（控制`b394ff9`，20261002版）已构建：整合PixelOS增强、跟随上游的普通ROM，以及配对的
+**交付物（控制`72c9836`，20261005版）已构建：整合PixelOS增强、跟随上游的普通ROM，以及配对的
 KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者已日用数日，此前登记的问题
-（高刷、相机、电源HAL节点、快充）均回报已解决。挖孔进度环偏上（ISSUE-DISPLAY-02）已有修正待构建；
+（高刷、相机、电源HAL节点、快充）均回报已解决。20261005版修正挖孔进度环偏上（ISSUE-DISPLAY-02），待实机；
 以及OTA保数据升级等尚无记录的验收层。**
 
 ## 当前交付物（未实机验证）
 
 | 产物 | SHA256 | 归档（构建服务器 `~/martini/artifacts/`） |
 | --- | --- | --- |
-| `EvolutionX-17.0-20261002-martini-12.2-Unofficial.zip`（3739546881字节） | `15e17eb4db63797c781429abe109d04d5938e07238c8ffb97c67dea85ff006c7` | `run-20261002T142541Z-xwl6wh9t`（含target-files） |
-| `EvolutionX-17.0-20261002-martini-12.2-Unofficial-ksu-boot.img` | `b8f202f51a0624418d64faa443f67e1031e887319a3b9c0ae832c9202b75c12c` | `run-20261002T152021Z-8g8y1wlk` |
+| `EvolutionX-17.0-20261005-martini-12.2-Unofficial.zip`（3739546769字节） | `fa61b1b1d4823d14dc92a013c570d9a9e5bde0fc8a9fa75dfcd966d603f8df1f` | `run-20261005T175349Z-fi3j95ud`（含target-files） |
+| `EvolutionX-17.0-20261005-martini-12.2-Unofficial-ksu-boot.img` | `fe8a967f1f47a93ad68b206acc847b9cdee20c6a88e4700ea2ea6c06a927ae5a` | `run-20261005T181058Z-hhuqox36` |
 
 20261002版（控制`b394ff9`）修复实机发现的OPlus Camera启动崩溃与DisplayWakeup节点权限，见
 [记录](evidence/build-20261002.json)。20261001版已实机验证：KSU内核、高刷、SELinux Enforcing、
 相机以外的PixelOS增强符合预期。2026-10-05维护者回报：20261002版日用数日，此前问题均已解决。
+20261005版（控制`72c9836`）只把挖孔圆心下移3 px，见[记录](evidence/build-20261005.json)；
+ODM overlay已含新路径，模块CRC一致（14610项），OTA验签同前，post-timestamp晚于20261002版。
 
 两者内核模块CRC一致（14610项），boot仅内核不同；OTA证书与`a8114027`相同，payload对项目公钥
 验签通过、对错误密钥拒绝，post-timestamp晚于候选。详见[构建记录](evidence/build-20261001.json)。
@@ -56,7 +58,7 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者�
 
 - 挖孔进度环（Evolution X `CutoutRingView`，下载/充电/音乐环）比物理挖孔偏上几个像素；
   环以`config_mainBuiltInDisplayCutout`的中心定位，该值来自PixelOS `60c876f`（圆心y 67、r 29，
-  原LineageOS为y 68.5、r 34）。实机标定+1.0 dp（=+3 px），`fixes/0002`改为圆心y 70，待构建，
+  原LineageOS为y 68.5、r 34）。实机标定+1.0 dp（=+3 px），`fixes/0002`改为圆心y 70，已进入20261005版，
   见ISSUE-DISPLAY-02。
 - 正常重启/冷启动、设置密码后的解锁、完整硬件矩阵、长期待机/温控未验收。
 - OTA/snapshot、保留数据的升级和可选KSU升级行为未验证。

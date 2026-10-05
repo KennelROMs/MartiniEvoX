@@ -29,7 +29,7 @@
 | KSU-01 | DONE | legacy源码、手动hooks、兼容回移植 | legacy `cd739c78`；独立编译通过；evidence/ksu-kernel-compile-20261001.json |
 | KSU-02 | PENDING_VALIDATION | 与普通ROM配对的KSU `boot.img` | 已构建；CRC一致、boot仅内核不同；实机临时启动与授权/拒绝见DEVICE-VALIDATION第4节 |
 | OTA-01 | PENDING_VALIDATION | OTA包与升级验证 | 离线：整包与payload签名、错误密钥拒绝、设备断言/SPL/时间戳均通过；`tools/ota_json.py`生成Updater条目；实机升级待最终阶段 |
-| FIX-01 | PENDING_VALIDATION | 集中修复开放问题并回归 | 2026-10-05维护者回报此前问题均已解决；ISSUE-DISPLAY-02已修正，待构建与实机 |
+| FIX-01 | PENDING_VALIDATION | 集中修复开放问题并回归 | 2026-10-05维护者回报此前问题均已解决；ISSUE-DISPLAY-02已修正并构建（20261005版，evidence/build-20261005.json），待实机 |
 | DELIVERY-01 | BLOCKED | 发布前同步上游、最终构建、发布说明 | 需维护者决定OTA托管位置（Updater的`updater_server_url`）及是否公开发布；Git推送另行授权 |
 
 ## 问题
@@ -41,7 +41,7 @@
 | ISSUE-CAMERA-02 | DONE | 实机：OPlus Camera启动即崩溃，`ClassNotFoundException: com.oplus.util.OplusTypeCastingHelper` | 20261002版引入PixelOS frameworks/base兼容桩后，维护者实机确认相机完全正常（2026-10-03） |
 | ISSUE-POWER-01 | DONE | 实机：libperfmgr正常运行（root dumpsys可见节点）；DisplayWakeup写`early_wakeup`遭DAC拒绝（节点root只写）；普通shell dumpsys因策略只认dumpstate fd而`FAILED_TRANSACTION`属预期 | 维护者日用回报已解决（2026-10-05，20261002版） |
 | ISSUE-CHARGE-01 | DONE | 实机数据（原厂65W充电器，69%）：`voocchg_ing=1`、`fast_charge=1`、`fast_chg_type=0x14`、ADSP `fastchg ongoing`、`cool_down=0`；martini为双电芯串联（DTS `vbatt_num=2`），单芯4.45–4.49V已到恒压段，1.4–1.8A≈13–16W属正常尾段；`dumpsys battery`的5V/2A只是USB电源描述 | 维护者日用回报已解决（2026-10-05） |
-| ISSUE-DISPLAY-02 | PENDING_VALIDATION | 实机：挖孔进度环比物理挖孔偏上几个像素。环（frameworks/base `cutoutprogress/ring/CutoutRingView`）以`config_mainBuiltInDisplayCutout`路径中心定位，该值来自PixelOS `60c876f`（圆心(98,67)、r 29；原LineageOS (99,68.5)、r 34）。维护者用Evolver进度环Y偏移标定为+1.0 dp（密度480，=+3 px）；`fixes/0002`把圆心改为(98,70)，半径不变 | 下次构建后把Evolver Y偏移恢复为0，确认环与挖孔同心 |
+| ISSUE-DISPLAY-02 | PENDING_VALIDATION | 实机：挖孔进度环比物理挖孔偏上几个像素。环（frameworks/base `cutoutprogress/ring/CutoutRingView`）以`config_mainBuiltInDisplayCutout`路径中心定位，该值来自PixelOS `60c876f`（圆心(98,67)、r 29；原LineageOS (99,68.5)、r 34）。维护者用Evolver进度环Y偏移标定为+1.0 dp（密度480，=+3 px）；`fixes/0002`把圆心改为(98,70)，半径不变 | 刷入20261005版后把Evolver Y偏移恢复为0，确认环与挖孔同心 |
 
 重启、加密解锁、完整硬件矩阵、长期稳定性是**未验收项**，不是已确认缺陷。
 AVB测试身份、未演练回退是**已知边界**。

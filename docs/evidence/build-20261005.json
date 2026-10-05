@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "tasks": [
+    "FIX-01",
+    "ISSUE-DISPLAY-02",
+    "OTA-01",
+    "KSU-02"
+  ],
+  "scope": "Rebuild after device feedback; server build, archive and offline checks only.",
+  "control_commit": "72c9836",
+  "lock": "manifests/locked/martini-20261001-upstream.xml",
+  "changes": [
+    "config_mainBuiltInDisplayCutout centre moved from y 67 to y 70 (maintainer calibrated +1.0 dp at 480 dpi)"
+  ],
+  "installed_checks": {
+    "odm_overlay_cutout_path": "M 98,70 M 69,70 A 29,29 0 1,0 127,70 A 29,29 0 1,0 69,70 Z @left"
+  },
+  "normal_rom": {
+    "run": "run-20261005T175349Z-fi3j95ud",
+    "zip": {
+      "name": "EvolutionX-17.0-20261005-martini-12.2-Unofficial.zip",
+      "bytes": 3739546769,
+      "sha256": "fa61b1b1d4823d14dc92a013c570d9a9e5bde0fc8a9fa75dfcd966d603f8df1f"
+    },
+    "target_files_tar_zst": {
+      "bytes": 7781882706,
+      "sha256": "e4cbd3c681fd78985515ec09bd1c1fca7bbf7867d7c8e2752ac95b2e6804b546"
+    }
+  },
+  "ksu_boot": {
+    "run": "run-20261005T181058Z-hhuqox36",
+    "image": {
+      "name": "EvolutionX-17.0-20261005-martini-12.2-Unofficial-ksu-boot.img",
+      "bytes": 201326592,
+      "sha256": "fe8a967f1f47a93ad68b206acc847b9cdee20c6a88e4700ea2ea6c06a927ae5a"
+    }
+  },
+  "pairing_checks": {
+    "crc_differences": 0,
+    "module_symvers_entries": 14610
+  },
+  "ota_offline_checks": {
+    "pre_device": "MT2111_IND,OP5155L1",
+    "post_security_patch_level": "2026-09-01",
+    "post_timestamp": 1791222840,
+    "previous_build_timestamp": 1790951152,
+    "payload_signature_project_key_exit": 0,
+    "payload_signature_wrong_key_exit": 1,
+    "whole_file_signature_exit": 0
+  },
+  "device_feedback_20261005": {
+    "build_in_use": "20261002",
+    "earlier_issues": "resolved per maintainer (high refresh, camera, power HAL node, fast charging)",
+    "cutout_ring": "a few px above the punch hole; aligned with Evolver ring Y offset +1.0 dp"
+  },
+  "not_performed": [
+    "device verification of this build"
+  ]
+}
