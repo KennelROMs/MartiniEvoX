@@ -30,7 +30,8 @@
 | KSU-02 | PENDING_VALIDATION | 与普通ROM配对的KSU `boot.img` | 已构建；CRC一致、boot仅内核不同；实机临时启动与授权/拒绝见DEVICE-VALIDATION第4节 |
 | OTA-01 | PENDING_VALIDATION | OTA包与升级验证 | 离线：整包与payload签名、错误密钥拒绝、设备断言/SPL/时间戳均通过；`tools/ota_json.py`生成Updater条目；实机升级待最终阶段 |
 | FIX-01 | DONE | 集中修复开放问题并回归 | 2026-10-05维护者回报此前问题均已解决；ISSUE-DISPLAY-02的修正（20261005版，evidence/build-20261005.json）2026-10-08实机确认生效；问题表无未结项 |
-| DELIVERY-01 | TODO | 发布前同步上游、最终构建、发布说明 | 维护者决定（2026-10-08）：控制仓库公开于KennelROMs/MartiniEvoX；ROM在crave.io构建、沿用现有签名私钥（仅放crave工作区）；ZIP托管SourceForge，Updater JSON放公开GitHub。crave构建脚本与SourceForge上传待实现 |
+| CRAVE-01 | IN_PROGRESS | 以crave.io取代自有构建服务器，产物发布到SourceForge | `tools/crave.sh`（构建、配对核对、上传、Updater条目）与`ota/0001`（Updater指向本仓库`ota/martini.json`）已完成，离线测试通过；待维护者给出crave基础项目和SourceForge项目后试编，对照20261005版核对OTA证书与模块CRC，通过后再停用Hetzner |
+| DELIVERY-01 | TODO | 发布前同步上游、最终构建、发布说明 | 维护者决定（2026-10-08）：控制仓库公开于KennelROMs/MartiniEvoX；ROM在crave.io构建、沿用现有签名私钥（仅放crave工作区）；ZIP托管SourceForge，Updater JSON放公开GitHub。构建与上传见CRAVE-01 |
 
 ## 问题
 

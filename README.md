@@ -34,4 +34,5 @@ Android主机依赖和外部签名材料，不在小型控制机上自动进行�
 
 新增原创控制代码、配置和文档采用 [Apache-2.0](LICENSE)。第三方原许可按
 [NOTICE](NOTICE)保留；这不授权重分发Google/OPlus专有组件。
-维护者已建立GitHub私有远端；推送与任何公开发布仍需分别授权。
+控制仓库公开于<https://github.com/KennelROMs/MartiniEvoX>；维护者决定（2026-10-08）ROM经crave.io
+构建、托管于SourceForge，见[BUILDING](docs/BUILDING.md)。

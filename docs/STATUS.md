@@ -73,12 +73,13 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | 历史候选锁/补丁序列 | 已完成：`20260930`锁（1262项目）保留为历史记录 |
 | 当前锁 | `20261001-upstream`：Evolution-X清单`b3001cf`+本地清单，1268项目；`refresh_lock.py`生成 |
 | SettingsGoogle外部输入 | 不再需要：上游已含同一修复；历史bundle描述保留 |
-| 重建/同步脚本及离线回归 | `rebuild.py` init/update/prepare/build（`--kernel normal|ksu`）、`refresh_lock.py`；40项测试通过 |
+| 重建/同步脚本及离线回归 | `rebuild.py` init/update/prepare/build（`--kernel normal|ksu`）、`refresh_lock.py`、`crave.sh`；44项测试通过 |
 | 新clone自足性 | 已通过：代码提交`3b34c18`，38项离线测试及build dry-run；见[记录](evidence/control-repository-20261001.json) |
 | 从此Git提交实际重建ROM | 已构建并归档（`BUILT_AND_ARCHIVED_UNVALIDATED`）：全新init→update→prepare→build |
 | KSU Next内核 | 配对boot已构建；CRC一致；未实机 |
 | 本次手机/OTA验证 | 20261002版已日用、问题复核通过（维护者回报）；OTA保数据升级无记录 |
 
 构建服务器：`~/martini/source`（SOURCE，OUT在其内的`out`与`out-ksu`），归档在
-`~/martini/artifacts/run-*`。旧工作区`~/evo`已在核对密钥一致后删除。
+`~/martini/artifacts/run-*`。旧工作区`~/evo`已在核对密钥一致后删除。构建正迁往crave.io、产物发布到
+SourceForge（CRAVE-01）；crave试编通过前保留此服务器。
 控制仓库公开于<https://github.com/KennelROMs/MartiniEvoX>（2026-10-08）；ROM产物尚未公开发布；手机写入由维护者操作。

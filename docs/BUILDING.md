@@ -114,9 +114,44 @@ python3 "$CONTROL/tools/ota_json.py" EvolutionX-*.zip --url "<最终下载地址
 ```
 
 条目字段与Evolution X Updater的解析要求一致，时间戳取自包内OTA元数据（等于该构建的
-`ro.build.date.utc`）。设备上的Updater默认指向官方`Evolution-X/OTA`，其中没有martini；
-在线更新需要先确定托管位置并为设备覆盖`updater_server_url`，未决定前只能用
-`push-update.sh`本地推送。
+`ro.build.date.utc`）。补丁`ota/0001`把设备的`updater_server_url`改为本仓库`main`分支的
+`ota/martini.json`（更新日志为`ota/changelogs/martini.txt`）；此前的构建仍指向官方
+`Evolution-X/OTA`（其中没有martini），只能用`push-update.sh`本地推送。
+
+## 在crave.io构建并发布到SourceForge
+
+crave（foss.crave.io）只允许公开仓库，同一账号同时只跑一个构建；不要`--clean`或删除out，
+否则排队从约半小时变成数小时。`tools/crave.sh`在构建节点的工作区根目录（即SOURCE）运行：
+CONTROL克隆在工作区外（默认`$HOME/MartiniEvoX`，节点home不保留时自动重新克隆），依次
+`update`、`prepare`、普通ROM（`out`）与KSU boot（`out-ksu`），均用`--signing release`。
+
+一次性准备（维护者在crave devspace中操作）：
+
+1. 从基础项目建立工作区：`crave clone create --projectID <ID> /crave-devspaces/martini`。
+   基础项目越接近Evolution X Android 17，首次`update`需下载的越少；若`repo sync`报告
+   某路径的项目已更换，按上文“更新已准备的SOURCE”处理，不用`--force-sync`。
+2. 放入现有签名私钥（必须沿用，否则OTA证书与APK签名不连续，无法保数据升级）：在自己的
+   备份处`tar -cf keys.tar keys`，经scp传到devspace后
+   `crave push keys.tar -d <工作区>/vendor/evolution-priv/`（工作区路径用`crave ssh -- pwd`
+   查看），再`crave ssh -- "cd vendor/evolution-priv && tar -xf keys.tar && rm keys.tar && chmod -R go-rwx keys"`，
+   删除devspace上的`keys.tar`。私钥不进入任何Git、gist或CI secret；工作区重置后重新放入。
+3. SourceForge：建立项目，为上传单独生成一把SSH密钥并把公钥加入SourceForge账号；私钥用同样
+   方式放到`<工作区>/.martini-secrets/sourceforge`（权限600）。主机指纹首次连接时记录在同目录。
+
+每次发布：
+
+```sh
+crave run --no-patch -- "curl -fsSL https://raw.githubusercontent.com/KennelROMs/MartiniEvoX/main/tools/crave.sh |
+  SF_USER=<用户> SF_PROJECT=<项目> bash -s -- build origin/main"
+```
+
+构建成功后脚本核对ROM与KSU boot来自同一CONTROL提交，把ZIP和`*-ksu-boot.img`上传到
+SourceForge项目的`martini/`目录，并打印Updater条目（也保存为ROM归档里的`martini.json`）。
+把条目提交为本仓库的`ota/martini.json`、补写`ota/changelogs/martini.txt`后设备才会看到更新。
+上传失败时不必重建：`crave ssh -- "curl … | SF_USER=… SF_PROJECT=… bash -s -- upload <ROM归档> <KSU归档>"`。
+
+每个ROM归档约11GiB（ZIP约3.7GiB、target-files约7.8GiB），确认上传后只保留最新一次；
+SourceForge建议项目总量在5GiB左右，最多20–30GiB，只保留最新一到两版。
 
 ## 验收范围
 

@@ -122,6 +122,13 @@
       "sha256": "291f1a64abbc2b69a7861b388cd59843d2cba26d57819f40057cc1598cb75dfe"
     },
     {
+      "id": "ota-martini-updater-server",
+      "repo": "device/oneplus/martini",
+      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
+      "patch": "patches/ota/0001-martini-updater-server.patch",
+      "sha256": "9b184fa48b950fe2fd249bb679eca0f86fd57e62a076b7eeb65141b8b0c2b4d9"
+    },
+    {
       "id": "pixelos-vendor-remove-perfd",
       "repo": "vendor/oneplus/sm8350-common",
       "base_revision": "445ead080f9ffb2be428405cea6e474e0fc3db05",
