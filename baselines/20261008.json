@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "id": "20261008",
+  "device": "martini",
+  "source": {
+    "evolution_manifest": "https://github.com/Evolution-X/manifest",
+    "branch": "cnb",
+    "commit": "8e41c899421748f2738a60e5757a0be2c3e353bb",
+    "local_manifest": {
+      "path": "manifests/martini.xml",
+      "sha256": "e79fa512b13c52c2e42bcd86fee281763cf5bb8c89dda6b13c703ff1afba92de"
+    },
+    "resolved_utc": "2026-10-08T19:56:27Z"
+  },
+  "manifest": {
+    "portable": {
+      "path": "manifests/locked/martini-20261008.xml",
+      "bytes": 312773,
+      "sha256": "b394f0beb1ab52d88ce4dd955f1e3c6e40080714158a6217784bfa77c34f314e"
+    },
+    "project_count": 1269
+  },
+  "repo_heads": {
+    "device/oneplus/martini": "3c226659a17d07f17a661e2571370af88cc16fb6",
+    "device/oneplus/sm8350-common": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
+    "system/update_engine": "5b9591570c6603d73ab86f8526f4280ccfea1849",
+    "vendor/lineage": "ce8742e4b1b6a2e4d85c933aadcb5f7c6c840e93",
+    "kernel/oneplus/sm8350-ksu": "187d13cd30e2b22e7c4405b62f162e5218025299",
+    "vendor/oneplus/sm8350-common": "445ead080f9ffb2be428405cea6e474e0fc3db05",
+    "kernel/oneplus/sm8350": "187d13cd30e2b22e7c4405b62f162e5218025299",
+    "frameworks/base": "31ab6b63337b39cb656afe073354ab7804342e51"
+  },
+  "kernel": {
+    "variants": {
+      "normal": {
+        "repo": "kernel/oneplus/sm8350",
+        "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
+        "ksu_enabled": false
+      },
+      "ksu": {
+        "repo": "kernel/oneplus/sm8350-ksu",
+        "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
+        "ksu_enabled": true,
+        "kernelsu_next": {
+          "repo": "external/KernelSU-Next",
+          "branch": "legacy",
+          "revision": "8869bd768d6650198810f2395c2762fabefc8557",
+          "version": 33306,
+          "version_tag": "v3.4.0-legacy",
+          "hook_mode": "manual",
+          "license_kernel_part": "GPL-2.0-only"
+        },
+        "build_switch": "MARTINI_KSU=true"
+      }
+    }
+  },
+  "pixelos_ledger": "docs/PIXELOS.md",
+  "candidate_rom": null,
+  "signing": {
+    "configuration": "inherited-no-key-changes",
+    "private_keys_included": false
+  }
+}

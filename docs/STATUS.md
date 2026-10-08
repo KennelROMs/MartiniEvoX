@@ -71,7 +71,7 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 | 本地Git初始化与工作分支 | 已完成；版本记录以`git log`为准 |
 | 当前文档、公开范围、原创Apache-2.0 | 已完成；基线提交`fd506e5` |
 | 历史候选锁/补丁序列 | 已完成：`20260930`锁（1262项目）保留为历史记录 |
-| 当前锁 | `20261001-upstream`：Evolution-X清单`b3001cf`+本地清单，1268项目；`refresh_lock.py`生成 |
+| 当前锁 | `20261008`：Evolution-X清单`8e41c89`+本地清单，1269项目；`refresh_lock.py`生成。上一锁`20261001-upstream`（20261005版所用）因上游删除`system_memory_libdmabufheap`与ThemeIcons的`cnb`分支已无法完整同步 |
 | SettingsGoogle外部输入 | 不再需要：上游已含同一修复；历史bundle描述保留 |
 | 重建/同步脚本及离线回归 | `rebuild.py` init/update/prepare/build（`--kernel normal|ksu`）、`refresh_lock.py`、`crave.sh`；44项测试通过 |
 | 新clone自足性 | 已通过：代码提交`3b34c18`，38项离线测试及build dry-run；见[记录](evidence/control-repository-20261001.json) |

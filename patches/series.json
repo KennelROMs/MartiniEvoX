@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "baseline": "baselines/20261001-upstream.json",
+  "baseline": "baselines/20261008.json",
   "apply": "git apply",
   "check": "git apply --check",
   "order": "patches-array-order",
@@ -40,14 +40,14 @@
     {
       "id": "vendor-lineage-retention",
       "repo": "vendor/lineage",
-      "base_revision": "ed19f3ad5ed5501579ac4f0b30f3f7d35cda6f63",
+      "base_revision": "ce8742e4b1b6a2e4d85c933aadcb5f7c6c840e93",
       "patch": "patches/vendor_lineage_target_files/0001-optional-target-files-retention.patch",
       "sha256": "06bdcdef5cc681f3bb9e5bb08fd3815420355bb9f58e42847dff4417863da5fd"
     },
     {
       "id": "vendor-lineage-kernel-relative-out",
       "repo": "vendor/lineage",
-      "base_revision": "ed19f3ad5ed5501579ac4f0b30f3f7d35cda6f63",
+      "base_revision": "ce8742e4b1b6a2e4d85c933aadcb5f7c6c840e93",
       "patch": "patches/vendor_lineage_kernel_out/0001-kernel-relative-out-dir.patch",
       "sha256": "6413abe5369687142778b62827eba18421c7d0a52ae1ba17d5edd5da4c96d75f"
     },
@@ -56,7 +56,7 @@
       "repo": "device/oneplus/martini",
       "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
       "patch": "patches/ksu/0001-martini-ksu-kernel-variant.patch",
-      "sha256": "ddff9abf33ff480dd84fe4be58ff213feb1ad0bb659b5b2c6043bbb522caa9d6"
+      "sha256": "2f4aec1c2a9b2d764cf542270f95edc56de464bd32064030dad90c758f22f998"
     },
     {
       "id": "kernel-kernelsu-next-manual-hooks",
@@ -152,7 +152,7 @@
     {
       "id": "pixelos-frameworks-base-oplus-camera-compat",
       "repo": "frameworks/base",
-      "base_revision": "b2d713f89c27ba99d1a414a03d93309e376ec6b0",
+      "base_revision": "31ab6b63337b39cb656afe073354ab7804342e51",
       "patch": "patches/pixelos/frameworks-base-1-oplus-camera-compat.patch",
       "sha256": "7df7de4a9778e5359e562c8b3c6ff25213168d1ffe24f1b871f865d0103274a7"
     }

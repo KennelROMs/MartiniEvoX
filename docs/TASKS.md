@@ -16,7 +16,7 @@
 | REPO-03 | DONE | 最小重建脚本及关键功能测试 | `tools/rebuild.py` |
 | REPO-04 | DONE | 本地提交与干净clone功能验证 | evidence/control-repository-20261001.json |
 | REPO-05 | DONE | 从控制提交实际同步/重建/归档ROM | `7d060c8`：全新init→update→prepare→build，构建与归档成功；见evidence/build-20261001.json（实机属OTA-01/PIXEL-02） |
-| SYNC-01 | DONE | 跟随上游的锁刷新 | `tools/refresh_lock.py`；首个刷新锁`20261001-upstream`（1268项目），全部补丁在真实源码上`prepare`通过 |
+| SYNC-01 | DONE | 跟随上游的锁刷新 | `tools/refresh_lock.py`；首个刷新锁`20261001-upstream`（1268项目），全部补丁在真实源码上`prepare`通过；2026-10-08刷新为`20261008`（1269项目），基础变化的vendor/lineage与frameworks/base补丁经`git apply --check`通过 |
 | SRC-01 | DONE | SettingsGoogle外部输入 | 上游SettingsGoogle已含同一修复（文件SHA256一致），当前锁无外部输入；历史bundle描述保留 |
 | LIC-01 | DONE | 公开范围与第三方边界 | 见PROVENANCE；PixelOS所用OnePlus公开blob经维护者确认可取用 |
 
