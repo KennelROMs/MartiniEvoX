@@ -193,7 +193,7 @@ class RebuildTests(unittest.TestCase):
         with mock.patch.object(subprocess, "run", side_effect=AssertionError("subprocess")), \
              mock.patch.object(subprocess, "Popen", side_effect=AssertionError("subprocess")), \
              contextlib.redirect_stdout(io.StringIO()) as output:
-            for command in ("init", "prepare", "build", "update"):
+            for command in ("init", "adopt", "prepare", "build", "update"):
                 self.assertEqual(rebuild.main(
                     [command, "--source", str(missing), "--dry-run"], control=self.control), 0)
         self.assertIn("BUILT_AND_ARCHIVED_UNVALIDATED", output.getvalue())
@@ -312,9 +312,10 @@ class RebuildTests(unittest.TestCase):
         unknown.unlink()
         with mock.patch.object(rebuild, "run", side_effect=repo_recorded), \
              contextlib.redirect_stdout(io.StringIO()):
-            self.workspace().update()
+            self.workspace(clone_depth=1).update()
         self.assertEqual([c[:2] for c in calls], [["repo", "init"], ["repo", "sync"]])
         self.assertIn(commit, calls[0])
+        self.assertIn("--depth=1", calls[0])
         for name in self.heads:
             self.assertEqual(git(self.source / name, "status", "--porcelain"), b"")
         self.assertFalse((self.source / "first/sub").exists())
@@ -323,6 +324,37 @@ class RebuildTests(unittest.TestCase):
         self.assertEqual(len(list((self.source / ".martini-history").iterdir())), 1)
         self.assertFalse(stale.exists())
         self.workspace().prepare()
+
+    def test_adopt_moves_only_clean_checkouts_of_replaced_projects(self):
+        snapshot = ET.Element("manifest")
+        ET.SubElement(snapshot, "project", name="base/first", path="first")
+        ET.SubElement(snapshot, "project", name="settings", path="settings")
+        ET.SubElement(snapshot, "project", name="base/only", path="only")
+        gitdir = self.source / ".repo/projects/first.git"
+        gitdir.mkdir(parents=True)
+        original_run = rebuild.run
+
+        def snapshot_manifest(command, **kwargs):
+            if command[:2] == ["repo", "manifest"]:
+                return ET.tostring(snapshot)
+            return original_run(command, **kwargs)
+
+        (self.source / "first/tracked").write_text("local change\n")
+        with mock.patch.object(rebuild, "run", side_effect=snapshot_manifest):
+            with self.assertRaises(rebuild.RebuildError):
+                self.workspace().adopt()
+            self.assertTrue((self.source / "first/tracked").is_file())
+            git(self.source / "first", "checkout", "--", "tracked")
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.workspace().adopt()
+        [moved] = (self.source / ".martini-displaced").iterdir()
+        self.assertEqual((moved / "tree/first/tracked").read_text(), "before\n")
+        self.assertTrue((moved / "projects/first.git").is_dir())
+        self.assertFalse((self.source / "first").exists() or gitdir.exists())
+        self.assertTrue((self.source / "settings/tracked").is_file())
+        (self.source / ".martini-history").mkdir()
+        with self.assertRaises(rebuild.RebuildError):
+            self.workspace().adopt()
 
     def test_build_refuses_uncommitted_control_before_source_work(self):
         work = self.workspace()

@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Runs on the crave build node from the workspace root (the Android SOURCE):
-#   build CONTROL_REF            update/prepare SOURCE to CONTROL_REF, build the ROM and its
-#                                paired KSU boot.img; upload too when SF_USER/SF_PROJECT are set
+#   sync CONTROL_REF             adopt a foreign snapshot once, then update/prepare SOURCE
+#   build CONTROL_REF            sync, then build the ROM and its paired KSU boot.img;
+#                                upload too when SF_USER/SF_PROJECT are set
 #   upload ROM_RUN KSU_RUN       rsync both to SourceForge and print the Updater entry
 # No flashing, clean, reset or force-sync; a failed build keeps its log in the run directory.
 set -euo pipefail
@@ -35,13 +36,22 @@ built() {
         tee /dev/stderr | sed -n 's/^BUILT_AND_ARCHIVED_UNVALIDATED: //p'
 }
 
+sync() {
+    local ref=${1:?usage: crave.sh sync CONTROL_REF}
+    need git repo python3
+    checkout_control "$ref"
+    if [[ ! -e $source_dir/.martini-prepared.json && ! -d $source_dir/.martini-history ]]; then
+        python3 "$control/tools/rebuild.py" adopt --source "$source_dir"
+    fi
+    python3 "$control/tools/rebuild.py" update --source "$source_dir" --clone-depth 1
+    python3 "$control/tools/rebuild.py" prepare --source "$source_dir"
+}
+
 build() {
     local ref=${1:?usage: crave.sh build CONTROL_REF} rom ksu
     need git repo python3 openssl zstd tar
     [[ -z ${SF_USER:-}${SF_PROJECT:-} ]] || need rsync ssh
-    checkout_control "$ref"
-    python3 "$control/tools/rebuild.py" update --source "$source_dir"
-    python3 "$control/tools/rebuild.py" prepare --source "$source_dir"
+    sync "$ref"
     rom=$(built --out "$source_dir/out")
     ksu=$(built --kernel ksu --out "$source_dir/out-ksu")
     echo "ROM run: $rom"
@@ -79,6 +89,6 @@ EOF
 }
 
 case "${1:-}" in
-    build|upload) "$@" ;;
-    *) echo "usage: crave.sh build CONTROL_REF | upload ROM_RUN_DIR KSU_RUN_DIR" >&2; exit 2 ;;
+    sync|build|upload) "$@" ;;
+    *) echo "usage: crave.sh sync|build CONTROL_REF | upload ROM_RUN_DIR KSU_RUN_DIR" >&2; exit 2 ;;
 esac

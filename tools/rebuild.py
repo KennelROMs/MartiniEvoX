@@ -115,7 +115,8 @@ def workspace_lock(source):
 
 class Rebuild:
     def __init__(self, control, source, *, source_bundle=None, settings_patch=None,
-                 out=None, artifacts=None, signing="self-build", kernel="normal"):
+                 out=None, artifacts=None, signing="self-build", kernel="normal",
+                 clone_depth=None):
         self.control = Path(control).resolve()
         for path in (source, out, artifacts):
             if path is not None and not Path(path).is_absolute():
@@ -136,6 +137,7 @@ class Rebuild:
         self.settings_patch = Path(settings_patch).resolve() if settings_patch else None
         self.signing = signing
         self.kernel = kernel
+        self.clone_depth = clone_depth
         self.profile = read_json(self.control / "profiles/martini.json")
         self.baseline = read_json(child(self.control, self.profile["baseline"]))
         self.series = read_json(child(self.control, self.profile["patch_series"]))
@@ -255,6 +257,32 @@ class Rebuild:
         with (directory / "martini-settings.xml").open("xb") as stream:
             stream.write(ET.tostring(local, encoding="utf-8", xml_declaration=True))
 
+    def adopt(self):
+        # A crave workspace starts as another project's synced snapshot. Repo refuses to
+        # replace a checkout whose path the lock gives to a different project, and we do
+        # not use --force-sync: move such clean checkouts and their Git dirs aside instead.
+        with workspace_lock(self.source):
+            if (self.source / PREPARED).exists() or (self.source / ".martini-history").exists():
+                raise RebuildError("SOURCE is already managed by update/prepare; adopt is for a foreign snapshot")
+            current = projects(run(["repo", "manifest"], cwd=self.source))
+            moves = sorted(path for path, project in self.locked.items()
+                           if path in current and current[path]["name"] != project["name"])
+            for path in moves:
+                if any(other.startswith(path + "/") for other in current):
+                    raise RebuildError(f"Nested project under a replaced path; inspect manually: {path}")
+                self.clean(child(self.source, path))
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            displaced = self.source / ".martini-displaced" / stamp
+            for path in moves:
+                for old, new in ((child(self.source, path), displaced / "tree" / path),
+                                 (child(self.source, f".repo/projects/{path}.git"),
+                                  displaced / "projects" / f"{path}.git")):
+                    if old.exists():
+                        new.parent.mkdir(parents=True, exist_ok=True)
+                        old.rename(new)
+        print(f"Moved {len(moves)} replaced checkouts aside" + (f" to {displaced}" if moves else "")
+              + "; run update next")
+
     def update(self):
         # Move a prepared SOURCE to the current CONTROL commit. Only changes proven
         # identical to our own preparation record are undone; anything else stops.
@@ -289,8 +317,10 @@ class Rebuild:
             if not self.restore and settings.exists():
                 # Written by an earlier init with the SettingsGoogle restore; no longer used.
                 settings.unlink()
+            # A shallow snapshot (crave) would otherwise be unshallowed by Repo on first sync.
+            depth = [f"--depth={self.clone_depth}"] if self.clone_depth else []
             run(["repo", "init", "-u", self.control, "-b", commit, "-m",
-                 self.profile["manifest"], "--git-lfs"], cwd=self.source, stdout=None)
+                 self.profile["manifest"], "--git-lfs", *depth], cwd=self.source, stdout=None)
             run(["repo", "sync", "-c", "--no-clone-bundle", "--no-tags"],
                 cwd=self.source, stdout=None)
         print(f"Updated SOURCE to CONTROL {commit}; run prepare next")
@@ -429,6 +459,10 @@ class Rebuild:
                 print(f"Verify --source-bundle; mirror {project['name']}.git at {project['revision']}.")
             print(f"repo init -u {self.control} -b CONTROL_COMMIT -m {self.profile['manifest']} --git-lfs")
             print("repo sync -c --no-clone-bundle --no-tags")
+        elif command == "adopt":
+            print("Require SOURCE without preparation record/history (a foreign synced snapshot).")
+            print("Move clean checkouts whose path the lock gives to another project, and their")
+            print(".repo/projects Git dirs, to SOURCE/.martini-displaced/; then run update.")
         elif command == "update":
             print("Require clean committed CONTROL; verify SOURCE still equals its preparation record.")
             print("Undo only recorded changes, archive the record, then repo init -b CONTROL_COMMIT and repo sync.")
@@ -484,7 +518,7 @@ m "$6"
 
 def main(argv=None, *, control=CONTROL):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("init", "update", "prepare", "build"))
+    parser.add_argument("command", choices=("init", "adopt", "update", "prepare", "build"))
     parser.add_argument("--source", required=True, type=Path, metavar="ABS")
     parser.add_argument("--source-bundle", type=Path, metavar="FILE")
     parser.add_argument("--settings-patch", type=Path, metavar="FILE",
@@ -493,12 +527,15 @@ def main(argv=None, *, control=CONTROL):
     parser.add_argument("--artifacts", type=Path, metavar="ABS", help="default: SOURCE/artifacts")
     parser.add_argument("--signing", choices=("release", "self-build"), default="self-build")
     parser.add_argument("--kernel", default="normal", help="profile kernel variant: normal or ksu")
+    parser.add_argument("--clone-depth", type=int, metavar="N",
+                        help="update: Repo default clone depth for a shallow workspace (crave)")
     parser.add_argument("--dry-run", action="store_true", help="read configuration and print steps only")
     args = parser.parse_args(argv)
     try:
         work = Rebuild(control, args.source, source_bundle=args.source_bundle,
                        settings_patch=args.settings_patch, out=args.out,
-                       artifacts=args.artifacts, signing=args.signing, kernel=args.kernel)
+                       artifacts=args.artifacts, signing=args.signing, kernel=args.kernel,
+                       clone_depth=args.clone_depth)
         if args.dry_run:
             work.dry_run(args.command)
         else:
