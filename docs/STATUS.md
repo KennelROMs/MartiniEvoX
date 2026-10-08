@@ -1,14 +1,14 @@
 # 当前状态
 
-更新日期：2026-10-05。本文是当前状态入口；历史时间点的报告不能覆盖较新的
+更新日期：2026-10-08。本文是当前状态入口；历史时间点的报告不能覆盖较新的
 实机回报。状态变化同时更新 [任务台账](TASKS.md)，不得用未验证的推测填 PASS。
 
 ## 一句话定位
 
 **交付物（控制`72c9836`，20261005版）已构建：整合PixelOS增强、跟随上游的普通ROM，以及配对的
 KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者已日用数日，此前登记的问题
-（高刷、相机、电源HAL节点、快充）均回报已解决。20261005版修正挖孔进度环偏上（ISSUE-DISPLAY-02），待实机；
-以及OTA保数据升级等尚无记录的验收层。**
+（高刷、相机、电源HAL节点、快充）均回报已解决。20261005版修正挖孔进度环偏上（ISSUE-DISPLAY-02），已实机确认生效；
+尚无记录的是OTA保数据升级等验收层。**
 
 ## 当前交付物（未实机验证）
 
@@ -20,7 +20,7 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者�
 20261002版（控制`b394ff9`）修复实机发现的OPlus Camera启动崩溃与DisplayWakeup节点权限，见
 [记录](evidence/build-20261002.json)。20261001版已实机验证：KSU内核、高刷、SELinux Enforcing、
 相机以外的PixelOS增强符合预期。2026-10-05维护者回报：20261002版日用数日，此前问题均已解决。
-20261005版（控制`72c9836`）只把挖孔圆心下移3 px，见[记录](evidence/build-20261005.json)；
+20261005版（控制`72c9836`）只把挖孔圆心下移3 px，2026-10-08维护者实机确认生效，见[记录](evidence/build-20261005.json)；
 ODM overlay已含新路径，模块CRC一致（14610项），OTA验签同前，post-timestamp晚于20261002版。
 
 两者内核模块CRC一致（14610项），boot仅内核不同；OTA证书与`a8114027`相同，payload对项目公钥
@@ -56,10 +56,6 @@ ODM overlay已含新路径，模块CRC一致（14610项），OTA验签同前，p
 
 ## 尚未通过或存在问题
 
-- 挖孔进度环（Evolution X `CutoutRingView`，下载/充电/音乐环）比物理挖孔偏上几个像素；
-  环以`config_mainBuiltInDisplayCutout`的中心定位，该值来自PixelOS `60c876f`（圆心y 67、r 29，
-  原LineageOS为y 68.5、r 34）。实机标定+1.0 dp（=+3 px），`fixes/0002`改为圆心y 70，已进入20261005版，
-  见ISSUE-DISPLAY-02。
 - 正常重启/冷启动、设置密码后的解锁、完整硬件矩阵、长期待机/温控未验收。
 - OTA/snapshot、保留数据的升级和可选KSU升级行为未验证。
 - 旧PixelOS回退材料已有准备记录，但未实测回退；另一槽不是保证可用备份。
@@ -85,4 +81,4 @@ SELinux或要求回到Recovery，也不推断所有C-to-C均不可用。
 
 构建服务器：`~/martini/source`（SOURCE，OUT在其内的`out`与`out-ksu`），归档在
 `~/martini/artifacts/run-*`。旧工作区`~/evo`已在核对密钥一致后删除。
-有GitHub私有远端，未推送或公开发布；手机写入由维护者操作。
+控制仓库公开于<https://github.com/KennelROMs/MartiniEvoX>（2026-10-08）；ROM产物尚未公开发布；手机写入由维护者操作。
