@@ -1,0 +1,35 @@
+diff --git a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
+index e0c5223..864458d 100644
+--- a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
++++ b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
+@@ -1802,6 +1802,7 @@ static void battery_chg_update_usb_type_work(struct work_struct *work)
+ 
+ 	switch (pst->prop[USB_ADAP_TYPE]) {
+ 	case POWER_SUPPLY_USB_TYPE_SDP:
++	case POWER_SUPPLY_USB_TYPE_PD_SDP:
+ 		usb_psy_desc.type = POWER_SUPPLY_TYPE_USB;
+ 		break;
+ 	case POWER_SUPPLY_USB_TYPE_DCP:
+@@ -6692,6 +6693,8 @@ int opchg_get_charger_type(void)
+ 			charger_type = POWER_SUPPLY_TYPE_UNKNOWN;
+ 			break;
+ 		case POWER_SUPPLY_USB_TYPE_SDP:
++		/* A PD host (e.g. a computer) carries USB data: never treat it as a DCP. */
++		case POWER_SUPPLY_USB_TYPE_PD_SDP:
+ 			charger_type = POWER_SUPPLY_TYPE_USB;
+ 			break;
+ 		case POWER_SUPPLY_USB_TYPE_CDP:
+diff --git a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h
+index 85cb670..63a7011 100644
+--- a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h
++++ b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h
+@@ -250,6 +250,9 @@ enum {
+ 	QTI_POWER_SUPPLY_USB_TYPE_HVDCP_3P5,
+ };
+ 
++/* ADSP reports a USB host port that also offers a PD contract (newer OPLUS drivers). */
++#define POWER_SUPPLY_USB_TYPE_PD_SDP	17
++
+ enum OTG_SCHEME {
+ 	OTG_SCHEME_CID,
+ 	OTG_SCHEME_CCDETECT_GPIO,

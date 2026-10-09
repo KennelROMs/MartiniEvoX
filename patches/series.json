@@ -162,6 +162,20 @@
       "base_revision": "2a7c5f7541a1b286ff967eb67a34c7c984d01458",
       "patch": "patches/fixes/0003-telephony-keep-hal-physical-slot.patch",
       "sha256": "d01c7952daef2e7c2b5657ab49b49e5dc15e58cfb61596de17636467306f04e1"
+    },
+    {
+      "id": "fix-oplus-chg-pd-sdp-is-usb-host",
+      "repo": "kernel/oneplus/sm8350",
+      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
+      "patch": "patches/fixes/0004-oplus-chg-pd-sdp-is-usb-host.patch",
+      "sha256": "5aef0126d118195f6c6d5ad8f0c6c78ccfb11780b538d44b4189b7bb614f5351"
+    },
+    {
+      "id": "fix-oplus-chg-pd-sdp-is-usb-host-ksu",
+      "repo": "kernel/oneplus/sm8350-ksu",
+      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
+      "patch": "patches/fixes/0004-oplus-chg-pd-sdp-is-usb-host.patch",
+      "sha256": "5aef0126d118195f6c6d5ad8f0c6c78ccfb11780b538d44b4189b7bb614f5351"
     }
   ]
 }

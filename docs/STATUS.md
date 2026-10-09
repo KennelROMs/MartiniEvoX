@@ -58,6 +58,8 @@ ODM overlay已含新路径，模块CRC一致（14610项），OTA验签同前，p
 
 - 双SIM有时只识别一张/全部ABSENT（ISSUE-SIM-01）：实机日志已证实根因：HAL把物理槽0/1交叉映射到
   phone 1/0，Evolution X telephony丢弃HAL物理槽位后触发Android 17的槽位重映射处置；`fixes/0003`待构建与实机确认。
+- C-to-C直连电脑约29 s断开USB（ISSUE-USB-01）：OPLUS充电驱动不识别PD主机类型17，误判为充电头后
+  执行QC检测打断D+/D-；`fixes/0004`待构建与实机确认。
 - 正常重启/冷启动、设置密码后的解锁、完整硬件矩阵、长期待机/温控未验收。
 - OTA/snapshot、保留数据的升级和可选KSU升级行为未验证。
 - 旧PixelOS回退材料已有准备记录，但未实测回退；另一槽不是保证可用备份。
