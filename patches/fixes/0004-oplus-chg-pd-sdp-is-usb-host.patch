@@ -1,5 +1,5 @@
 diff --git a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
-index e0c5223..579a269 100644
+index e0c5223..ab5f3e4 100644
 --- a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
 +++ b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
 @@ -1802,6 +1802,7 @@ static void battery_chg_update_usb_type_work(struct work_struct *work)
@@ -20,26 +20,71 @@ index e0c5223..579a269 100644
  
  #ifdef OPLUS_FEATURE_CHG_BASIC
  	if (prop_id == USB_ONLINE) {
-@@ -6692,6 +6696,8 @@ int opchg_get_charger_type(void)
- 			charger_type = POWER_SUPPLY_TYPE_UNKNOWN;
+@@ -6700,6 +6704,10 @@ int opchg_get_charger_type(void)
+ 		case POWER_SUPPLY_USB_TYPE_DCP:
+ 			charger_type = POWER_SUPPLY_TYPE_USB_DCP;
  			break;
- 		case POWER_SUPPLY_USB_TYPE_SDP:
-+		/* A PD host (e.g. a computer) carries USB data: never treat it as a DCP. */
++		/* A PD host carries USB data: not a DCP, so no VOOC/QC detection on D+/D-. */
 +		case POWER_SUPPLY_USB_TYPE_PD_SDP:
- 			charger_type = POWER_SUPPLY_TYPE_USB;
++			charger_type = POWER_SUPPLY_TYPE_USB_PD_SDP;
++			break;
+ 		default:
+ 			charger_type = POWER_SUPPLY_TYPE_USB_DCP;
  			break;
- 		case POWER_SUPPLY_USB_TYPE_CDP:
-diff --git a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h
-index 85cb670..63a7011 100644
---- a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h
-+++ b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.h
-@@ -250,6 +250,9 @@ enum {
- 	QTI_POWER_SUPPLY_USB_TYPE_HVDCP_3P5,
+diff --git a/drivers/power/oplus/oplus_charger.c b/drivers/power/oplus/oplus_charger.c
+index 93de84c..9efeb17 100644
+--- a/drivers/power/oplus/oplus_charger.c
++++ b/drivers/power/oplus/oplus_charger.c
+@@ -372,6 +372,7 @@ int oplus_usb_get_property(struct power_supply *psy,
+ 
+ 	if (chip->charger_exist) {
+ 		if ((chip->charger_type == POWER_SUPPLY_TYPE_USB
++				|| chip->charger_type == POWER_SUPPLY_TYPE_USB_PD_SDP
+ 				|| chip->charger_type == POWER_SUPPLY_TYPE_USB_CDP)
+ 				&& chip->stop_chg == 1) {
+ 			chip->usb_online = true;
+@@ -380,6 +381,7 @@ int oplus_usb_get_property(struct power_supply *psy,
+ 			else
+ 				chip->usb_psd.type = POWER_SUPPLY_TYPE_USB;
+ 		} else if (!(chip->charger_type == POWER_SUPPLY_TYPE_USB
++				|| chip->charger_type == POWER_SUPPLY_TYPE_USB_PD_SDP
+ 				|| chip->charger_type == POWER_SUPPLY_TYPE_USB_CDP)) {
+ 			chip->usb_online = false;
+ 		}
+@@ -410,7 +412,8 @@ static void usb_update(struct oplus_chg_chip *chip)
+ {
+ 	if (chip->charger_exist) {
+ 		/*if (chip->charger_type==STANDARD_HOST || chip->charger_type==CHARGING_HOST) {*/
+-		if (chip->charger_type == POWER_SUPPLY_TYPE_USB) {
++		if (chip->charger_type == POWER_SUPPLY_TYPE_USB
++				|| chip->charger_type == POWER_SUPPLY_TYPE_USB_PD_SDP) {
+ 			chip->usb_online = true;
+ 			chip->usb_psd.type = POWER_SUPPLY_TYPE_USB;
+ 		} else if(chip->charger_type == POWER_SUPPLY_TYPE_USB_CDP) {
+@@ -5292,6 +5295,9 @@ void oplus_chg_set_input_current_limit(struct oplus_chg_chip *chip)
+ 		case POWER_SUPPLY_TYPE_USB_CDP:
+ 			current_limit = chip->limits.input_current_cdp_ma;
+ 			break;
++		case POWER_SUPPLY_TYPE_USB_PD_SDP:
++			current_limit = chip->limits.input_current_charger_ma;
++			break;
+ 		default:
+ 			return;
+ 	}
+diff --git a/drivers/power/oplus/oplus_charger.h b/drivers/power/oplus/oplus_charger.h
+index 34f2de7..4684221 100644
+--- a/drivers/power/oplus/oplus_charger.h
++++ b/drivers/power/oplus/oplus_charger.h
+@@ -352,6 +352,12 @@ enum {
+ 	PD_PPS_ACTIVE,
  };
  
-+/* ADSP reports a USB host port that also offers a PD contract (newer OPLUS drivers). */
-+#define POWER_SUPPLY_USB_TYPE_PD_SDP	17
++/* A USB host that also offers a PD contract, as the ADSP reports it (newer OPLUS drivers). */
++enum {
++	POWER_SUPPLY_TYPE_USB_PD_SDP = 17,	/* charger_type */
++	POWER_SUPPLY_USB_TYPE_PD_SDP = 17,	/* USB type from the ADSP */
++};
 +
- enum OTG_SCHEME {
- 	OTG_SCHEME_CID,
- 	OTG_SCHEME_CCDETECT_GPIO,
+ typedef enum {
+ 	CHG_NONE = 0,
+ 	CHG_DISABLE,

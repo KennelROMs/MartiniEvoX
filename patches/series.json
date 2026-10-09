@@ -168,14 +168,14 @@
       "repo": "kernel/oneplus/sm8350",
       "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
       "patch": "patches/fixes/0004-oplus-chg-pd-sdp-is-usb-host.patch",
-      "sha256": "71b450e975309dac93b1c54cb4d4fe7f3e3d5ccc9ad237420d9236c3e255e29f"
+      "sha256": "87df068427138744651482234a9b93970728221680ce8b99aadb08e7638dfa90"
     },
     {
       "id": "fix-oplus-chg-pd-sdp-is-usb-host-ksu",
       "repo": "kernel/oneplus/sm8350-ksu",
       "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
       "patch": "patches/fixes/0004-oplus-chg-pd-sdp-is-usb-host.patch",
-      "sha256": "71b450e975309dac93b1c54cb4d4fe7f3e3d5ccc9ad237420d9236c3e255e29f"
+      "sha256": "87df068427138744651482234a9b93970728221680ce8b99aadb08e7638dfa90"
     }
   ]
 }
