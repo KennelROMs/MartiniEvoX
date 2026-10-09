@@ -270,7 +270,9 @@ class Rebuild:
             for path in moves:
                 if any(other.startswith(path + "/") for other in current):
                     raise RebuildError(f"Nested project under a replaced path; inspect manually: {path}")
-                self.clean(child(self.source, path))
+                # A checkout whose earlier sync failed may be missing; only its Git dir moves.
+                if child(self.source, path).exists():
+                    self.clean(child(self.source, path))
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             displaced = self.source / ".martini-displaced" / stamp
             for path in moves:

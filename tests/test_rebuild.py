@@ -330,6 +330,13 @@ class RebuildTests(unittest.TestCase):
         ET.SubElement(snapshot, "project", name="base/first", path="first")
         ET.SubElement(snapshot, "project", name="settings", path="settings")
         ET.SubElement(snapshot, "project", name="base/only", path="only")
+        # A replaced project whose earlier sync failed: no checkout, only a Git dir.
+        ET.SubElement(snapshot, "project", name="base/missing", path="missing")
+        self.locked_extra = ET.parse(self.control / self.profile["manifest"])
+        ET.SubElement(self.locked_extra.getroot(), "project", name="missing", path="missing",
+                      revision="0" * 40)
+        self.locked_extra.write(self.control / self.profile["manifest"])
+        (self.source / ".repo/projects/missing.git").mkdir(parents=True)
         gitdir = self.source / ".repo/projects/first.git"
         gitdir.mkdir(parents=True)
         original_run = rebuild.run
@@ -350,6 +357,7 @@ class RebuildTests(unittest.TestCase):
         [moved] = (self.source / ".martini-displaced").iterdir()
         self.assertEqual((moved / "tree/first/tracked").read_text(), "before\n")
         self.assertTrue((moved / "projects/first.git").is_dir())
+        self.assertTrue((moved / "projects/missing.git").is_dir())
         self.assertFalse((self.source / "first").exists() or gitdir.exists())
         self.assertTrue((self.source / "settings/tracked").is_file())
         (self.source / ".martini-history").mkdir()
