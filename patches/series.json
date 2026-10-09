@@ -155,6 +155,13 @@
       "base_revision": "31ab6b63337b39cb656afe073354ab7804342e51",
       "patch": "patches/pixelos/frameworks-base-1-oplus-camera-compat.patch",
       "sha256": "7df7de4a9778e5359e562c8b3c6ff25213168d1ffe24f1b871f865d0103274a7"
+    },
+    {
+      "id": "fix-telephony-keep-hal-physical-slot",
+      "repo": "frameworks/opt/telephony",
+      "base_revision": "2a7c5f7541a1b286ff967eb67a34c7c984d01458",
+      "patch": "patches/fixes/0003-telephony-keep-hal-physical-slot.patch",
+      "sha256": "d01c7952daef2e7c2b5657ab49b49e5dc15e58cfb61596de17636467306f04e1"
     }
   ]
 }

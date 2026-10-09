@@ -28,7 +28,8 @@
     "kernel/oneplus/sm8350-ksu": "187d13cd30e2b22e7c4405b62f162e5218025299",
     "vendor/oneplus/sm8350-common": "445ead080f9ffb2be428405cea6e474e0fc3db05",
     "kernel/oneplus/sm8350": "187d13cd30e2b22e7c4405b62f162e5218025299",
-    "frameworks/base": "31ab6b63337b39cb656afe073354ab7804342e51"
+    "frameworks/base": "31ab6b63337b39cb656afe073354ab7804342e51",
+    "frameworks/opt/telephony": "2a7c5f7541a1b286ff967eb67a34c7c984d01458"
   },
   "kernel": {
     "variants": {

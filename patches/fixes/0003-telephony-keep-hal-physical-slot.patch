@@ -1,0 +1,13 @@
+diff --git a/src/java/com/android/internal/telephony/RadioResponse.java b/src/java/com/android/internal/telephony/RadioResponse.java
+index 587b80c..1d1adf7 100644
+--- a/src/java/com/android/internal/telephony/RadioResponse.java
++++ b/src/java/com/android/internal/telephony/RadioResponse.java
+@@ -1871,8 +1871,6 @@ public class RadioResponse extends IRadioResponse.Stub {
+ 
+         if (rr != null) {
+             IccCardStatus iccCardStatus = RILUtils.convertHalCardStatus(cardStatus);
+-            IccSlotPortMapping slotPortMapping = new IccSlotPortMapping();
+-            iccCardStatus.mSlotPortMapping = slotPortMapping;
+             mRil.riljLog("responseIccCardStatus: from HIDL: " + iccCardStatus);
+             if (responseInfo.error == RadioError.NONE) {
+                 sendMessageResponse(rr.mResult, iccCardStatus);
