@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-09",
+  "tasks": ["ISSUE-SIM-01", "ISSUE-USB-01", "SYNC-01", "CRAVE-01", "KSU-02", "OTA-01"],
+  "scope": "Build server release build for early device testing; server build, archive and offline checks only.",
+  "control_commit": "1409caf",
+  "lock": "manifests/locked/martini-20261008.xml",
+  "changes": [
+    "Lock refreshed to Evolution-X manifest 8e41c89 (1269 projects)",
+    "fixes/0003: keep the HAL physical slot in HIDL 1.5 card status (dual SIM ABSENT)",
+    "fixes/0004: OPLUS charger handles a PD USB host (type 17) as PD_SDP instead of DCP (C-to-C USB drops)",
+    "ota/0001: Updater reads ota/martini.json from KennelROMs/MartiniEvoX main"
+  ],
+  "source_moves_before_update": "libcore and system/memory/libdmabufheap changed project in the new lock; both clean, moved to ~/martini/displaced/20261009-lock20261008",
+  "normal_rom": {
+    "run": "run-20261009T125811Z-2j7xu04k",
+    "zip": {
+      "name": "EvolutionX-17.0-20261009-martini-12.3-Unofficial.zip",
+      "bytes": 3741207729,
+      "sha256": "664a74ae2ac365d7d74c4e358955fc15ed7cb0a59cc8d15e62228eea6d0038e9"
+    },
+    "target_files_tar_zst": {
+      "bytes": 7788298332,
+      "sha256": "f53b6266d8694f87c50e180dc3eed1364a76a0689cd7e1e25bb9d853d6477c86"
+    }
+  },
+  "ksu_boot": {
+    "run": "run-20261009T142203Z-6zdwlit8",
+    "image": {
+      "name": "EvolutionX-17.0-20261009-martini-12.3-Unofficial-ksu-boot.img",
+      "bytes": 201326592,
+      "sha256": "b489c8034adcbec8af9bb0b397ad903df435f5ab6eb3dcf2bb2bba0f289cc5d9"
+    }
+  },
+  "pairing_checks": {"crc_differences": 0, "module_symvers_entries": 14610},
+  "ota_offline_checks": {
+    "ota_certificate_der_sha256": "d6310c4135f42e1cb4087d6a21c88d3f8d5c04f89e7db0ef1e08a2122b41f9af",
+    "pre_device": "MT2111_IND,OP5155L1",
+    "post_security_patch_level": "2026-10-01",
+    "post_timestamp": 1791550703,
+    "previous_build_timestamp": 1791222840,
+    "check_ota_package_signature_project_cert_exit": 0,
+    "check_ota_package_signature_aosp_testkey_exit": 1
+  },
+  "installed_checks": {
+    "responseIccCardStatus_1_5_slot_mapping_overrides": 0,
+    "kernel_pd_sdp_references": {"sm8350": 8, "sm8350-ksu": 8},
+    "updater_rro": "vendor/overlay/Updater__evolution_martini__auto_generated_rro_vendor.apk, static, updater_server_url=https://raw.githubusercontent.com/KennelROMs/MartiniEvoX/main/ota/{device}.json"
+  },
+  "not_performed": ["device verification of this build", "publishing (SourceForge upload, ota/martini.json)"]
+}

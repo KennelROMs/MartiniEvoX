@@ -14,8 +14,13 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者�
 
 | 产物 | SHA256 | 归档（构建服务器 `~/martini/artifacts/`） |
 | --- | --- | --- |
-| `EvolutionX-17.0-20261005-martini-12.2-Unofficial.zip`（3739546769字节） | `fa61b1b1d4823d14dc92a013c570d9a9e5bde0fc8a9fa75dfcd966d603f8df1f` | `run-20261005T175349Z-fi3j95ud`（含target-files） |
-| `EvolutionX-17.0-20261005-martini-12.2-Unofficial-ksu-boot.img` | `fe8a967f1f47a93ad68b206acc847b9cdee20c6a88e4700ea2ea6c06a927ae5a` | `run-20261005T181058Z-hhuqox36` |
+| `EvolutionX-17.0-20261009-martini-12.3-Unofficial.zip`（3741207729字节） | `664a74ae2ac365d7d74c4e358955fc15ed7cb0a59cc8d15e62228eea6d0038e9` | `run-20261009T125811Z-2j7xu04k`（含target-files） |
+| `EvolutionX-17.0-20261009-martini-12.3-Unofficial-ksu-boot.img` | `b489c8034adcbec8af9bb0b397ad903df435f5ab6eb3dcf2bb2bba0f289cc5d9` | `run-20261009T142203Z-6zdwlit8` |
+
+20261009版（控制`1409caf`，锁`20261008`）为早测版：含ISSUE-SIM-01与ISSUE-USB-01修正及Updater地址，
+OTA证书同前、整包与payload对项目证书验签通过、对AOSP测试证书拒绝，模块CRC一致（14610项），
+post-timestamp晚于20261005版，见[记录](evidence/build-20261009.json)。尚未发布、未实机。
+上一版20261005（控制`72c9836`）：ZIP `fa61b1b1…`、KSU boot `fe8a967f…`，见[记录](evidence/build-20261005.json)。
 
 20261002版（控制`b394ff9`）修复实机发现的OPlus Camera启动崩溃与DisplayWakeup节点权限，见
 [记录](evidence/build-20261002.json)。20261001版已实机验证：KSU内核、高刷、SELinux Enforcing、
