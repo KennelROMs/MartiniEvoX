@@ -27,7 +27,8 @@ checkout_control() {
         git clone --quiet https://github.com/KennelROMs/MartiniEvoX.git "$control"
     fi
     git -C "$control" fetch --quiet origin
-    git -C "$control" checkout --quiet --detach "$1"
+    # Repo only finds the manifest revision on a branch of CONTROL, not a detached HEAD.
+    git -C "$control" checkout --quiet -B martini-build "$1"
     echo "CONTROL $(git -C "$control" rev-parse HEAD)"
 }
 

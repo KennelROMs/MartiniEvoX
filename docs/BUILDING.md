@@ -21,7 +21,8 @@
 
 ## 三步重建
 
-先提交/固定CONTROL版本。以下变量由构建者指定，不能照搬另一台机器的私有目录：
+先提交/固定CONTROL版本，并让它位于本地分支上：`repo init -b <提交>`只在CONTROL的分支中查找该提交，
+detached HEAD会报`revision ... not found`。以下变量由构建者指定，不能照搬另一台机器的私有目录：
 
 ```sh
 CONTROL="$PWD"
