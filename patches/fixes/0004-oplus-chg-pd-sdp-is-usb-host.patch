@@ -1,5 +1,5 @@
 diff --git a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
-index e0c5223..864458d 100644
+index e0c5223..579a269 100644
 --- a/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
 +++ b/drivers/power/oplus/charger_ic/oplus_battery_sm8350.c
 @@ -1802,6 +1802,7 @@ static void battery_chg_update_usb_type_work(struct work_struct *work)
@@ -10,7 +10,17 @@ index e0c5223..864458d 100644
  		usb_psy_desc.type = POWER_SUPPLY_TYPE_USB;
  		break;
  	case POWER_SUPPLY_USB_TYPE_DCP:
-@@ -6692,6 +6693,8 @@ int opchg_get_charger_type(void)
+@@ -2459,6 +2460,9 @@ static int usb_psy_get_prop(struct power_supply *psy,
+ 	pval->intval = pst->prop[prop_id];
+ 	if (prop == POWER_SUPPLY_PROP_TEMP)
+ 		pval->intval = DIV_ROUND_CLOSEST((int)pval->intval, 10);
++	/* The sysfs core rejects unknown USB types, which fails the whole uevent. */
++	if (prop == POWER_SUPPLY_PROP_USB_TYPE && pval->intval == POWER_SUPPLY_USB_TYPE_PD_SDP)
++		pval->intval = POWER_SUPPLY_USB_TYPE_SDP;
+ 
+ #ifdef OPLUS_FEATURE_CHG_BASIC
+ 	if (prop_id == USB_ONLINE) {
+@@ -6692,6 +6696,8 @@ int opchg_get_charger_type(void)
  			charger_type = POWER_SUPPLY_TYPE_UNKNOWN;
  			break;
  		case POWER_SUPPLY_USB_TYPE_SDP:
