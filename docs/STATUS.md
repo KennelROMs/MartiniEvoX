@@ -14,10 +14,15 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者�
 
 | 产物 | SHA256 | 归档（构建服务器 `~/martini/artifacts/`） |
 | --- | --- | --- |
-| `EvolutionX-17.0-20261010-martini-12.3-Unofficial.zip`（3741208017字节） | `1fac2c5f7250ce5ea974265142254d642b97dc44aed27e3e9692bd8ffe3ed613` | `run-20261010T030733Z-cqe359ju`（含target-files） |
-| `EvolutionX-17.0-20261010-martini-12.3-Unofficial-ksu-boot.img` | `cc2fd613f292523a47b9317ccc8b1b173a49de99e9765b8226735550cc12dc56` | `run-20261010T032659Z-uacan9q7` |
+| `EvolutionX-17.0-20261010-martini-12.3-Unofficial.zip`（3742154534字节） | `7f262fb6d203c6677ed06dd3bc925460dbc0945a73ffe5fac5d30aa7d9a65bbe` | `run-20261010T063329Z-kvfja48_`（含target-files） |
+| `EvolutionX-17.0-20261010-martini-12.3-Unofficial-ksu-boot.img` | `9029e1fb3d71a7eca2af3c7bcc0241033464f345bc87c0c37c906fa364924747` | `run-20261010T073047Z-5dcgo13_` |
 
-20261010版（控制`a52c187`，锁`20261008`）在20261009版上只加`fixes/0005`（ISSUE-DISPLAY-03）；两份内核源码与
+当前版（控制`165fee2`，锁`20261010`）首次从KennelROMs fork构建设备树与内核（TREE-01）：四个fork提交的
+Git tree与a52c187补丁准备后的工作树相同，两份内核`Module.symvers`与补丁方式构建逐字节相同；
+另含上游8个项目的更新（frameworks/base、vendor/lineage、Evolver等）。OTA证书与验签结果同前、
+模块CRC一致（14610项），post-timestamp晚于下述同日早测版，见[记录](evidence/build-20261010-forks.json)。
+尚未发布，待实机。文件名与早测版相同，以SHA256区分。
+早测版20261010（控制`a52c187`，锁`20261008`，ZIP `1fac2c5f…`、KSU boot `cc2fd613…`）在20261009版上只加`fixes/0005`（ISSUE-DISPLAY-03）；两份内核源码与
 `msm_drm.ko`均含该修正，OTA证书与验签结果同前，模块CRC一致（14610项），post-timestamp晚于20261009版，
 见[记录](evidence/build-20261010.json)。尚未发布；2026-10-10维护者实机回报开机掉帧修正生效。
 上一版20261009（控制`1409caf`，锁`20261008`）为早测版：含ISSUE-SIM-01与ISSUE-USB-01修正及Updater地址，

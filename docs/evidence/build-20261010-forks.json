@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-10",
+  "tasks": ["TREE-01"],
+  "scope": "First build from the KennelROMs device/kernel forks; server build, archive and offline checks only.",
+  "control_commit": "165fee2",
+  "lock": "manifests/locked/martini-20261010.xml",
+  "changes": [
+    "device/oneplus/martini, device/oneplus/sm8350-common, kernel/oneplus/sm8350 (kennel-17) and kernel/oneplus/sm8350-ksu (kennel-17-ksu) sync from KennelROMs forks; their 19 patch series entries removed",
+    "Lock 20261010 (Evolution-X manifest 8e41c89 as before): upstream moved evolution/OTA, frameworks/base, frameworks/libs/systemui, hardware/qcom-caf/sm8450-6.6/audio/primary-hal, lineage/scripts, packages/apps/Evolver, packages/apps/Messaging, vendor/lineage"
+  ],
+  "fork_equivalence": {
+    "method": "git tree of each patch-prepared worktree (a52c187, temporary index) vs tree of the fork commit",
+    "trees": {
+      "device/oneplus/martini d0eda2a": "4ec68db46d48050433b4d8771353cb6ba9e98586",
+      "device/oneplus/sm8350-common 09b2599": "69bb13bf8455ed54a3f8ecce8a1443b856226ab2",
+      "kernel/oneplus/sm8350 2cfc5d3": "474987f8d180941db55d4610007af753bfbb5c63",
+      "kernel/oneplus/sm8350-ksu d9009f9": "4a4ca71e73640d5ea8cbe5cbf001ce5ae7fe1669"
+    },
+    "identical": true,
+    "module_symvers_identical_to_patch_based_build": {"normal": true, "ksu": true}
+  },
+  "normal_rom": {
+    "run": "run-20261010T063329Z-kvfja48_",
+    "zip": {
+      "name": "EvolutionX-17.0-20261010-martini-12.3-Unofficial.zip",
+      "bytes": 3742154534,
+      "sha256": "7f262fb6d203c6677ed06dd3bc925460dbc0945a73ffe5fac5d30aa7d9a65bbe"
+    },
+    "target_files_tar_zst": {
+      "bytes": 7789818857,
+      "sha256": "bef944a682c8c1282e25fbfe99265ba140d95aa929858071c79deddff8980da5"
+    }
+  },
+  "ksu_boot": {
+    "run": "run-20261010T073047Z-5dcgo13_",
+    "image": {
+      "name": "EvolutionX-17.0-20261010-martini-12.3-Unofficial-ksu-boot.img",
+      "bytes": 201326592,
+      "sha256": "9029e1fb3d71a7eca2af3c7bcc0241033464f345bc87c0c37c906fa364924747"
+    }
+  },
+  "pairing_checks": {"crc_differences": 0, "module_symvers_entries": 14610},
+  "ota_offline_checks": {
+    "ota_certificate_der_sha256": "d6310c4135f42e1cb4087d6a21c88d3f8d5c04f89e7db0ef1e08a2122b41f9af",
+    "pre_device": "MT2111_IND,OP5155L1",
+    "post_security_patch_level": "2026-10-01",
+    "post_timestamp": 1791614020,
+    "previous_build_timestamp": 1791601665,
+    "check_ota_package_signature_project_cert_exit": 0,
+    "check_ota_package_signature_aosp_testkey_exit": 1
+  },
+  "installed_checks": {
+    "responseIccCardStatus_1_5_slot_mapping_overrides": 0,
+    "kernel_pd_sdp_references": {"sm8350": 8, "sm8350-ksu": 8},
+    "kernel_splash_timing_switch_references": {"sm8350": 3, "sm8350-ksu": 3},
+    "msm_drm_ko_splash_timing_message": {"normal": 1, "ksu": 1},
+    "updater_server_url": "https://raw.githubusercontent.com/KennelROMs/MartiniEvoX/main/ota/{device}.json"
+  },
+  "not_performed": ["device verification of this build", "publishing (SourceForge upload, ota/martini.json)"]
+}
