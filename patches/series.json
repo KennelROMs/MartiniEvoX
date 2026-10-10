@@ -176,6 +176,20 @@
       "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
       "patch": "patches/fixes/0004-oplus-chg-pd-sdp-is-usb-host.patch",
       "sha256": "87df068427138744651482234a9b93970728221680ce8b99aadb08e7638dfa90"
+    },
+    {
+      "id": "fix-dsi-splash-timing-switch",
+      "repo": "kernel/oneplus/sm8350",
+      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
+      "patch": "patches/fixes/0005-dsi-splash-timing-switch.patch",
+      "sha256": "381af644f8a94b61df2dd109157c9cef74fd82393d0ca3cba1bfc4265e01181e"
+    },
+    {
+      "id": "fix-dsi-splash-timing-switch-ksu",
+      "repo": "kernel/oneplus/sm8350-ksu",
+      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
+      "patch": "patches/fixes/0005-dsi-splash-timing-switch.patch",
+      "sha256": "381af644f8a94b61df2dd109157c9cef74fd82393d0ca3cba1bfc4265e01181e"
     }
   ]
 }
