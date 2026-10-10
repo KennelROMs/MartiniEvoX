@@ -31,6 +31,7 @@
 | OTA-01 | PENDING_VALIDATION | OTA包与升级验证 | 离线：整包与payload签名、错误密钥拒绝、设备断言/SPL/时间戳均通过；`tools/ota_json.py`生成Updater条目；实机升级待最终阶段 |
 | FIX-01 | IN_PROGRESS | 集中修复开放问题并回归 | 2026-10-05维护者回报此前问题均已解决；ISSUE-DISPLAY-02的修正（20261005版）2026-10-08实机确认生效；2026-10-09新增ISSUE-SIM-01、ISSUE-USB-01（20261009版实机生效）；2026-10-10新增ISSUE-DISPLAY-03 |
 | CRAVE-01 | IN_PROGRESS | 以crave.io取代自有构建服务器，产物发布到SourceForge | `tools/crave.sh`（构建、配对核对、上传、Updater条目）与`ota/0001`（Updater指向本仓库`ota/martini.json`）已完成，离线测试通过；待维护者给出crave基础项目和SourceForge项目后试编，对照20261005版核对OTA证书与模块CRC，通过后再停用Hetzner |
+| TREE-01 | IN_PROGRESS | 自维护设备树与内核（KennelROMs fork） | 维护者决定（2026-10-10）：只fork `android_device_oneplus_martini`、`android_device_oneplus_sm8350-common`、`android_kernel_oneplus_sm8350`（KSU为`kennel-17-ksu`分支），其余仓库保持补丁，改动增多时再评估；上游同步只合并、不rebase/force push。已完成：三个公开fork，`kennel-17`分支从锁定LineageOS提交起逐补丁提交（PixelOS来源注明原提交）：martini `d0eda2a`、sm8350-common `09b2599`、kernel `2cfc5d3`、kernel-ksu `d9009f9`，四者与a52c187准备后的源码逐文件一致 | 待ISSUE-DISPLAY-03实机确认后：清单改指向fork，锁/基线/补丁序列去掉对应13项，`refresh_lock.py`的KSU版本号改为提交到设备树fork，更新测试；重建后与补丁方式产物对照 |
 | DELIVERY-01 | TODO | 发布前同步上游、最终构建、发布说明 | 维护者决定（2026-10-08）：控制仓库公开于KennelROMs/MartiniEvoX；ROM在crave.io构建、沿用现有签名私钥（仅放crave工作区）；ZIP托管SourceForge，Updater JSON放公开GitHub。构建与上传见CRAVE-01 |
 
 ## 问题
