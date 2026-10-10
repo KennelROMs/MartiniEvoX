@@ -1,6 +1,6 @@
 # 当前状态
 
-更新日期：2026-10-08。本文是当前状态入口；历史时间点的报告不能覆盖较新的
+更新日期：2026-10-10。本文是当前状态入口；历史时间点的报告不能覆盖较新的
 实机回报。状态变化同时更新 [任务台账](TASKS.md)，不得用未验证的推测填 PASS。
 
 ## 一句话定位
@@ -14,12 +14,15 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者�
 
 | 产物 | SHA256 | 归档（构建服务器 `~/martini/artifacts/`） |
 | --- | --- | --- |
-| `EvolutionX-17.0-20261009-martini-12.3-Unofficial.zip`（3741207729字节） | `664a74ae2ac365d7d74c4e358955fc15ed7cb0a59cc8d15e62228eea6d0038e9` | `run-20261009T125811Z-2j7xu04k`（含target-files） |
-| `EvolutionX-17.0-20261009-martini-12.3-Unofficial-ksu-boot.img` | `b489c8034adcbec8af9bb0b397ad903df435f5ab6eb3dcf2bb2bba0f289cc5d9` | `run-20261009T142203Z-6zdwlit8` |
+| `EvolutionX-17.0-20261010-martini-12.3-Unofficial.zip`（3741208017字节） | `1fac2c5f7250ce5ea974265142254d642b97dc44aed27e3e9692bd8ffe3ed613` | `run-20261010T030733Z-cqe359ju`（含target-files） |
+| `EvolutionX-17.0-20261010-martini-12.3-Unofficial-ksu-boot.img` | `cc2fd613f292523a47b9317ccc8b1b173a49de99e9765b8226735550cc12dc56` | `run-20261010T032659Z-uacan9q7` |
 
-20261009版（控制`1409caf`，锁`20261008`）为早测版：含ISSUE-SIM-01与ISSUE-USB-01修正及Updater地址，
+20261010版（控制`a52c187`，锁`20261008`）在20261009版上只加`fixes/0005`（ISSUE-DISPLAY-03）；两份内核源码与
+`msm_drm.ko`均含该修正，OTA证书与验签结果同前，模块CRC一致（14610项），post-timestamp晚于20261009版，
+见[记录](evidence/build-20261010.json)。尚未发布，待实机。
+上一版20261009（控制`1409caf`，锁`20261008`）为早测版：含ISSUE-SIM-01与ISSUE-USB-01修正及Updater地址，
 OTA证书同前、整包与payload对项目证书验签通过、对AOSP测试证书拒绝，模块CRC一致（14610项），
-post-timestamp晚于20261005版，见[记录](evidence/build-20261009.json)。尚未发布；2026-10-10维护者实机回报双卡与C-to-C修正生效。
+post-timestamp晚于20261005版，ZIP `664a74ae…`、KSU boot `b489c803…`，见[记录](evidence/build-20261009.json)。2026-10-10维护者实机回报双卡与C-to-C修正生效。
 上一版20261005（控制`72c9836`）：ZIP `fa61b1b1…`、KSU boot `fe8a967f…`，见[记录](evidence/build-20261005.json)。
 
 20261002版（控制`b394ff9`）修复实机发现的OPlus Camera启动崩溃与DisplayWakeup节点权限，见

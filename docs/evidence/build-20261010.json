@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-10",
+  "tasks": ["ISSUE-DISPLAY-03", "ISSUE-SIM-01", "ISSUE-USB-01"],
+  "scope": "Build server release build for early device testing; server build, archive and offline checks only.",
+  "control_commit": "a52c187",
+  "lock": "manifests/locked/martini-20261008.xml",
+  "changes": [
+    "fixes/0005: after the cont-splash handoff, send post-mode-switch and timing-switch when the first mode's refresh rate differs from the splash (preferred) mode (both kernels)"
+  ],
+  "normal_rom": {
+    "run": "run-20261010T030733Z-cqe359ju",
+    "zip": {
+      "name": "EvolutionX-17.0-20261010-martini-12.3-Unofficial.zip",
+      "bytes": 3741208017,
+      "sha256": "1fac2c5f7250ce5ea974265142254d642b97dc44aed27e3e9692bd8ffe3ed613"
+    },
+    "target_files_tar_zst": {
+      "bytes": 7788280078,
+      "sha256": "006cfa227f32e0d07f31b333d0ce84dc7c476a600578b1ce897ee1111b1f18c9"
+    }
+  },
+  "ksu_boot": {
+    "run": "run-20261010T032659Z-uacan9q7",
+    "image": {
+      "name": "EvolutionX-17.0-20261010-martini-12.3-Unofficial-ksu-boot.img",
+      "bytes": 201326592,
+      "sha256": "cc2fd613f292523a47b9317ccc8b1b173a49de99e9765b8226735550cc12dc56"
+    }
+  },
+  "pairing_checks": {"crc_differences": 0, "module_symvers_entries": 14610},
+  "ota_offline_checks": {
+    "ota_certificate_der_sha256": "d6310c4135f42e1cb4087d6a21c88d3f8d5c04f89e7db0ef1e08a2122b41f9af",
+    "pre_device": "MT2111_IND,OP5155L1",
+    "post_security_patch_level": "2026-10-01",
+    "post_timestamp": 1791601665,
+    "previous_build_timestamp": 1791550703,
+    "check_ota_package_signature_project_cert_exit": 0,
+    "check_ota_package_signature_aosp_testkey_exit": 1
+  },
+  "installed_checks": {
+    "responseIccCardStatus_1_5_slot_mapping_overrides": 0,
+    "kernel_pd_sdp_references": {"sm8350": 8, "sm8350-ksu": 8},
+    "kernel_splash_timing_switch_references": {"sm8350": 3, "sm8350-ksu": 3},
+    "msm_drm_ko_splash_timing_message": {"normal": 1, "ksu": 1},
+    "updater_server_url": "https://raw.githubusercontent.com/KennelROMs/MartiniEvoX/main/ota/{device}.json"
+  },
+  "not_performed": ["device verification of this build", "publishing (SourceForge upload, ota/martini.json)"]
+}
