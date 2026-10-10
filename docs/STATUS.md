@@ -19,7 +19,7 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者�
 
 20261009版（控制`1409caf`，锁`20261008`）为早测版：含ISSUE-SIM-01与ISSUE-USB-01修正及Updater地址，
 OTA证书同前、整包与payload对项目证书验签通过、对AOSP测试证书拒绝，模块CRC一致（14610项），
-post-timestamp晚于20261005版，见[记录](evidence/build-20261009.json)。尚未发布、未实机。
+post-timestamp晚于20261005版，见[记录](evidence/build-20261009.json)。尚未发布；2026-10-10维护者实机回报双卡与C-to-C修正生效。
 上一版20261005（控制`72c9836`）：ZIP `fa61b1b1…`、KSU boot `fe8a967f…`，见[记录](evidence/build-20261005.json)。
 
 20261002版（控制`b394ff9`）修复实机发现的OPlus Camera启动崩溃与DisplayWakeup节点权限，见
@@ -61,10 +61,7 @@ ODM overlay已含新路径，模块CRC一致（14610项），OTA验签同前，p
 
 ## 尚未通过或存在问题
 
-- 双SIM有时只识别一张/全部ABSENT（ISSUE-SIM-01）：实机日志已证实根因：HAL把物理槽0/1交叉映射到
-  phone 1/0，Evolution X telephony丢弃HAL物理槽位后触发Android 17的槽位重映射处置；`fixes/0003`待构建与实机确认。
-- C-to-C直连电脑约29 s断开USB（ISSUE-USB-01）：OPLUS充电驱动不识别PD主机类型17，误判为充电头后
-  执行QC检测打断D+/D-；`fixes/0004`待构建与实机确认。
+- 重启后起初为低刷新率、一段时间后高刷才生效（ISSUE-DISPLAY-03）：待抓DisplayModeDirector投票。
 - 正常重启/冷启动、设置密码后的解锁、完整硬件矩阵、长期待机/温控未验收。
 - OTA/snapshot、保留数据的升级和可选KSU升级行为未验证。
 - 旧PixelOS回退材料已有准备记录，但未实测回退；另一槽不是保证可用备份。
