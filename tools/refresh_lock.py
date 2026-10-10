@@ -4,9 +4,10 @@
 """Pin the current Evolution-X manifest plus manifests/martini.xml into a new lock.
 
 Repo merges the manifests; every project revision is resolved with git ls-remote.
-Writes manifests/locked/martini-ID.xml and baselines/ID.json, points the profile and
-patch series at them, and keeps the KernelSU Next version pins in step. Whether the
-patches still apply is checked afterwards by rebuild.py prepare on real source.
+Writes manifests/locked/martini-ID.xml and baselines/ID.json and points the profile and
+patch series at them. Refuses when the KernelSU Next version pin committed to the device
+tree fork is stale. Whether the patches still apply is checked afterwards by rebuild.py
+prepare on real source.
 """
 
 import argparse
@@ -32,7 +33,10 @@ SHALLOW_REMOTES = {"evo"}
 # The Evolution-X manifest uses a relative GitHub remote; locks are portable.
 REMOTE_FETCH = {"..": "https://github.com"}
 KSU_REPO = "external/KernelSU-Next"
-KSU_PATCH = "patches/ksu/0001-martini-ksu-kernel-variant.patch"
+# Our own trees (KennelROMs forks); their changes are commits, not patch series entries.
+FORKS = ("device/oneplus/martini", "device/oneplus/sm8350-common",
+         "kernel/oneplus/sm8350", "kernel/oneplus/sm8350-ksu")
+KSU_PINS_REPO, KSU_PINS_FILE = "device/oneplus/martini", "BoardConfig.mk"
 KSU_PINS = re.compile(r"KSU_VERSION_OVERRIDE=\d+ KSU_VERSION_TAG_OVERRIDE=\S+")
 
 
@@ -106,6 +110,13 @@ def ksu_version(url, sha, workdir):
     return 30000 + count + 289, tag
 
 
+def read_at(url, sha, path, workdir):
+    git_dir = Path(workdir) / "fork.git"
+    run(["git", "init", "--quiet", "--bare", str(git_dir)])
+    run(["git", "-C", str(git_dir), "fetch", "--quiet", "--depth=1", url, sha])
+    return run(["git", "-C", str(git_dir), "show", f"{sha}:{path}"])
+
+
 def fingerprint(path):
     data = path.read_bytes()
     return {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
@@ -133,26 +144,30 @@ def refresh(control, lock_id, branch):
         projects = {p.get("path", p.get("name")): p for p in root.findall("project")}
         ksu = projects[KSU_REPO]
         remotes = {r.get("name"): r.get("fetch") for r in root.findall("remote")}
-        version, tag = ksu_version(remotes[ksu.get("remote")].rstrip("/") + "/" + ksu.get("name"),
-                                   ksu.get("revision"), work)
+        url = lambda project: remotes[project.get("remote")].rstrip("/") + "/" + project.get("name")
+        version, tag = ksu_version(url(ksu), ksu.get("revision"), work)
+        device = projects[KSU_PINS_REPO]
+        pins = KSU_PINS.findall(read_at(url(device), device.get("revision"), KSU_PINS_FILE, work))
+        expected = f"KSU_VERSION_OVERRIDE={version} KSU_VERSION_TAG_OVERRIDE={tag}"
+        if pins != [expected]:
+            # Repo syncs without tags, so the device tree pins what Kbuild would derive.
+            raise RefreshError(f"{KSU_PINS_REPO} {KSU_PINS_FILE} has {pins}; commit {expected} "
+                               f"to {url(device)} {device.get('upstream')} and refresh again")
     ET.indent(root, "  ")
     (control / lock_rel).write_bytes(ET.tostring(root, encoding="UTF-8", xml_declaration=True) + b"\n")
 
-    patch = control / KSU_PATCH
-    text = patch.read_text()
-    if len(KSU_PINS.findall(text)) != 1:
-        raise RefreshError(f"Expected one KSU version pin line in {KSU_PATCH}")
-    patch.write_text(KSU_PINS.sub(f"KSU_VERSION_OVERRIDE={version} KSU_VERSION_TAG_OVERRIDE={tag}", text))
-
     heads = {}
     for entry in series["patches"]:
+        if entry["repo"] in FORKS:
+            raise RefreshError(f"{entry['id']}: {entry['repo']} is a fork; commit the change there")
         heads[entry["repo"]] = entry["base_revision"] = projects[entry["repo"]].get("revision")
         if entry.get("patch"):
             entry["sha256"] = fingerprint(control / entry["patch"])["sha256"]
-    heads["kernel/oneplus/sm8350"] = projects["kernel/oneplus/sm8350"].get("revision")
+    for path in FORKS:
+        heads[path] = projects[path].get("revision")
     kernel = previous["kernel"]
     for variant in kernel["variants"].values():
-        variant["base_revision"] = heads["kernel/oneplus/sm8350"]
+        variant["base_revision"] = heads[variant["repo"]]
     kernel["variants"]["ksu"]["kernelsu_next"].update(revision=ksu.get("revision"), version=version,
                                                       version_tag=tag)
     baseline = {

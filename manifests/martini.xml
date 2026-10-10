@@ -6,13 +6,17 @@
     current Evolution-X manifest and pins every project into
     manifests/locked/; builds always use the locked file.
 
-    - LineageOS device/kernel trees and TheMuppets blobs (lineage-24.0)
+    - KennelROMs forks of the LineageOS device trees and kernel (kennel-17): our
+      changes are commits there, synced with lineage-24.0 by merge only
+    - TheMuppets blobs (lineage-24.0)
     - PixelOS hardware/oplus fork and the OnePlus camera/Dolby components
       PixelOS ships (seventeen)
-    - kernel/oneplus/sm8350-ksu: second checkout of the same kernel, patched
-      only for KernelSU Next; external/KernelSU-Next is its legacy branch
+    - kernel/oneplus/sm8350-ksu: second checkout of the same kernel fork on
+      kennel-17-ksu (kennel-17 plus the KernelSU Next hooks); external/KernelSU-Next
+      is its legacy branch
 -->
 <manifest>
+    <remote name="martini-kennel" fetch="https://github.com/KennelROMs/" />
     <remote name="martini-los" fetch="https://github.com/LineageOS/" />
     <remote name="martini-vendor" fetch="https://github.com/TheMuppets/" />
     <remote name="martini-pixelos" fetch="https://github.com/PixelOS-AOSP/" />
@@ -20,13 +24,13 @@
     <remote name="martini-ksu" fetch="https://github.com/KernelSU-Next/" />
 
     <project name="android_device_oneplus_martini" path="device/oneplus/martini"
-             remote="martini-los" revision="lineage-24.0" />
+             remote="martini-kennel" revision="kennel-17" />
     <project name="android_device_oneplus_sm8350-common" path="device/oneplus/sm8350-common"
-             remote="martini-los" revision="lineage-24.0" />
+             remote="martini-kennel" revision="kennel-17" />
     <project name="android_kernel_oneplus_sm8350" path="kernel/oneplus/sm8350"
-             remote="martini-los" revision="lineage-24.0" />
+             remote="martini-kennel" revision="kennel-17" />
     <project name="android_kernel_oneplus_sm8350" path="kernel/oneplus/sm8350-ksu"
-             remote="martini-los" revision="lineage-24.0" />
+             remote="martini-kennel" revision="kennel-17-ksu" />
     <project name="android_hardware_oplus" path="hardware/oplus"
              remote="martini-pixelos" revision="seventeen" />
     <project name="android_hardware_pixelworks_interfaces" path="hardware/pixelworks/interfaces"

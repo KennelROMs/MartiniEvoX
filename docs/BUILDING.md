@@ -49,9 +49,10 @@ Evolution-X会改写`cnb`分支历史，部分固定提交已不在分支上；�
 python3 "$CONTROL/tools/rebuild.py" prepare --source "$SOURCE"
 ```
 
-核对基线、补丁哈希和工作树，先检查再应用：EROFS/update_engine/target-files、PixelOS增强
-（设备树、vendor、内核）与KSU开关/内核补丁。PixelOS内核补丁同时用于两份内核checkout；
-KSU补丁只在`kernel/oneplus/sm8350-ksu`中。
+核对基线、补丁哈希和工作树，先检查再应用：update_engine、vendor/lineage（target-files、
+内核OUT）、PixelOS的vendor与frameworks/base补丁和telephony修正。设备树martini、sm8350-common
+和内核不打补丁：它们是KennelROMs fork（`kennel-17`；`kernel/oneplus/sm8350-ksu`用
+`kennel-17-ksu`，即`kennel-17`加KernelSU Next hooks），改动直接提交在fork上。
 未知修改或部分应用时停止，不reset/clean。准备记录仅用于后续发现输入/工作树变化，
 不代替构建与实机验证。已准备的树直接进入build，不盲目重复应用补丁。
 
@@ -88,8 +89,12 @@ PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s "$CONTROL/tests"
 ```
 
 工具让Repo合并当前Evolution-X清单与`manifests/martini.xml`，用`git ls-remote`固定全部
-项目，并更新profile、补丁基线和KSU版本号。提交后在SOURCE上`update`与`prepare`：补丁若
+项目，并更新profile与补丁基线。设备树fork里的KSU版本号（`BoardConfig.mk`）若与KernelSU Next
+不符，工具拒绝并给出应提交到fork的值。提交后在SOURCE上`update`与`prepare`：补丁若
 已被上游合入或冲突，按上游现状重做补丁或从序列移除，并在[PIXELOS](PIXELOS.md)记录。
+
+fork只用合并同步上游：在fork中`git merge`LineageOS `lineage-24.0`到`kennel-17`，再把
+`kennel-17`合并到`kennel-17-ksu`，推送后刷新锁；不rebase、不force push（旧锁固定的提交须保持可取）。
 
 ### 更新已准备的SOURCE到新的CONTROL提交
 

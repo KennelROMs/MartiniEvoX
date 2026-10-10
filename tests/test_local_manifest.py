@@ -9,10 +9,10 @@ MANIFEST = Path(__file__).resolve().parents[1] / "manifests" / "martini.xml"
 
 # path -> (canonical clone URL, floating branch)
 EXPECTED = {
-    "device/oneplus/martini": ("https://github.com/LineageOS/android_device_oneplus_martini", "lineage-24.0"),
-    "device/oneplus/sm8350-common": ("https://github.com/LineageOS/android_device_oneplus_sm8350-common", "lineage-24.0"),
-    "kernel/oneplus/sm8350": ("https://github.com/LineageOS/android_kernel_oneplus_sm8350", "lineage-24.0"),
-    "kernel/oneplus/sm8350-ksu": ("https://github.com/LineageOS/android_kernel_oneplus_sm8350", "lineage-24.0"),
+    "device/oneplus/martini": ("https://github.com/KennelROMs/android_device_oneplus_martini", "kennel-17"),
+    "device/oneplus/sm8350-common": ("https://github.com/KennelROMs/android_device_oneplus_sm8350-common", "kennel-17"),
+    "kernel/oneplus/sm8350": ("https://github.com/KennelROMs/android_kernel_oneplus_sm8350", "kennel-17"),
+    "kernel/oneplus/sm8350-ksu": ("https://github.com/KennelROMs/android_kernel_oneplus_sm8350", "kennel-17-ksu"),
     "hardware/oplus": ("https://github.com/PixelOS-AOSP/android_hardware_oplus", "seventeen"),
     "hardware/pixelworks/interfaces": ("https://github.com/LineageOS/android_hardware_pixelworks_interfaces", "lineage-24.0"),
     "vendor/oneplus/martini": ("https://github.com/TheMuppets/proprietary_vendor_oneplus_martini", "lineage-24.0"),

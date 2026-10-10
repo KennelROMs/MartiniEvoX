@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "baseline": "baselines/20261008.json",
+  "baseline": "baselines/20261010.json",
   "apply": "git apply",
   "check": "git apply --check",
   "order": "patches-array-order",
@@ -9,20 +9,6 @@
   "on_mismatch": "stop-and-inspect",
   "already_applied": "stop-and-inspect",
   "patches": [
-    {
-      "id": "martini-device-erofs",
-      "repo": "device/oneplus/martini",
-      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
-      "patch": "patches/martini-erofs/0001-device-enable-erofs.patch",
-      "sha256": "15a5155d7897c646e3855adff149e03a19ff0a8d10870b66d15d685adbb6c7c3"
-    },
-    {
-      "id": "martini-common-erofs",
-      "repo": "device/oneplus/sm8350-common",
-      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
-      "patch": "patches/martini-erofs/0002-common-select-erofs.patch",
-      "sha256": "1313947fc3451a5fc63267e36704958fa6c2faa358dd7ecfff60dfa7094f06b2"
-    },
     {
       "id": "update-engine-signature",
       "repo": "system/update_engine",
@@ -40,93 +26,16 @@
     {
       "id": "vendor-lineage-retention",
       "repo": "vendor/lineage",
-      "base_revision": "ce8742e4b1b6a2e4d85c933aadcb5f7c6c840e93",
+      "base_revision": "3d76beee5a9c4c49d68faab48aa51e3d7bce458a",
       "patch": "patches/vendor_lineage_target_files/0001-optional-target-files-retention.patch",
       "sha256": "06bdcdef5cc681f3bb9e5bb08fd3815420355bb9f58e42847dff4417863da5fd"
     },
     {
       "id": "vendor-lineage-kernel-relative-out",
       "repo": "vendor/lineage",
-      "base_revision": "ce8742e4b1b6a2e4d85c933aadcb5f7c6c840e93",
+      "base_revision": "3d76beee5a9c4c49d68faab48aa51e3d7bce458a",
       "patch": "patches/vendor_lineage_kernel_out/0001-kernel-relative-out-dir.patch",
       "sha256": "6413abe5369687142778b62827eba18421c7d0a52ae1ba17d5edd5da4c96d75f"
-    },
-    {
-      "id": "martini-ksu-kernel-variant",
-      "repo": "device/oneplus/martini",
-      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
-      "patch": "patches/ksu/0001-martini-ksu-kernel-variant.patch",
-      "sha256": "2f4aec1c2a9b2d764cf542270f95edc56de464bd32064030dad90c758f22f998"
-    },
-    {
-      "id": "kernel-kernelsu-next-manual-hooks",
-      "repo": "kernel/oneplus/sm8350-ksu",
-      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
-      "patch": "patches/ksu/0002-kernel-kernelsu-next-manual-hooks.patch",
-      "sha256": "1a0f8025beb9b5f77e66a4a86e78130509fe50649cabc23b9f0bab8d3fb4359c"
-    },
-    {
-      "id": "pixelos-common-power",
-      "repo": "device/oneplus/sm8350-common",
-      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
-      "patch": "patches/pixelos/common-1-power.patch",
-      "sha256": "e9264eb9f1d8f89ce0b77073bbe75e7076f0e2b37a579867414edd8dde9b4e14"
-    },
-    {
-      "id": "pixelos-common-sensors",
-      "repo": "device/oneplus/sm8350-common",
-      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
-      "patch": "patches/pixelos/common-2-sensors.patch",
-      "sha256": "716605b2f88116b469843065d3e7ccfb1244290839637522ca12d3af50de5571"
-    },
-    {
-      "id": "pixelos-common-dolby",
-      "repo": "device/oneplus/sm8350-common",
-      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
-      "patch": "patches/pixelos/common-3-dolby.patch",
-      "sha256": "6aa04b5a29fa32ecba5da5bb66fbcaf5b090d1ab79f40df272cde912469b0be7"
-    },
-    {
-      "id": "pixelos-common-camera",
-      "repo": "device/oneplus/sm8350-common",
-      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
-      "patch": "patches/pixelos/common-4-camera.patch",
-      "sha256": "6ec52e1c016765e9bd213b661e9fabdf1352f838a822bb7d01d83a3fcbe1c4c2"
-    },
-    {
-      "id": "fix-common-early-wakeup-permissions",
-      "repo": "device/oneplus/sm8350-common",
-      "base_revision": "88ef16a01303b36544633ee55c2d9bf413d4bd3c",
-      "patch": "patches/fixes/0001-common-early-wakeup-permissions.patch",
-      "sha256": "4132d519e73d70c9b39920df1a67e52d99d9b0798f0c6ed7c6264ae10db9f37e"
-    },
-    {
-      "id": "pixelos-martini-brightness",
-      "repo": "device/oneplus/martini",
-      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
-      "patch": "patches/pixelos/martini-1-brightness.patch",
-      "sha256": "3ebcc131d1a966ae2eea9c4ffd1270d8f2a42193fdb27d62a9b2f7589e83eeee"
-    },
-    {
-      "id": "pixelos-martini-ui-overlays",
-      "repo": "device/oneplus/martini",
-      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
-      "patch": "patches/pixelos/martini-2-ui-overlays.patch",
-      "sha256": "03c8058cf42b4cd785df11ab6a785353e45681d530bcd2600feffa6ae776b37e"
-    },
-    {
-      "id": "fix-martini-cutout-center",
-      "repo": "device/oneplus/martini",
-      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
-      "patch": "patches/fixes/0002-martini-cutout-center.patch",
-      "sha256": "291f1a64abbc2b69a7861b388cd59843d2cba26d57819f40057cc1598cb75dfe"
-    },
-    {
-      "id": "ota-martini-updater-server",
-      "repo": "device/oneplus/martini",
-      "base_revision": "3c226659a17d07f17a661e2571370af88cc16fb6",
-      "patch": "patches/ota/0001-martini-updater-server.patch",
-      "sha256": "9b184fa48b950fe2fd249bb679eca0f86fd57e62a076b7eeb65141b8b0c2b4d9"
     },
     {
       "id": "pixelos-vendor-remove-perfd",
@@ -136,23 +45,9 @@
       "sha256": "4b7a82256db053d0dd68eb3f8176c0cf24e338b0cbe3be4625a475c8a4d7bbc3"
     },
     {
-      "id": "pixelos-kernel-picks",
-      "repo": "kernel/oneplus/sm8350",
-      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
-      "patch": "patches/pixelos/kernel-1-pixelos-picks.patch",
-      "sha256": "61e5b34f3d9f74f134860e7af63c9abb3c90eb2db50f6631db2feaaa3c37bcf1"
-    },
-    {
-      "id": "pixelos-kernel-picks-ksu",
-      "repo": "kernel/oneplus/sm8350-ksu",
-      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
-      "patch": "patches/pixelos/kernel-1-pixelos-picks.patch",
-      "sha256": "61e5b34f3d9f74f134860e7af63c9abb3c90eb2db50f6631db2feaaa3c37bcf1"
-    },
-    {
       "id": "pixelos-frameworks-base-oplus-camera-compat",
       "repo": "frameworks/base",
-      "base_revision": "31ab6b63337b39cb656afe073354ab7804342e51",
+      "base_revision": "0547a04e7ebb1147e677b0cfca65fda56b8e54ae",
       "patch": "patches/pixelos/frameworks-base-1-oplus-camera-compat.patch",
       "sha256": "7df7de4a9778e5359e562c8b3c6ff25213168d1ffe24f1b871f865d0103274a7"
     },
@@ -162,34 +57,6 @@
       "base_revision": "2a7c5f7541a1b286ff967eb67a34c7c984d01458",
       "patch": "patches/fixes/0003-telephony-keep-hal-physical-slot.patch",
       "sha256": "d01c7952daef2e7c2b5657ab49b49e5dc15e58cfb61596de17636467306f04e1"
-    },
-    {
-      "id": "fix-oplus-chg-pd-sdp-is-usb-host",
-      "repo": "kernel/oneplus/sm8350",
-      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
-      "patch": "patches/fixes/0004-oplus-chg-pd-sdp-is-usb-host.patch",
-      "sha256": "87df068427138744651482234a9b93970728221680ce8b99aadb08e7638dfa90"
-    },
-    {
-      "id": "fix-oplus-chg-pd-sdp-is-usb-host-ksu",
-      "repo": "kernel/oneplus/sm8350-ksu",
-      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
-      "patch": "patches/fixes/0004-oplus-chg-pd-sdp-is-usb-host.patch",
-      "sha256": "87df068427138744651482234a9b93970728221680ce8b99aadb08e7638dfa90"
-    },
-    {
-      "id": "fix-dsi-splash-timing-switch",
-      "repo": "kernel/oneplus/sm8350",
-      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
-      "patch": "patches/fixes/0005-dsi-splash-timing-switch.patch",
-      "sha256": "381af644f8a94b61df2dd109157c9cef74fd82393d0ca3cba1bfc4265e01181e"
-    },
-    {
-      "id": "fix-dsi-splash-timing-switch-ksu",
-      "repo": "kernel/oneplus/sm8350-ksu",
-      "base_revision": "187d13cd30e2b22e7c4405b62f162e5218025299",
-      "patch": "patches/fixes/0005-dsi-splash-timing-switch.patch",
-      "sha256": "381af644f8a94b61df2dd109157c9cef74fd82393d0ca3cba1bfc4265e01181e"
     }
   ]
 }

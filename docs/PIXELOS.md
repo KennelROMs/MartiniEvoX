@@ -8,7 +8,11 @@ NoPrincessHere GitLab vendor仓库。维护者已确认PixelOS使用的OnePlus�
 结论只有五类：**集成**、**已有等效**、**无收益**、**不适用**、**阻塞**。“集成”表示补丁已进入
 `patches/series.json`或锁，验证状态单独记录；未构建/未实机的一律写未验证。
 
-## 设备树 sm8350-common（补丁 `patches/pixelos/common-*.patch`）
+自锁`20261010`起（TREE-01），设备树martini、sm8350-common与内核的改动是KennelROMs fork
+`kennel-17`（内核另有`kennel-17-ksu`）上的提交，每个原补丁一个提交，PixelOS来源提交写在提交说明中；
+下文的`common-*`、`martini-*`、`kernel-1`、`fixes/0001`、`fixes/0002`即这些提交的原补丁名。
+
+## 设备树 sm8350-common（fork提交，原补丁`common-*`）
 
 | 项 | PixelOS提交 | 结论 | 说明 |
 | --- | --- | --- | --- |
@@ -24,7 +28,7 @@ NoPrincessHere GitLab vendor仓库。维护者已确认PixelOS使用的OnePlus�
 | oplus接口去blob | f160485 | 无收益 | 只改提取清单；所用vendor仓库未变，不影响构建 |
 | 音频策略位置、fastbootd、PowerOffAlarm、UFFD等 | f5b6b30、f8307d6、ecd25a8、27ccc1a、37021bc | 已有等效 | 已在锁定的LineageOS提交中 |
 
-## 设备树 martini（`patches/pixelos/martini-*.patch`）
+## 设备树 martini（fork提交，原补丁`martini-*`）
 
 | 项 | PixelOS提交 | 结论 | 说明 |
 | --- | --- | --- | --- |
@@ -57,7 +61,7 @@ PixelOS把这类OPlus兼容桩放在自己的frameworks/base，而非设备树�
 | vendor/oneplus/martini | 无收益 | 仅删除.lfsconfig |
 | richtap Awinic | 不适用 | martini未启用相关soong配置 |
 
-## 内核（`patches/pixelos/kernel-1-pixelos-picks.patch`，普通与KSU内核相同，基于LineageOS 187d13c）
+## 内核（fork提交，原补丁`kernel-1-pixelos-picks`，普通与KSU内核相同，基于LineageOS 187d13c）
 
 | 项 | PixelOS提交 | 结论 |
 | --- | --- | --- |

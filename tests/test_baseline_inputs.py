@@ -21,7 +21,8 @@ MANIFEST = "manifests/locked/martini-20260930.xml"
 # The active lock moves with every upstream refresh; the profile names it.
 KSU_KERNEL = "kernel/oneplus/sm8350-ksu"
 KSU_SOURCE = "external/KernelSU-Next"
-KSU_PATCH = "patches/ksu/0001-martini-ksu-kernel-variant.patch"
+# Our own trees: changes are commits on the KennelROMs forks, never patch series entries.
+FORKS = {"device/oneplus/martini", "device/oneplus/sm8350-common", "kernel/oneplus/sm8350", KSU_KERNEL}
 SERIES = "patches/series.json"
 SOURCE = "sources/settings-google.json"
 SETTINGS_PATCH_BYTES = 1357
@@ -43,10 +44,11 @@ HEADS = {
     "vendor/lineage": "ab335e0ba751d5bde019f48e1935922f7afd62e4",
     "kernel/oneplus/sm8350": "abd4ede9ec6463110b40360a4a772e1285e995dd",
 }
+# The EROFS patches are commits on the device tree forks now (patch None: no file here).
 PATCHES = [
-    ("martini-device-erofs", "device/oneplus/martini", "patches/martini-erofs/0001-device-enable-erofs.patch",
+    ("martini-device-erofs", "device/oneplus/martini", None,
      "15a5155d7897c646e3855adff149e03a19ff0a8d10870b66d15d685adbb6c7c3"),
-    ("martini-common-erofs", "device/oneplus/sm8350-common", "patches/martini-erofs/0002-common-select-erofs.patch",
+    ("martini-common-erofs", "device/oneplus/sm8350-common", None,
      "1313947fc3451a5fc63267e36704958fa6c2faa358dd7ecfff60dfa7094f06b2"),
     ("settings-google-collector", "vendor/google/apps/SettingsGoogle", None,
      "039b2f1591745b6168eef871cef9aebd135b0a48981979e4ece0206cdf109359"),
@@ -217,15 +219,7 @@ class TestBaselineInputs(unittest.TestCase):
         self.assertEqual(series["on_mismatch"], "stop-and-inspect")
         self.assertEqual(series["already_applied"], "stop-and-inspect")
         self.assertNotIn("git am", json.dumps(series))
-        kernel = {}
-        for entry in series["patches"]:
-            if entry["repo"].startswith("kernel/"):
-                kernel.setdefault(entry["repo"], []).append(entry["patch"])
-        # KSU changes only exist in their own checkout; both kernels share the same other patches.
-        ksu_only = [p for p in kernel[KSU_KERNEL] if p.startswith("patches/ksu/")]
-        self.assertEqual([p for p in kernel[KSU_KERNEL] if p not in ksu_only], kernel["kernel/oneplus/sm8350"])
-        self.assertEqual(set(kernel), {"kernel/oneplus/sm8350", KSU_KERNEL})
-        self.assertTrue(ksu_only)
+        self.assertFalse({entry["repo"] for entry in series["patches"]} & FORKS)
 
     def test_candidate_identity_and_historical_trust_scope(self):
         baseline = self.load_json(BASELINE)
@@ -324,19 +318,22 @@ class TestBaselineInputs(unittest.TestCase):
             with self.subTest(baseline=path.name):
                 self.check_derivation(json.loads(path.read_text()))
 
-    def test_ksu_sources_in_active_lock(self):
+    def test_forks_and_ksu_sources_in_active_lock(self):
         _, baseline, projects = self.active()
+        for path in FORKS:
+            self.assertEqual((projects[path].get("remote"), baseline["repo_heads"][path]),
+                             ("martini-kennel", projects[path].get("revision")), path)
         kernel, ksu = projects["kernel/oneplus/sm8350"], projects[KSU_KERNEL]
-        self.assertEqual((ksu.get("name"), ksu.get("revision")), (kernel.get("name"), kernel.get("revision")))
+        # One kernel fork: kennel-17, and kennel-17-ksu with the KernelSU Next hooks on top.
+        self.assertEqual((kernel.get("name"), kernel.get("upstream")), (ksu.get("name"), "kennel-17"))
+        self.assertEqual(ksu.get("upstream"), "kennel-17-ksu")
+        for variant in baseline["kernel"]["variants"].values():
+            self.assertEqual(variant["base_revision"], projects[variant["repo"]].get("revision"))
         source = projects[KSU_SOURCE]
         # Kbuild runs "git fetch --unshallow" on shallow checkouts; keep the full history.
         self.assertIsNone(source.get("clone-depth"))
         variant = baseline["kernel"]["variants"]["ksu"]
-        pins = variant["kernelsu_next"]
-        self.assertEqual((variant["repo"], pins["revision"]), (KSU_KERNEL, source.get("revision")))
-        # Repo syncs without tags, so the KSU switch pins the version Kbuild would derive.
-        self.assertIn(f"KSU_VERSION_OVERRIDE={pins['version']} KSU_VERSION_TAG_OVERRIDE={pins['version_tag']}",
-                      self.required_file(KSU_PATCH).read_text())
+        self.assertEqual((variant["repo"], variant["kernelsu_next"]["revision"]), (KSU_KERNEL, source.get("revision")))
 
     def test_source_descriptor_is_explicitly_external_and_blocked(self):
         source = self.load_json(SOURCE)
@@ -374,7 +371,7 @@ class TestBaselineInputs(unittest.TestCase):
 
     def test_new_json_is_host_independent(self):
         for relative in [BASELINE, "profiles/martini.json", SERIES, SOURCE] + sorted(
-                str(p.relative_to(ROOT)) for p in (ROOT / "baselines").glob("2026100*.json")):
+                str(p.relative_to(ROOT)) for p in (ROOT / "baselines").glob("202610*.json")):
             text = self.required_file(relative).read_text()
             self.load_json(relative)
             self.assertNotRegex(text, r"/(?:home|Users|tmp|mnt)/")
