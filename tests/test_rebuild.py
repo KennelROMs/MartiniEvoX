@@ -392,8 +392,11 @@ class RebuildTests(unittest.TestCase):
         (gone / "stray").unlink()
         # "first" stays at its locked revision and keeps its hook; "gone" leaves the lock.
         snapshot = ET.Element("manifest")
-        for name in ("first", "settings", "gone"):
+        for name in ("first", "settings"):
             ET.SubElement(snapshot, "project", name=name, path=name)
+        # An earlier failed sync already switched manifests; Repo still lists "gone" for removal.
+        (self.source / ".repo").mkdir()
+        (self.source / ".repo/project.list").write_text("first\ngone\nsettings\n")
         original_run = rebuild.run
 
         def snapshot_manifest(command, **kwargs):

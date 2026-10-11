@@ -228,7 +228,12 @@ class Rebuild:
         # Repo cannot move or remove a project whose compilers crave hooked: put the
         # originals back only there. Projects that stay at their revision keep the hooks.
         restored = 0
-        for path in sorted(projects(run(["repo", "manifest"], cwd=self.source))):
+        paths = set(projects(run(["repo", "manifest"], cwd=self.source)))
+        # Checkouts Repo still tracks from an earlier sync; it removes those not in the lock.
+        listed = self.source / ".repo/project.list"
+        if listed.exists():
+            paths.update(line for line in listed.read_text().splitlines() if line)
+        for path in sorted(paths):
             repo = child(self.source, path)
             if not (repo / ".git").exists():
                 continue
