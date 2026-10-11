@@ -203,8 +203,7 @@ class Rebuild:
 
     def crave_hooks(self, repo):
         """Return {hooked path: its mbt-bin- original}; refuse any other change."""
-        dirty = RebuildError(f"Dirty or already-patched project; inspect without resetting: {repo}")
-        originals, changed = {}, set()
+        originals, changed, unexpected = {}, {}, []
         for entry in git(repo, "status", "--porcelain=v1", "-z", "--untracked-files=all").split(b"\0"):
             if not entry:
                 continue
@@ -214,14 +213,20 @@ class Rebuild:
                 hooked = (directory + "/" if directory else "") + base[len(CRAVE_HOOK):]
                 originals[hooked] = name
             elif code in (" M", " T"):
-                changed.add(name)
+                changed[name] = code
             else:
-                raise dirty
+                unexpected.append(f"{code} {name}")
         # Git may not report every hooked file as modified; each original must name a tracked file.
         tracked = (git(repo, "ls-files", "-z", "--", *(":(literal)" + n for n in originals)).split(b"\0")
                    if originals else [])
-        if not changed <= set(originals) or {os.fsdecode(n) for n in tracked if n} != set(originals):
-            raise dirty
+        tracked = {os.fsdecode(n) for n in tracked if n}
+        unexpected += [f"{code} {name} (no {CRAVE_HOOK} original)" for name, code in changed.items()
+                       if name not in originals]
+        unexpected += [f"?? {name} (names no tracked file)" for hooked, name in originals.items()
+                       if hooked not in tracked]
+        if unexpected:
+            shown = "; ".join(sorted(unexpected)[:20]) + (" ..." if len(unexpected) > 20 else "")
+            raise RebuildError(f"Dirty or already-patched project; inspect without resetting: {repo}: {shown}")
         return originals
 
     def unhook_moving(self):
@@ -233,17 +238,26 @@ class Rebuild:
         listed = self.source / ".repo/project.list"
         if listed.exists():
             paths.update(line for line in listed.read_text().splitlines() if line)
+        problems = []
         for path in sorted(paths):
             repo = child(self.source, path)
             if not (repo / ".git").exists():
                 continue
             if path in self.locked and git(repo, "rev-parse", "HEAD").decode().strip() == self.locked[path]["revision"]:
                 continue
-            for hooked, original in self.crave_hooks(repo).items():
+            try:
+                hooks = self.crave_hooks(repo)
+            except RebuildError as exc:
+                # Report every such project at once; crave queues each attempt for hours.
+                problems.append(str(exc))
+                continue
+            for hooked, original in hooks.items():
                 os.replace(repo / original, repo / hooked)
                 restored += 1
             self.clean(repo)
         print(f"Restored {restored} crave-hooked files in projects that sync moves")
+        if problems:
+            raise RebuildError("\n".join(problems))
 
     def snapshot(self, repo):
         untracked = {}

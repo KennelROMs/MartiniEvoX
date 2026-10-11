@@ -387,7 +387,7 @@ class RebuildTests(unittest.TestCase):
         with self.assertRaises(rebuild.RebuildError):
             crave.clean(gone)
         (gone / "stray").write_text("not a hook\n")
-        with self.assertRaises(rebuild.RebuildError):
+        with self.assertRaisesRegex(rebuild.RebuildError, "stray"):
             crave.clean(gone, hooks=True)
         (gone / "stray").unlink()
         # "first" stays at its locked revision and keeps its hook; "gone" leaves the lock.
