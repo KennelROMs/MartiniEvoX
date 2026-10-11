@@ -8,6 +8,8 @@
 #                                upload too when SF_USER/SF_PROJECT are set
 #   upload ROM_RUN KSU_RUN       rsync both to SourceForge and print the Updater entry
 # No flashing, clean, reset or force-sync; a failed build keeps its log in the run directory.
+# --crave: crave hooks compilers (X becomes its hook, the original is mbt-bin-X); unpatched
+# projects may carry them, and update puts the originals back only where sync moves a project.
 set -euo pipefail
 
 source_dir=$PWD
@@ -33,7 +35,7 @@ checkout_control() {
 }
 
 built() {
-    python3 "$control/tools/rebuild.py" build --source "$source_dir" --signing release "$@" |
+    python3 "$control/tools/rebuild.py" build --source "$source_dir" --crave --signing release "$@" |
         tee /dev/stderr | sed -n 's/^BUILT_AND_ARCHIVED_UNVALIDATED: //p'
 }
 
@@ -42,9 +44,9 @@ sync() {
     need git repo python3
     checkout_control "$ref"
     if [[ ! -e $source_dir/.martini-prepared.json && ! -d $source_dir/.martini-history ]]; then
-        python3 "$control/tools/rebuild.py" adopt --source "$source_dir"
+        python3 "$control/tools/rebuild.py" adopt --source "$source_dir" --crave
     fi
-    python3 "$control/tools/rebuild.py" update --source "$source_dir" --clone-depth 1
+    python3 "$control/tools/rebuild.py" update --source "$source_dir" --crave --clone-depth 1
     python3 "$control/tools/rebuild.py" prepare --source "$source_dir"
 }
 

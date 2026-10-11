@@ -21,6 +21,9 @@ import xml.etree.ElementTree as ET
 CONTROL = Path(__file__).resolve().parents[1]
 PREPARED = ".martini-prepared.json"
 OUT_KERNEL = ".martini-kernel"
+# crave's build accelerator replaces a compiler X with its hook and keeps the original
+# next to it as the untracked file mbt-bin-X.
+CRAVE_HOOK = "mbt-bin-"
 
 
 class RebuildError(Exception):
@@ -116,7 +119,7 @@ def workspace_lock(source):
 class Rebuild:
     def __init__(self, control, source, *, source_bundle=None, settings_patch=None,
                  out=None, artifacts=None, signing="self-build", kernel="normal",
-                 clone_depth=None):
+                 clone_depth=None, crave=False):
         self.control = Path(control).resolve()
         for path in (source, out, artifacts):
             if path is not None and not Path(path).is_absolute():
@@ -138,6 +141,7 @@ class Rebuild:
         self.signing = signing
         self.kernel = kernel
         self.clone_depth = clone_depth
+        self.crave = crave
         self.profile = read_json(self.control / "profiles/martini.json")
         self.baseline = read_json(child(self.control, self.profile["baseline"]))
         self.series = read_json(child(self.control, self.profile["patch_series"]))
@@ -188,11 +192,53 @@ class Rebuild:
             inputs["patch:" + entry["id"]] = fingerprint(path)
         return inputs
 
-    def clean(self, repo):
+    def clean(self, repo, hooks=False):
+        # hooks: in a crave workspace, an unpatched project may carry crave compiler hooks.
         if Path(git(repo, "rev-parse", "--show-toplevel").decode().strip()).resolve() != repo:
             raise RebuildError(f"Not an independent source project: {repo}")
-        if git(repo, "status", "--porcelain=v1", "--untracked-files=all"):
+        if hooks and self.crave:
+            self.crave_hooks(repo)
+        elif git(repo, "status", "--porcelain=v1", "--untracked-files=all"):
             raise RebuildError(f"Dirty or already-patched project; inspect without resetting: {repo}")
+
+    def crave_hooks(self, repo):
+        """Return {hooked path: its mbt-bin- original}; refuse any other change."""
+        dirty = RebuildError(f"Dirty or already-patched project; inspect without resetting: {repo}")
+        originals, changed = {}, set()
+        for entry in git(repo, "status", "--porcelain=v1", "-z", "--untracked-files=all").split(b"\0"):
+            if not entry:
+                continue
+            code, name = entry[:2].decode(), os.fsdecode(entry[3:])
+            directory, _, base = name.rpartition("/")
+            if code == "??" and base.startswith(CRAVE_HOOK):
+                hooked = (directory + "/" if directory else "") + base[len(CRAVE_HOOK):]
+                originals[hooked] = name
+            elif code in (" M", " T"):
+                changed.add(name)
+            else:
+                raise dirty
+        # Git may not report every hooked file as modified; each original must name a tracked file.
+        tracked = (git(repo, "ls-files", "-z", "--", *(":(literal)" + n for n in originals)).split(b"\0")
+                   if originals else [])
+        if not changed <= set(originals) or {os.fsdecode(n) for n in tracked if n} != set(originals):
+            raise dirty
+        return originals
+
+    def unhook_moving(self):
+        # Repo cannot move or remove a project whose compilers crave hooked: put the
+        # originals back only there. Projects that stay at their revision keep the hooks.
+        restored = 0
+        for path in sorted(projects(run(["repo", "manifest"], cwd=self.source))):
+            repo = child(self.source, path)
+            if not (repo / ".git").exists():
+                continue
+            if path in self.locked and git(repo, "rev-parse", "HEAD").decode().strip() == self.locked[path]["revision"]:
+                continue
+            for hooked, original in self.crave_hooks(repo).items():
+                os.replace(repo / original, repo / hooked)
+                restored += 1
+            self.clean(repo)
+        print(f"Restored {restored} crave-hooked files in projects that sync moves")
 
     def snapshot(self, repo):
         untracked = {}
@@ -272,7 +318,7 @@ class Rebuild:
                     raise RebuildError(f"Nested project under a replaced path; inspect manually: {path}")
                 # A checkout whose earlier sync failed may be missing; only its Git dir moves.
                 if child(self.source, path).exists():
-                    self.clean(child(self.source, path))
+                    self.clean(child(self.source, path), hooks=True)
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             displaced = self.source / ".martini-displaced" / stamp
             for path in moves:
@@ -319,6 +365,8 @@ class Rebuild:
             if not self.restore and settings.exists():
                 # Written by an earlier init with the SettingsGoogle restore; no longer used.
                 settings.unlink()
+            if self.crave:
+                self.unhook_moving()
             # A shallow snapshot (crave) would otherwise be unshallowed by Repo on first sync.
             depth = [f"--depth={self.clone_depth}"] if self.clone_depth else []
             run(["repo", "init", "-u", self.control, "-b", commit, "-m",
@@ -370,7 +418,7 @@ class Rebuild:
         patched = {entry["repo"] for entry in self.series["patches"]}
         for name in self.locked:
             if name not in patched:
-                self.clean(child(self.source, name))
+                self.clean(child(self.source, name), hooks=True)
         return xml
 
     def build(self):
@@ -467,6 +515,8 @@ class Rebuild:
             print(".repo/projects Git dirs, to SOURCE/.martini-displaced/; then run update.")
         elif command == "update":
             print("Require clean committed CONTROL; verify SOURCE still equals its preparation record.")
+            if self.crave:
+                print("crave: restore mbt-bin- originals of hooked compilers in projects that sync moves.")
             print("Undo only recorded changes, archive the record, then repo init -b CONTROL_COMMIT and repo sync.")
         elif command == "prepare":
             print("Verify internal patches and explicit --settings-patch; check every base/clean tree/apply first.")
@@ -531,13 +581,15 @@ def main(argv=None, *, control=CONTROL):
     parser.add_argument("--kernel", default="normal", help="profile kernel variant: normal or ksu")
     parser.add_argument("--clone-depth", type=int, metavar="N",
                         help="update: Repo default clone depth for a shallow workspace (crave)")
+    parser.add_argument("--crave", action="store_true",
+                        help="crave workspace: accept crave compiler hooks in unpatched projects")
     parser.add_argument("--dry-run", action="store_true", help="read configuration and print steps only")
     args = parser.parse_args(argv)
     try:
         work = Rebuild(control, args.source, source_bundle=args.source_bundle,
                        settings_patch=args.settings_patch, out=args.out,
                        artifacts=args.artifacts, signing=args.signing, kernel=args.kernel,
-                       clone_depth=args.clone_depth)
+                       clone_depth=args.clone_depth, crave=args.crave)
         if args.dry_run:
             work.dry_run(args.command)
         else:

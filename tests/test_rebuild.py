@@ -364,6 +364,51 @@ class RebuildTests(unittest.TestCase):
         with self.assertRaises(rebuild.RebuildError):
             self.workspace().adopt()
 
+    def hook(self, repo, name):
+        # What crave's accelerator does to a compiler: original kept as untracked mbt-bin-NAME.
+        os.rename(repo / name, repo / ("mbt-bin-" + name))
+        (repo / name).write_text("crave hook\n")
+
+    def test_crave_hooks_are_accepted_only_in_crave_mode_and_undone_where_sync_moves(self):
+        gone = self.source / "gone"
+        gone.mkdir()
+        git(gone, "init", "--quiet")
+        (gone / "gcc").write_text("compiler\n")
+        (gone / "kernel-gcc").symlink_to("gcc")
+        git(gone, "add", ".")
+        git(gone, "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+            "commit", "--quiet", "-m", "synthetic prebuilt\n\nCo-Authored-By: Claude Code <noreply@anthropic.com>")
+        for repo, name in ((self.source / "first", "tracked"), (gone, "gcc"), (gone, "kernel-gcc")):
+            self.hook(repo, name)
+        with self.assertRaises(rebuild.RebuildError):
+            self.workspace().clean(gone, hooks=True)
+        crave = self.workspace(crave=True)
+        crave.clean(gone, hooks=True)
+        with self.assertRaises(rebuild.RebuildError):
+            crave.clean(gone)
+        (gone / "stray").write_text("not a hook\n")
+        with self.assertRaises(rebuild.RebuildError):
+            crave.clean(gone, hooks=True)
+        (gone / "stray").unlink()
+        # "first" stays at its locked revision and keeps its hook; "gone" leaves the lock.
+        snapshot = ET.Element("manifest")
+        for name in ("first", "settings", "gone"):
+            ET.SubElement(snapshot, "project", name=name, path=name)
+        original_run = rebuild.run
+
+        def snapshot_manifest(command, **kwargs):
+            if command[:2] == ["repo", "manifest"]:
+                return ET.tostring(snapshot)
+            return original_run(command, **kwargs)
+
+        with mock.patch.object(rebuild, "run", side_effect=snapshot_manifest), \
+             contextlib.redirect_stdout(io.StringIO()):
+            crave.unhook_moving()
+        self.assertEqual(git(gone, "status", "--porcelain"), b"")
+        self.assertTrue((gone / "kernel-gcc").is_symlink())
+        self.assertEqual((self.source / "first/tracked").read_text(), "crave hook\n")
+        self.assertTrue((self.source / "first/mbt-bin-tracked").is_file())
+
     def test_build_refuses_uncommitted_control_before_source_work(self):
         work = self.workspace()
         (self.control / "README.md").write_text("uncommitted control change\n")

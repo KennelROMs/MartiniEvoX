@@ -144,6 +144,9 @@ cd ~/crave/martini        # 以下crave命令都在此目录执行，加 -c ~/.c
   （LOS 23.2约67个，均无改动）连同`.repo/projects/<路径>.git`移到`.martini-displaced/`，
   代替`--force-sync`；然后`update --clone-depth 1`（否则Repo会把浅克隆全部补成完整历史）
   与`prepare`。
+- crave的编译加速把快照里的编译器`X`换成它的hook，原文件改名为未跟踪的`mbt-bin-X`。
+  `crave.sh`给rebuild.py加`--crave`：未打补丁的项目允许这种成对改动（其他改动照常拒绝）；
+  `update`只在同步要移动或移除的项目里把`mbt-bin-X`改回`X`，保持版本不变的项目保留加速。
 - `build REF`：`sync`后构建普通ROM（`out`）与KSU boot（`out-ksu`），均用`--signing release`；
   设置`SF_USER`/`SF_PROJECT`时接着`upload`。
 - `upload ROM归档 KSU归档`：核对两者来自同一CONTROL提交，rsync到SourceForge项目的
