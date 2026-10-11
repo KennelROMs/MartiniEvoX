@@ -254,6 +254,16 @@ class Rebuild:
             for hooked, original in hooks.items():
                 os.replace(repo / original, repo / hooked)
                 restored += 1
+            if hooks:
+                print(f"{path}: restored {', '.join(sorted(hooks))}")
+                # Our status runs without optional locks and leaves the index stat data stale;
+                # git checkout trusts that data and would see the restored files as changed.
+                try:
+                    git(repo, "update-index", "--refresh")
+                except subprocess.CalledProcessError as exc:
+                    problems.append(f"{path}: differs from HEAD after restoring: "
+                                    + exc.stdout.decode(errors="replace").strip())
+                    continue
             self.clean(repo)
         print(f"Restored {restored} crave-hooked files in projects that sync moves")
         if problems:

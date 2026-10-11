@@ -407,6 +407,8 @@ class RebuildTests(unittest.TestCase):
         with mock.patch.object(rebuild, "run", side_effect=snapshot_manifest), \
              contextlib.redirect_stdout(io.StringIO()):
             crave.unhook_moving()
+        # The index stat data is fresh: what Repo's git checkout relies on (no refresh of its own).
+        git(gone, "diff-files", "--quiet")
         self.assertEqual(git(gone, "status", "--porcelain"), b"")
         self.assertTrue((gone / "kernel-gcc").is_symlink())
         self.assertEqual((self.source / "first/tracked").read_text(), "crave hook\n")
