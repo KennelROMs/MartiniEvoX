@@ -229,16 +229,16 @@ class Rebuild:
             raise RebuildError(f"Dirty or already-patched project; inspect without resetting: {repo}: {shown}")
         return originals
 
-    def unhook_moving(self):
-        # Repo cannot move or remove a project whose compilers crave hooked: put the
-        # originals back only there. Projects that stay at their revision keep the hooks.
-        restored = 0
+    def moving_hooks(self):
+        # Repo cannot move or remove a project whose compilers crave hooked, and crave's
+        # dcmon puts any hook we undo straight back. Prove that the only local changes in
+        # projects sync moves or removes are such hooks; update then lets Repo overwrite them.
+        hooked, problems = 0, []
         paths = set(projects(run(["repo", "manifest"], cwd=self.source)))
         # Checkouts Repo still tracks from an earlier sync; it removes those not in the lock.
         listed = self.source / ".repo/project.list"
         if listed.exists():
             paths.update(line for line in listed.read_text().splitlines() if line)
-        problems = []
         for path in sorted(paths):
             repo = child(self.source, path)
             if not (repo / ".git").exists():
@@ -251,23 +251,12 @@ class Rebuild:
                 # Report every such project at once; crave queues each attempt for hours.
                 problems.append(str(exc))
                 continue
-            for hooked, original in hooks.items():
-                os.replace(repo / original, repo / hooked)
-                restored += 1
             if hooks:
-                print(f"{path}: restored {', '.join(sorted(hooks))}")
-                # Our status runs without optional locks and leaves the index stat data stale;
-                # git checkout trusts that data and would see the restored files as changed.
-                try:
-                    git(repo, "update-index", "--refresh")
-                except subprocess.CalledProcessError as exc:
-                    problems.append(f"{path}: differs from HEAD after restoring: "
-                                    + exc.stdout.decode(errors="replace").strip())
-                    continue
-            self.clean(repo)
-        print(f"Restored {restored} crave-hooked files in projects that sync moves")
+                print(f"{path}: crave hooks {', '.join(sorted(hooks))}")
+                hooked += len(hooks)
         if problems:
             raise RebuildError("\n".join(problems))
+        return hooked
 
     def snapshot(self, repo):
         untracked = {}
@@ -394,13 +383,17 @@ class Rebuild:
             if not self.restore and settings.exists():
                 # Written by an earlier init with the SettingsGoogle restore; no longer used.
                 settings.unlink()
-            if self.crave:
-                self.unhook_moving()
+            force = []
+            if self.crave and self.moving_hooks():
+                # Only crave hooks differ (checked above); dcmon re-hooks the new checkout.
+                force = ["--force-checkout", "--force-remove-dirty"]
+                if b"--force-checkout" not in run(["repo", "sync", "--help"], cwd=self.source):
+                    raise RebuildError("This Repo cannot overwrite crave hooks (no --force-checkout)")
             # A shallow snapshot (crave) would otherwise be unshallowed by Repo on first sync.
             depth = [f"--depth={self.clone_depth}"] if self.clone_depth else []
             run(["repo", "init", "-u", self.control, "-b", commit, "-m",
                  self.profile["manifest"], "--git-lfs", *depth], cwd=self.source, stdout=None)
-            run(["repo", "sync", "-c", "--no-clone-bundle", "--no-tags"],
+            run(["repo", "sync", "-c", "--no-clone-bundle", "--no-tags", *force],
                 cwd=self.source, stdout=None)
         print(f"Updated SOURCE to CONTROL {commit}; run prepare next")
 
@@ -545,7 +538,7 @@ class Rebuild:
         elif command == "update":
             print("Require clean committed CONTROL; verify SOURCE still equals its preparation record.")
             if self.crave:
-                print("crave: restore mbt-bin- originals of hooked compilers in projects that sync moves.")
+                print("crave: if projects sync moves carry only crave compiler hooks, let Repo overwrite them.")
             print("Undo only recorded changes, archive the record, then repo init -b CONTROL_COMMIT and repo sync.")
         elif command == "prepare":
             print("Verify internal patches and explicit --settings-patch; check every base/clean tree/apply first.")

@@ -390,7 +390,7 @@ class RebuildTests(unittest.TestCase):
         with self.assertRaisesRegex(rebuild.RebuildError, "stray"):
             crave.clean(gone, hooks=True)
         (gone / "stray").unlink()
-        # "first" stays at its locked revision and keeps its hook; "gone" leaves the lock.
+        # "first" stays at its locked revision; "gone" leaves the lock: only its hooks count.
         snapshot = ET.Element("manifest")
         for name in ("first", "settings"):
             ET.SubElement(snapshot, "project", name=name, path=name)
@@ -398,21 +398,31 @@ class RebuildTests(unittest.TestCase):
         (self.source / ".repo").mkdir()
         (self.source / ".repo/project.list").write_text("first\ngone\nsettings\n")
         original_run = rebuild.run
+        calls = []
 
-        def snapshot_manifest(command, **kwargs):
+        def fake_repo(command, **kwargs):
             if command[:2] == ["repo", "manifest"]:
                 return ET.tostring(snapshot)
+            if command[:3] == ["repo", "sync", "--help"]:
+                return b"  --force-checkout  ...\n  --force-remove-dirty  ...\n"
+            if command[0] == "repo":
+                calls.append(command)
+                return b""
             return original_run(command, **kwargs)
 
-        with mock.patch.object(rebuild, "run", side_effect=snapshot_manifest), \
+        with mock.patch.object(rebuild, "run", side_effect=fake_repo), \
              contextlib.redirect_stdout(io.StringIO()):
-            crave.unhook_moving()
-        # The index stat data is fresh: what Repo's git checkout relies on (no refresh of its own).
-        git(gone, "diff-files", "--quiet")
-        self.assertEqual(git(gone, "status", "--porcelain"), b"")
-        self.assertTrue((gone / "kernel-gcc").is_symlink())
+            self.assertEqual(crave.moving_hooks(), 2)
+            self.workspace(crave=True).update()
+            (gone / "stray").write_text("not a hook\n")
+            with self.assertRaisesRegex(rebuild.RebuildError, "gone.*stray"):
+                self.workspace(crave=True).update()
+        sync = [c for c in calls if c[:2] == ["repo", "sync"]]
+        # Repo may overwrite hooks only after they were proven to be the only changes.
+        self.assertEqual(len(sync), 1)
+        self.assertIn("--force-checkout", sync[0])
+        self.assertIn("--force-remove-dirty", sync[0])
         self.assertEqual((self.source / "first/tracked").read_text(), "crave hook\n")
-        self.assertTrue((self.source / "first/mbt-bin-tracked").is_file())
 
     def test_build_refuses_uncommitted_control_before_source_work(self):
         work = self.workspace()

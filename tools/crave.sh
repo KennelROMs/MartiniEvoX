@@ -9,7 +9,8 @@
 #   upload ROM_RUN KSU_RUN       rsync both to SourceForge and print the Updater entry
 # No flashing, clean, reset or force-sync; a failed build keeps its log in the run directory.
 # --crave: crave hooks compilers (X becomes its hook, the original is mbt-bin-X); unpatched
-# projects may carry them, and update puts the originals back only where sync moves a project.
+# projects may carry them. Where sync moves or removes a project whose only changes are such
+# hooks, update lets Repo overwrite them (crave's dcmon re-hooks); anything else stops.
 set -euo pipefail
 
 source_dir=$PWD

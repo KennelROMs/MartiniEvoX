@@ -145,8 +145,10 @@ cd ~/crave/martini        # 以下crave命令都在此目录执行，加 -c ~/.c
   代替`--force-sync`；然后`update --clone-depth 1`（否则Repo会把浅克隆全部补成完整历史）
   与`prepare`。
 - crave的编译加速把快照里的编译器`X`换成它的hook，原文件改名为未跟踪的`mbt-bin-X`。
-  `crave.sh`给rebuild.py加`--crave`：未打补丁的项目允许这种成对改动（其他改动照常拒绝）；
-  `update`只在同步要移动或移除的项目里把`mbt-bin-X`改回`X`，保持版本不变的项目保留加速。
+  `crave.sh`给rebuild.py加`--crave`：未打补丁的项目允许这种成对改动（其他改动照常拒绝）。
+  容器的`dcmon`会立刻把撤掉的hook装回（305217实测），所以`update`先核实同步要移动或移除的
+  项目除hook外没有任何改动，再以`repo sync --force-checkout --force-remove-dirty`让Repo覆盖；
+  有其他改动时列出全部并停止。这是“不force-sync”规则在crave工作区的唯一例外。
 - `build REF`：`sync`后构建普通ROM（`out`）与KSU boot（`out-ksu`），均用`--signing release`；
   设置`SF_USER`/`SF_PROJECT`时接着`upload`。
 - `upload ROM归档 KSU归档`：核对两者来自同一CONTROL提交，rsync到SourceForge项目的
