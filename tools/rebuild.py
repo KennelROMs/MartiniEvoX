@@ -222,8 +222,14 @@ class Rebuild:
         tracked = {os.fsdecode(n) for n in tracked if n}
         unexpected += [f"{code} {name} (no {CRAVE_HOOK} original)" for name, code in changed.items()
                        if name not in originals]
-        unexpected += [f"?? {name} (names no tracked file)" for hooked, name in originals.items()
-                       if hooked not in tracked]
+        for hooked, name in list(originals.items()):
+            if hooked in tracked:
+                continue
+            if os.path.lexists(repo / hooked):
+                unexpected.append(f"?? {name} (names no tracked file)")
+            else:
+                # The checkout removed that compiler; crave left its original behind.
+                del originals[hooked]
         if unexpected:
             shown = "; ".join(sorted(unexpected)[:20]) + (" ..." if len(unexpected) > 20 else "")
             raise RebuildError(f"Dirty or already-patched project; inspect without resetting: {repo}: {shown}")

@@ -386,6 +386,14 @@ class RebuildTests(unittest.TestCase):
         crave.clean(gone, hooks=True)
         with self.assertRaises(rebuild.RebuildError):
             crave.clean(gone)
+        # A sync that removed a hooked compiler leaves only crave's copy of the original.
+        (gone / "old").mkdir()
+        (gone / "old/mbt-bin-cc").write_text("removed compiler\n")
+        self.assertEqual(set(crave.crave_hooks(gone)), {"gcc", "kernel-gcc"})
+        (gone / "old/cc").write_text("untracked\n")
+        with self.assertRaisesRegex(rebuild.RebuildError, "mbt-bin-cc"):
+            crave.clean(gone, hooks=True)
+        shutil.rmtree(gone / "old")
         (gone / "stray").write_text("not a hook\n")
         with self.assertRaisesRegex(rebuild.RebuildError, "stray"):
             crave.clean(gone, hooks=True)
