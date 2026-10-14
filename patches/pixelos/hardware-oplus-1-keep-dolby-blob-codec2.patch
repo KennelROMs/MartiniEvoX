@@ -1,0 +1,14 @@
+diff --git a/hidl/dolby/codec2/Android.bp b/hidl/dolby/codec2/Android.bp
+index 0ea571f..1870d95 100644
+--- a/hidl/dolby/codec2/Android.bp
++++ b/hidl/dolby/codec2/Android.bp
+@@ -5,6 +5,9 @@
+ 
+ cc_binary {
+     name: "dolbycodec2",
++    // MartiniEvoX: our Dolby blobs (NoPrincessHere seventeen) still ship their own
++    // vendor.dolby_sp.media.c2@1.0-service and its rc at the same path.
++    enabled: false,
+     device_specific: true,
+     relative_install_path: "hw",
+     compile_multilib: "64",

@@ -56,6 +56,7 @@ PixelOS把这类OPlus兼容桩放在自己的frameworks/base，而非设备树�
 | 仓库 | 结论 | 说明 |
 | --- | --- | --- |
 | hardware/oplus | 集成（锁改为PixelOS-AOSP 8ead74c） | 锁定提交的快进+20：传感器multihal、Doze覆盖、powerhal/walt sepolicy、oplus-fwk相机类、richtap、KeyHandler |
+| hardware/oplus Dolby Codec2包装（LineageOS 2ccd6fa，2026-10-12，PixelOS 10-13变基带入） | 暂不采用（`pixelos/hardware-oplus-1`置`enabled: false`） | 新模块`dolbycodec2`安装的`odm/etc/init/vendor.dolby.media.c2@1.0-service.rc`与vendor/oneplus/dolby（NoPrincessHere seventeen）的同路径rc冲突（kati报错）；包装dlopen `c2.dolby.store.so`，我们的blob是`_sp`系列，换用会让Dolby解码器启动失败。vendor/oneplus/dolby改用包装后移除此补丁 |
 | vendor/oneplus/sm8350-common | 集成（vendor-common-1） | 相对TheMuppets 445ead0仅删除perfd相关模块 |
 | vendor/oplus/camera、vendor/oneplus/dolby、packages/apps/DolbyAtmos | 集成（新增锁项目） | NoPrincessHere/PixelOS-AOSP seventeen |
 | vendor/oneplus/martini | 无收益 | 仅删除.lfsconfig |

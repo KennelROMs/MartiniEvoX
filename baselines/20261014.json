@@ -29,7 +29,8 @@
     "device/oneplus/martini": "528fb33fa7c12c77390a11f732714fe1a1022cbc",
     "device/oneplus/sm8350-common": "09b259995099c66c990ad7c39e939faeefb63902",
     "kernel/oneplus/sm8350": "2cfc5d3ed7572e4789199b838dbe6a5054203276",
-    "kernel/oneplus/sm8350-ksu": "d9009f938f74b5e6817a43b9b736adc11a04f358"
+    "kernel/oneplus/sm8350-ksu": "d9009f938f74b5e6817a43b9b736adc11a04f358",
+    "hardware/oplus": "aeb5d34a962dddf0fd835cdcbf2fc5673d7533cc"
   },
   "kernel": {
     "variants": {

@@ -45,6 +45,13 @@
       "sha256": "4b7a82256db053d0dd68eb3f8176c0cf24e338b0cbe3be4625a475c8a4d7bbc3"
     },
     {
+      "id": "pixelos-hardware-oplus-keep-dolby-blob-codec2",
+      "repo": "hardware/oplus",
+      "base_revision": "aeb5d34a962dddf0fd835cdcbf2fc5673d7533cc",
+      "patch": "patches/pixelos/hardware-oplus-1-keep-dolby-blob-codec2.patch",
+      "sha256": "485497be0da2416db245e07ff695c745c50eb1d7c7ea30aa404b878bcdc7b654"
+    },
+    {
       "id": "pixelos-frameworks-base-oplus-camera-compat",
       "repo": "frameworks/base",
       "base_revision": "0811df5851b1c3b1eb959d6164763d7a1db63e9f",
