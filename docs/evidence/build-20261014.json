@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-14",
+  "tasks": ["KSU-02", "TREE-01"],
+  "scope": "Build server release build; server build, archive and offline checks only.",
+  "control_commit": "d2b59ee",
+  "lock": "manifests/locked/martini-20261014.xml",
+  "changes": [
+    "KernelSU-Next legacy 8869bd7 -> 3ab98d0 (pkg_observer deadlock fix, avtab/xperms and policydb.len fixes, SELinux hide refactor); device fork pins version 33309 (528fb33)",
+    "pixelos/hardware-oplus-1: disable the new dolbycodec2 wrapper (LineageOS 2ccd6fa), whose rc collides with the Dolby blob rc; our _sp blobs lack c2.dolby.store.so",
+    "Upstream moved 27 other projects (Evolution-X manifest 8e41c89 unchanged), including frameworks/base, frameworks/native, build/make, system/update_engine, vendor/lineage, hardware/oplus and the WebView prebuilts"
+  ],
+  "first_attempt": "30c3a88 stopped in kati: overriding commands for odm/etc/init/vendor.dolby.media.c2@1.0-service.rc",
+  "normal_rom": {
+    "run": "run-20261014T043359Z-ndngbyji",
+    "zip": {
+      "name": "EvolutionX-17.0-20261014-martini-12.3-Unofficial.zip",
+      "bytes": 3749612463,
+      "sha256": "ea0c20343ead58bb677c645c9135c2ad87ffd0195c6e2ab6a91edebc72cd22b0"
+    },
+    "target_files_tar_zst": {
+      "bytes": 7804619208,
+      "sha256": "9b2212dfe3beb949fa9e3beaffd57f676b2323f7525d189434c868be3d97db8f"
+    }
+  },
+  "ksu_boot": {
+    "run": "run-20261014T053313Z-1izlzw1q",
+    "image": {
+      "name": "EvolutionX-17.0-20261014-martini-12.3-Unofficial-ksu-boot.img",
+      "bytes": 201326592,
+      "sha256": "00c6c00799172353ff3d655277fdb19eede4490031987dda7eb99c7fc983b715"
+    },
+    "kernelsu_next": {"revision": "3ab98d0", "kernel_banner": "welcome to KernelSU version 33309", "tag": "v3.4.0-legacy"}
+  },
+  "pairing_checks": {"crc_differences": 0, "module_symvers_entries": 14610,
+                     "module_symvers_identical_to_20261010": {"normal": true, "ksu": true}},
+  "ota_offline_checks": {
+    "ota_certificate_der_sha256": "d6310c4135f42e1cb4087d6a21c88d3f8d5c04f89e7db0ef1e08a2122b41f9af",
+    "pre_device": "MT2111_IND,OP5155L1",
+    "post_security_patch_level": "2026-10-01",
+    "post_timestamp": 1791952450,
+    "previous_build_timestamp": 1791614020,
+    "check_ota_package_signature_project_cert_exit": 0,
+    "check_ota_package_signature_aosp_testkey_exit": 1
+  },
+  "installed_checks": {
+    "responseIccCardStatus_1_5_slot_mapping_overrides": 0,
+    "kernel_pd_sdp_references": {"sm8350": 8, "sm8350-ksu": 8},
+    "msm_drm_ko_splash_timing_message": {"normal": 1, "ksu": 1},
+    "dolby_codec2_rc": "odm/etc/init/vendor.dolby.media.c2@1.0-service.rc starts /odm/bin/hw/vendor.dolby_sp.media.c2@1.0-service (blob); no dolbycodec2 installed",
+    "updater_server_url": "https://raw.githubusercontent.com/KennelROMs/MartiniEvoX/main/ota/{device}.json"
+  },
+  "not_performed": ["device verification of this build", "publishing (SourceForge upload, ota/martini.json)"]
+}

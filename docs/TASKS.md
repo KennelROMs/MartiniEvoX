@@ -27,7 +27,7 @@
 | PIXEL-01 | DONE | 完整差异/来源/依赖台账 | [PIXELOS](PIXELOS.md)，逐项结论 |
 | PIXEL-02 | PENDING_VALIDATION | 可行项整合及范围内验证 | 已进入交付ROM并构建成功；实机检查见DEVICE-VALIDATION第2节 |
 | KSU-01 | DONE | legacy源码、手动hooks、兼容回移植 | legacy `cd739c78`；独立编译通过；evidence/ksu-kernel-compile-20261001.json |
-| KSU-02 | PENDING_VALIDATION | 与普通ROM配对的KSU `boot.img` | 已构建；CRC一致、boot仅内核不同；实机临时启动与授权/拒绝见DEVICE-VALIDATION第4节 |
+| KSU-02 | PENDING_VALIDATION | 与普通ROM配对的KSU `boot.img` | 已构建；CRC一致、boot仅内核不同；20261014版跟进legacy `3ab98d0`（33309，dev v3.4.1/3.4.2的内核修正中throne_tracker iterate_dir死锁`a86e8ed`尚未移植到legacy，等上游）；实机临时启动与授权/拒绝见DEVICE-VALIDATION第4节 |
 | OTA-01 | PENDING_VALIDATION | OTA包与升级验证 | 离线：整包与payload签名、错误密钥拒绝、设备断言/SPL/时间戳均通过；`tools/ota_json.py`生成Updater条目；实机升级待最终阶段 |
 | FIX-01 | IN_PROGRESS | 集中修复开放问题并回归 | 2026-10-05维护者回报此前问题均已解决；ISSUE-DISPLAY-02的修正（20261005版）2026-10-08实机确认生效；2026-10-09新增ISSUE-SIM-01、ISSUE-USB-01（20261009版实机生效）；2026-10-10新增ISSUE-DISPLAY-03（20261010版实机生效）；问题表无未结项 |
 | CRAVE-01 | IN_PROGRESS | 以crave.io取代自有构建服务器，产物发布到SourceForge | `tools/crave.sh`（构建、配对核对、上传、Updater条目）与`ota/0001`（Updater指向本仓库`ota/martini.json`）已完成，离线测试通过；基础项目LOS 23.2（ID 99）、SourceForge `kennelroms`。同步失败记录：304479（上游删除仓库，刷新锁）、304656（adopt检查不存在的目录，已修）、304828（快照编译器被crave加速hook替换为`X`+未跟踪`mbt-bin-X`，repo拒绝移动clang与移除gcc 4.9；检查任务304929确认）。`--crave`：未打补丁项目允许该成对改动；305217证实dcmon会立即装回被还原的hook，故update核实移动/移除的项目只有hook后，以`--force-checkout --force-remove-dirty`同步（crave唯一例外）。每次排队约10–15小时。305261同步与prepare成功（hook处理生效）。密钥：前两次push因目标目录不存在被写成同一文件（签名私钥被覆盖未残留），305393空等push被取消；2026-10-14改用`crave ssh`建目录、逐个push、ssh解包，证书指纹`d6310c41…`一致。下一步：以锁20261014提交一个build任务，对照Hetzner同提交的OTA证书与模块CRC |

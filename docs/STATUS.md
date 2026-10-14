@@ -1,6 +1,6 @@
 # 当前状态
 
-更新日期：2026-10-10。本文是当前状态入口；历史时间点的报告不能覆盖较新的
+更新日期：2026-10-14。本文是当前状态入口；历史时间点的报告不能覆盖较新的
 实机回报。状态变化同时更新 [任务台账](TASKS.md)，不得用未验证的推测填 PASS。
 
 ## 一句话定位
@@ -14,14 +14,17 @@ KernelSU Next `boot.img`；离线OTA签名与元数据核对通过。维护者�
 
 | 产物 | SHA256 | 归档（构建服务器 `~/martini/artifacts/`） |
 | --- | --- | --- |
-| `EvolutionX-17.0-20261010-martini-12.3-Unofficial.zip`（3742154534字节） | `7f262fb6d203c6677ed06dd3bc925460dbc0945a73ffe5fac5d30aa7d9a65bbe` | `run-20261010T063329Z-kvfja48_`（含target-files） |
-| `EvolutionX-17.0-20261010-martini-12.3-Unofficial-ksu-boot.img` | `9029e1fb3d71a7eca2af3c7bcc0241033464f345bc87c0c37c906fa364924747` | `run-20261010T073047Z-5dcgo13_` |
+| `EvolutionX-17.0-20261014-martini-12.3-Unofficial.zip`（3749612463字节） | `ea0c20343ead58bb677c645c9135c2ad87ffd0195c6e2ab6a91edebc72cd22b0` | `run-20261014T043359Z-ndngbyji`（含target-files） |
+| `EvolutionX-17.0-20261014-martini-12.3-Unofficial-ksu-boot.img` | `00c6c00799172353ff3d655277fdb19eede4490031987dda7eb99c7fc983b715` | `run-20261014T053313Z-1izlzw1q` |
 
-当前版（控制`165fee2`，锁`20261010`）首次从KennelROMs fork构建设备树与内核（TREE-01）：四个fork提交的
+当前版20261014（控制`d2b59ee`，锁`20261014`）：KernelSU Next legacy `3ab98d0`（内核报版本33309，含packages.list
+监听死锁修正），上游27个项目更新；新的hardware/oplus Dolby Codec2包装以补丁停用，Dolby仍用blob服务。两份内核
+`Module.symvers`与20261010相同，模块CRC一致，OTA证书与验签结果同前，见[记录](evidence/build-20261014.json)。尚未发布，待实机。
+上一版（控制`165fee2`，锁`20261010`）首次从KennelROMs fork构建设备树与内核（TREE-01）：四个fork提交的
 Git tree与a52c187补丁准备后的工作树相同，两份内核`Module.symvers`与补丁方式构建逐字节相同；
 另含上游8个项目的更新（frameworks/base、vendor/lineage、Evolver等）。OTA证书与验签结果同前、
 模块CRC一致（14610项），post-timestamp晚于下述同日早测版，见[记录](evidence/build-20261010-forks.json)。
-尚未发布，待实机。文件名与早测版相同，以SHA256区分。
+ZIP `7f262fb6…`、KSU boot `9029e1fb…`；文件名与早测版相同，以SHA256区分。
 早测版20261010（控制`a52c187`，锁`20261008`，ZIP `1fac2c5f…`、KSU boot `cc2fd613…`）在20261009版上只加`fixes/0005`（ISSUE-DISPLAY-03）；两份内核源码与
 `msm_drm.ko`均含该修正，OTA证书与验签结果同前，模块CRC一致（14610项），post-timestamp晚于20261009版，
 见[记录](evidence/build-20261010.json)。尚未发布；2026-10-10维护者实机回报开机掉帧修正生效。
