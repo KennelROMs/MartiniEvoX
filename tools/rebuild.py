@@ -345,6 +345,11 @@ class Rebuild:
                     self.clean(child(self.source, path), hooks=True)
             stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             displaced = self.source / ".martini-displaced" / stamp
+            if moves:
+                # Soong's finder would read the displaced trees' Android.bp files as part of
+                # the build (duplicate modules); .find-ignore is its marker to skip a directory.
+                displaced.mkdir(parents=True)
+                (displaced.parent / ".find-ignore").touch()
             for path in moves:
                 for old, new in ((child(self.source, path), displaced / "tree" / path),
                                  (child(self.source, f".repo/projects/{path}.git"),

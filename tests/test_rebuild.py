@@ -354,7 +354,8 @@ class RebuildTests(unittest.TestCase):
             git(self.source / "first", "checkout", "--", "tracked")
             with contextlib.redirect_stdout(io.StringIO()):
                 self.workspace().adopt()
-        [moved] = (self.source / ".martini-displaced").iterdir()
+        self.assertTrue((self.source / ".martini-displaced/.find-ignore").is_file())
+        [moved] = [p for p in (self.source / ".martini-displaced").iterdir() if p.is_dir()]
         self.assertEqual((moved / "tree/first/tracked").read_text(), "before\n")
         self.assertTrue((moved / "projects/first.git").is_dir())
         self.assertTrue((moved / "projects/missing.git").is_dir())

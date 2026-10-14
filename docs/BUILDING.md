@@ -141,7 +141,8 @@ cd ~/crave/martini        # 以下crave命令都在此目录执行，加 -c ~/.c
 `tools/crave.sh`在构建节点的工作区根目录（即SOURCE）运行，CONTROL克隆在`$HOME/MartiniEvoX`：
 
 - `sync REF`：工作区还没有准备记录时先`rebuild.py adopt`——把锁里换成其他项目的路径
-  （LOS 23.2约67个，均无改动）连同`.repo/projects/<路径>.git`移到`.martini-displaced/`，
+  （LOS 23.2约67个，均无改动）连同`.repo/projects/<路径>.git`移到`.martini-displaced/`（内放Soong的
+  `.find-ignore`标记，否则这些旧树的`Android.bp`会被当作源码读入，报模块重复定义），
   代替`--force-sync`；然后`update --clone-depth 1`（否则Repo会把浅克隆全部补成完整历史）
   与`prepare`。
 - crave的编译加速把快照里的编译器`X`换成它的hook，原文件改名为未跟踪的`mbt-bin-X`。
