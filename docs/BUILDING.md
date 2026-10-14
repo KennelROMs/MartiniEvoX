@@ -157,8 +157,11 @@ cd ~/crave/martini        # 以下crave命令都在此目录执行，加 -c ~/.c
 一次性放入的机密（不进入任何Git、gist或CI secret；工作区重置后重新放入）：
 
 - 现有签名私钥（必须沿用，否则OTA证书与APK签名不连续，无法保数据升级）：
-  `crave push keys.tar -d /tmp/src/android/vendor/evolution-priv`，再
-  `crave ssh -- "cd vendor/evolution-priv && tar -xf keys.tar && rm keys.tar"`。
+  先`crave ssh -- mkdir -p vendor/evolution-priv`（`crave ssh`的目录即工作区`/tmp/src/android`），再
+  `crave push keys.tar -d /tmp/src/android/vendor/evolution-priv`，然后
+  `crave ssh -- "cd vendor/evolution-priv && tar -xf keys.tar && rm keys.tar"`。目标目录必须已存在，
+  且每次只push一个文件：目录不存在时push把文件写成该路径本身，多个文件会互相覆盖（2026-10-12实测）。
+  `crave ssh`/`push`直接作用于保留的工作区，不排队；不要用等待外部push的`crave run`任务。
   `build --signing release`会核对证书指纹等于`certificates/release-info.json`。
 - SourceForge上传私钥与已核对的主机指纹（frs的ED25519为
   `SHA256:209BDmH3jsRyO9UeGPPgLWPSegKmYCBIya0nR/AWWCY`，见SourceForge文档）：
