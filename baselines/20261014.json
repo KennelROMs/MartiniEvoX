@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "20261014",
+  "device": "martini",
+  "source": {
+    "evolution_manifest": "https://github.com/Evolution-X/manifest",
+    "branch": "cnb",
+    "commit": "8e41c899421748f2738a60e5757a0be2c3e353bb",
+    "local_manifest": {
+      "path": "manifests/martini.xml",
+      "sha256": "8ed9b0e66efe8d79ebaa1ab74c915eb131bde7735d53575ac65acedf62ed0b2e"
+    },
+    "resolved_utc": "2026-10-14T04:14:38Z"
+  },
+  "manifest": {
+    "portable": {
+      "path": "manifests/locked/martini-20261014.xml",
+      "bytes": 312843,
+      "sha256": "470d7b3cb9293414bfc12639f1fe5758c28e963d08b0154810353992a30e31ae"
+    },
+    "project_count": 1269
+  },
+  "repo_heads": {
+    "system/update_engine": "1ef2cbc4f6f3fee374b9124b005da6eab13f8880",
+    "vendor/lineage": "12eed86fe35dfac19e229bd6c383031e304311e0",
+    "vendor/oneplus/sm8350-common": "445ead080f9ffb2be428405cea6e474e0fc3db05",
+    "frameworks/base": "0811df5851b1c3b1eb959d6164763d7a1db63e9f",
+    "frameworks/opt/telephony": "2a7c5f7541a1b286ff967eb67a34c7c984d01458",
+    "device/oneplus/martini": "528fb33fa7c12c77390a11f732714fe1a1022cbc",
+    "device/oneplus/sm8350-common": "09b259995099c66c990ad7c39e939faeefb63902",
+    "kernel/oneplus/sm8350": "2cfc5d3ed7572e4789199b838dbe6a5054203276",
+    "kernel/oneplus/sm8350-ksu": "d9009f938f74b5e6817a43b9b736adc11a04f358"
+  },
+  "kernel": {
+    "variants": {
+      "normal": {
+        "repo": "kernel/oneplus/sm8350",
+        "base_revision": "2cfc5d3ed7572e4789199b838dbe6a5054203276",
+        "ksu_enabled": false
+      },
+      "ksu": {
+        "repo": "kernel/oneplus/sm8350-ksu",
+        "base_revision": "d9009f938f74b5e6817a43b9b736adc11a04f358",
+        "ksu_enabled": true,
+        "kernelsu_next": {
+          "repo": "external/KernelSU-Next",
+          "branch": "legacy",
+          "revision": "3ab98d0d8ef5163f5bd31cbe522fdb87763b300b",
+          "version": 33309,
+          "version_tag": "v3.4.0-legacy",
+          "hook_mode": "manual",
+          "license_kernel_part": "GPL-2.0-only"
+        },
+        "build_switch": "MARTINI_KSU=true"
+      }
+    }
+  },
+  "pixelos_ledger": "docs/PIXELOS.md",
+  "candidate_rom": null,
+  "signing": {
+    "configuration": "inherited-no-key-changes",
+    "private_keys_included": false
+  }
+}

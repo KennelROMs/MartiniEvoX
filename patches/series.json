@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "baseline": "baselines/20261010.json",
+  "baseline": "baselines/20261014.json",
   "apply": "git apply",
   "check": "git apply --check",
   "order": "patches-array-order",
@@ -12,28 +12,28 @@
     {
       "id": "update-engine-signature",
       "repo": "system/update_engine",
-      "base_revision": "5b9591570c6603d73ab86f8526f4280ccfea1849",
+      "base_revision": "1ef2cbc4f6f3fee374b9124b005da6eab13f8880",
       "patch": "patches/update_engine-payload-verification/0001-restore-payload-signature-verification.patch",
       "sha256": "52810228ca9a2750d5c14ad792f9f5b83623dac64867f622bd492ffbb28129f0"
     },
     {
       "id": "update-engine-backuptool",
       "repo": "system/update_engine",
-      "base_revision": "5b9591570c6603d73ab86f8526f4280ccfea1849",
+      "base_revision": "1ef2cbc4f6f3fee374b9124b005da6eab13f8880",
       "patch": "patches/update_engine-erofs-backuptool/0002-guard-erofs-backuptool.patch",
       "sha256": "794477b1f3b0b2a788d50002c442ff8727ac4a45f1735e6c1e6dcba6809f8419"
     },
     {
       "id": "vendor-lineage-retention",
       "repo": "vendor/lineage",
-      "base_revision": "3d76beee5a9c4c49d68faab48aa51e3d7bce458a",
+      "base_revision": "12eed86fe35dfac19e229bd6c383031e304311e0",
       "patch": "patches/vendor_lineage_target_files/0001-optional-target-files-retention.patch",
       "sha256": "06bdcdef5cc681f3bb9e5bb08fd3815420355bb9f58e42847dff4417863da5fd"
     },
     {
       "id": "vendor-lineage-kernel-relative-out",
       "repo": "vendor/lineage",
-      "base_revision": "3d76beee5a9c4c49d68faab48aa51e3d7bce458a",
+      "base_revision": "12eed86fe35dfac19e229bd6c383031e304311e0",
       "patch": "patches/vendor_lineage_kernel_out/0001-kernel-relative-out-dir.patch",
       "sha256": "6413abe5369687142778b62827eba18421c7d0a52ae1ba17d5edd5da4c96d75f"
     },
@@ -47,7 +47,7 @@
     {
       "id": "pixelos-frameworks-base-oplus-camera-compat",
       "repo": "frameworks/base",
-      "base_revision": "0547a04e7ebb1147e677b0cfca65fda56b8e54ae",
+      "base_revision": "0811df5851b1c3b1eb959d6164763d7a1db63e9f",
       "patch": "patches/pixelos/frameworks-base-1-oplus-camera-compat.patch",
       "sha256": "7df7de4a9778e5359e562c8b3c6ff25213168d1ffe24f1b871f865d0103274a7"
     },
